@@ -1,0 +1,203 @@
+repo,commit_hash,author,date,message,file_path,commit_url,removed_lines,added_lines
+https://github.com/fastify/fastify,81b6e01a73f9022e64b18fd5cc089786dbda87ee,Tommaso Allevi,2018-02-11 23:41:21+01:00,"Clean code (#772)
+
+* Rename into throwIfAlreadyStarted
+
+* Consistency return statement
+
+* Revert else/return
+
+* Force return undefined
+
+* Use done directly
+
+* Consistency promise
+
+* Avoid new line if the promise doesn't have the catch",lib\handleRequest.js,https://github.com/fastify/fastify/commit/81b6e01a73f9022e64b18fd5cc089786dbda87ee,-    result.then((payload) => {,+        // this is for async functions that
+https://github.com/fastify/fastify,2996fd83042084a2ecccc38b6fa123ec87546eec,Matteo Collina,2019-07-31 09:59:03+02:00,"Ensure we are not running the handler if reply.sent is true (#1778)
+
+Fixes #1733
+Fixes #1776",test\hooks-async.js,https://github.com/fastify/fastify/commit/2996fd83042084a2ecccc38b6fa123ec87546eec,"-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))","+  test('preValidation hooks should be able to block a request with async onSend', t => {
++    fastify.addHook('preValidation', async (req, reply) => {
++    fastify.addHook('onSend', async (req, reply, payload) => {
++      await sleep(10)
++    fastify.addHook('preHandler', async (request, reply) => {
++    fastify.addHook('onResponse', async (request, reply) => {
++    fastify.addHook('preHandler', async (req, reply) => {
++    fastify.addHook('onSend', async (req, reply, payload) => {
++      await sleep(10)
++    fastify.addHook('onResponse', async (request, reply) => {"
+https://github.com/fastify/fastify,453028bbfbb34a240bddb146549d91261deac495,Vincent LE GOFF,2020-11-03 12:29:01+01:00,"feat: delete var syntax (#2667)
+
+* feat: delete var syntax
+
+* feat: bump standard
+
+* Restored var for for loops
+
+Co-authored-by: Matteo Collina <hello@matteocollina.com>",test\custom-parser-async.test.js,https://github.com/fastify/fastify/commit/453028bbfbb34a240bddb146549d91261deac495,"-    var res = await new Promise((resolve, reject) => resolve(payload))
+-    var res = await new Promise((resolve, reject) => resolve(req))","+    const res = await new Promise((resolve, reject) => resolve(payload))
++    const res = await new Promise((resolve, reject) => resolve(req))"
+https://github.com/fastify/fastify,f0281948cfcb04cd1c5c93a330823278e4a1b44f,James Sumners,2022-03-05 09:44:52-05:00,"Deprecate variadic listen method (closes #3652) (#3712)
+
+* Deprecate variadic listen method
+
+* Update lib/warnings.js
+
+Co-authored-by: darkgl0w <31093081+darkgl0w@users.noreply.github.com>
+
+* Fix misleading deprecation warning cases
+
+Co-authored-by: darkgl0w <31093081+darkgl0w@users.noreply.github.com>
+Co-authored-by: Manuel Spigolon <behemoth89@gmail.com>",test\listen.test.js,https://github.com/fastify/fastify/commit/f0281948cfcb04cd1c5c93a330823278e4a1b44f,"-    .then(() => {
+-    .then(() => {
+-    .then(address => {
+-    .then(address => {
+-    .then(address => {","+test('listen works without arguments', async t => {
++  await fastify.listen()
++  await app.listen({ port: 0, host: 'localhost' })
++  await app.listen({ port: 0, host: 'localhost' })"
+https://github.com/fastify/fastify,00f40881ad68942fd2492598d1647540e25d607f,Ivan Tymoshenko,2022-06-16 08:14:44+03:00,test: fix request terminated should not crash fastify test (#4024),test\stream.test.js,https://github.com/fastify/fastify/commit/00f40881ad68942fd2492598d1647540e25d607f,"-    await new Promise((resolve) => { setTimeout(resolve, 6).unref() })","+    await new Promise((resolve) => { setTimeout(resolve, 100).unref() })"
+https://github.com/fastify/fastify,b94441ff71e10252b6b3806c8cd4730821dfe737,Matteo Collina,2022-10-21 11:30:25+01:00,Node.js V19 support (#4366),test\close-pipelining.test.js,https://github.com/fastify/fastify/commit/b94441ff71e10252b6b3806c8cd4730821dfe737,"-      ).then(data => {
+-      ).then(data => {","+test('Should return 503 while closing - pipelining', async t => {
++  fastify.get('/', async (req, reply) => {
++  await fastify.listen({ port: 0 })
++  const responses = await Promise.all([
++  await instance.close()
++test('Should not return 503 while closing - pipelining - return503OnClosing: false, skip Node >= v19.x', { skip: isV19plus }, async t => {
++  await fastify.listen({ port: 0 })
++  const responses = await Promise.all([
++  await instance.close()
++test('Should close the socket abruptly - pipelining - return503OnClosing: false, skip Node < v19.x', { skip: !isV19plus }, async t => {
++  await fastify.listen({ port: 0 })
++  const responses = await Promise.allSettled([
++  await instance.close()"
+https://github.com/fastify/fastify,04cc8c1f8a9b561cf14c7f569461bc649c16c1a1,Simone Sanfratello,2023-10-12 14:25:57+02:00,fix: citgm (#5075),test\custom-http-server.test.js,https://github.com/fastify/fastify/commit/04cc8c1f8a9b561cf14c7f569461bc649c16c1a1,"-  await new Promise((resolve, reject) => {
+-  t.teardown(() => new Promise(resolve => server.close(resolve)))
+-  await new Promise((resolve, reject) => {
+-  await new Promise((resolve, reject) => {","+async function setup () {
++  test('Should support a custom http server', { skip: localAddresses.length < 1 }, async t => {
++    await fastify.listen({ port: 0 })
++    await new Promise((resolve, reject) => {
++  test('Should accept user defined serverFactory and ignore secondary server creation', async t => {
++    const app = await Fastify({
++    t.resolves(async () => {
++      await app.listen({ port: 0 })
++  test('Should not call close on the server if it has not created it', async t => {
++    await fastify.ready()
++    await new Promise((resolve, reject) => {
++    await fastify.close()
++    await new Promise((resolve, reject) => {"
+https://github.com/fastify/fastify,04cc8c1f8a9b561cf14c7f569461bc649c16c1a1,Simone Sanfratello,2023-10-12 14:25:57+02:00,fix: citgm (#5075),test\https\custom-https-server.test.js,https://github.com/fastify/fastify/commit/04cc8c1f8a9b561cf14c7f569461bc649c16c1a1,"-  await new Promise((resolve, reject) => {","+async function setup () {
++  await buildCertificate()
++  const localAddresses = await dns.lookup('localhost', { all: true })
++  test('Should support a custom https server', { skip: localAddresses.length < 1 }, async t => {
++    await fastify.listen({ port: 0 })
++    await new Promise((resolve, reject) => {"
+https://github.com/fastify/fastify,5927ca7957658c108d9fe4fdb06caef2aa0ddb90,Giovanni Laganà,2024-10-27 19:15:56+01:00,"test: migrated custom-http-server from tap to node:test (#5773)
+
+* chore: migrated custom-http-server from tap to node:test
+
+* fix: removed leftover",test\custom-http-server.test.js,https://github.com/fastify/fastify/commit/5927ca7957658c108d9fe4fdb06caef2aa0ddb90,-    t.teardown(() => new Promise(resolve => server.close(resolve))),+    await t.assert.doesNotReject(async () => { await app.listen({ port: 0 }) })
+https://github.com/fastify/fastify,bec067a84cada96f9918cf68396d12165ac1248b,Aras Abbasi,2024-11-01 20:15:31+01:00,"fix: streamline migrated tests, make migrated the filenames of migrated tests kebab-case (#5800)
+
+* fix: streamline migrated tests
+
+* souvlaki or kebab?
+
+* kebabify connectionTimeout.test.js
+
+* fix pr comment",test\server.test.js,https://github.com/fastify/fastify/commit/bec067a84cada96f9918cf68396d12165ac1248b,-    await new Promise((resolve) => {,"+test('#5180 - preClose should be called before closing secondary server', async (t) => {
++    await new Promise((resolve) => { setTimeout(resolve, 1000) })
++  // Wait 1000ms to ensure that the test is finished and async operations are
++  await new Promise((resolve) => { setTimeout(resolve, 1000) })"
+https://github.com/fastify/fastify,c85e0bf6f0bc26569ca8ebd1ba613db63459fb46,Antonio Tripodi,2024-12-14 07:57:32+01:00,test: migrated content-length.test.js from tap to node:test (#5878),test\content-length.test.js,https://github.com/fastify/fastify/commit/c85e0bf6f0bc26569ca8ebd1ba613db63459fb46,"-    .then(response => {
+-    .then(res => {","+test('default 413 with bodyLimit option', async (t) => {
++  const response = await fastify.inject({
++test('default 400 with wrong content-length', async (t) => {
++  const response = await fastify.inject({
++test('custom 413 with bodyLimit option', async (t) => {
++  const response = await fastify.inject({
++test('custom 400 with wrong content-length', async (t) => {
++  const response = await fastify.inject({
++test('#2214 - wrong content-length', async (t) => {
++  const response = await fastify.inject({
++test('#2543 - wrong content-length with errorHandler', async (t) => {
++  const response = await fastify.inject({"
+https://github.com/fastify/fastify,14ad3ca897bef513dcd2153bf4e9d170fadef203,Antonio Tripodi,2025-01-18 10:05:06+01:00,test: migrated route-shorthand.test.js from tap to node:test (#5923),test\route-shorthand.test.js,https://github.com/fastify/fastify/commit/14ad3ca897bef513dcd2153bf4e9d170fadef203,-        await new Promise(resolve => sget({,"+    test(`route-shorthand - ${method.toLowerCase()}`, async (t) => {
++      await fastify.listen({ port: 0 })
++      await new Promise((resolve, reject) => {
++  test('route-shorthand - all', async (t) => {
++    await fastify.listen({ port: 0 })
++      await new Promise((resolve, reject) => {"
+https://github.com/fastify/fastify,794d7d19dfa0dbba4ec7284682050be93b2fcfc2,Coluzzi Andrea,2025-01-21 21:23:16+01:00,test: migrate from tap to node test for close & custom-parser-async (#5915),test\close.test.js,https://github.com/fastify/fastify/commit/794d7d19dfa0dbba4ec7284682050be93b2fcfc2,"-    instance.request({ path: '/', method: 'GET' }).then(data => {
+-    instance.request({ path: '/', method: 'GET' }).then(data => {
+-      .then((res) => res.body.json(), err => t.error(err))
+-      .then((res) => res.body.json(), err => t.error(err))","+  fastify.listen({ port: 0 }, async err => {
++    let response = await instance.request({ path: '/', method: 'GET' })
++    response = await instance.request({ path: '/', method: 'GET' })
++test('shutsdown while keep-alive connections are active (non-async, native)', { skip: noSupport }, (t, done) => {
++test('shutsdown while keep-alive connections are active (non-async, idle, native)', { skip: noSupport }, (t, done) => {
++test('shutsdown while keep-alive connections are active (non-async, custom)', (t, done) => {"
+https://github.com/fastify/fastify,503a1254701440a5a1ddd5d2bfe91306361cc2d0,Antonio Tripodi,2025-01-25 08:58:25+01:00,test: migrated listen.2.test.js from tap to node:test (#5960),test\listen.2.test.js,https://github.com/fastify/fastify/commit/503a1254701440a5a1ddd5d2bfe91306361cc2d0,-    .then(() => t.pass('resolved')),"+test('register after listen using Promise.resolve()', async t => {
++  await Promise.resolve()"
+https://github.com/fastify/fastify,664204f231020b5230778996bf149dfd1aa507a0,Antonio Tripodi,2025-03-23 15:42:09+01:00,test: migrated listen.3.test.js from tap to node:test (#6022),test\listen.3.test.js,https://github.com/fastify/fastify/commit/664204f231020b5230778996bf149dfd1aa507a0,-    .then(address => {,"+  test('listen on socket', async t => {
++    await fastify.listen({ path: sockFile })
++  test('listen on socket', async t => {
++    await fastify.listen({ path: sockFile })
++test('listen without callback with (address)', async t => {
++  const address = await fastify.listen({ port: 0 })"
+https://github.com/fastify/fastify,6cbcfa7d82aaf25c7e53804e2a024c531d15c4d0,Antonio Tripodi,2025-03-23 15:43:42+01:00,test: migrated listen.4.test.js from tap to node:test (#6024),test\listen.4.test.js,https://github.com/fastify/fastify/commit/6cbcfa7d82aaf25c7e53804e2a024c531d15c4d0,-    .then(() => {,"+test('listen logs the port as info', async t => {
++  await fastify.listen({ port: 0 })"
+https://github.com/fastify/fastify,5fd2a3c031670d43bc4f12360bc5389149dbc52f,Antonio Tripodi,2025-05-01 23:24:17+02:00,"test: migrated decorator.test.js from tap to node:test (#5957)
+
+* test: migrated decorator.test.js from tap to node:test
+
+* test: update test
+
+* test: update test",test\decorator.test.js,https://github.com/fastify/fastify/commit/5fd2a3c031670d43bc4f12360bc5389149dbc52f,"-    fastify.inject('/').then(res => t.same(res.statusCode, 200)),
+-    fastify.inject('/').then(res => t.same(res.statusCode, 200)),
+-    fastify.inject('/').then(res => t.same(res.statusCode, 200)),
+-    fastify.inject('/').then(res => t.same(res.statusCode, 200)),
+-    fastify.inject('/').then(res => t.same(res.statusCode, 200)),
+-    fastify.inject('/').then(res => t.same(res.statusCode, 200))
+-    fastify.inject('/').then(res => t.same(res.statusCode, 200)),
+-    fastify.inject('/').then(res => t.same(res.statusCode, 200)),
+-    fastify.inject('/').then(res => t.same(res.statusCode, 200)),
+-    fastify.inject('/').then(res => t.same(res.statusCode, 200)),
+-    fastify.inject('/').then(res => t.same(res.statusCode, 200)),
+-    fastify.inject('/').then(res => t.same(res.statusCode, 200))","+  test('is a function', async t => {
++  test('should check if the given request decoration already exist', async t => {
++  test('should check if the given request decoration already exist when null', async t => {
++  test('should be plugin encapsulable', async t => {
++    await fastify.register(async function (fastify2, opts) {
++    await fastify.ready()
++  test('should be inherited', async t => {
++    await fastify.register(async function (fastify2, opts) {
++    await fastify.ready()
++  test('is a function', async t => {
++  test('should check if the given reply decoration already exist', async t => {
++  test('should check if the given reply decoration already exist when null', async t => {
++  test('should be plugin encapsulable', async t => {
++    await fastify.register(async function (fastify2, opts) {
++    await fastify.ready()
++  test('should be inherited', async t => {
++    await fastify.register(async function (fastify2, opts) {
++    await fastify.ready()
++test('chain of decorators on Request', async t => {"
+https://github.com/fastify/fastify,d4d3db2657235cf32cf827d87e3ef361ee7fdc13,Icaro Vieira,2025-05-05 19:19:34-03:00,chore: remove tap from hooks-on ready file (#6080),test\hooks.on-ready.test.js,https://github.com/fastify/fastify/commit/d4d3db2657235cf32cf827d87e3ef361ee7fdc13,"-    .then(instance => { t.same(instance, fastify) })
+-    one.ready().then(itself => { t.same(itself, one) })
+-    two.ready().then(itself => { t.same(itself, two) })
+-      twoDotOne.ready().then(itself => { t.same(itself, twoDotOne) })
+-    .then(instance => { t.same(instance, fastify) })","+test('onReady should be called once', async (t) => {
++test('async onReady should be called in order', async t => {
++test('mix ready and onReady', async t => {
++test('listen and onReady order', async t => {
++test('multiple ready calls', async t => {
++test('onReady should manage error in async', (t, done) => {
++test('ready return the server with Promise', async t => {
++  await fastify.ready()
++test('ready return registered', async t => {
++  await fastify.ready()
++test('do not crash with error in follow up onReady hook', async t => {
++  await t.assert.rejects(fastify.ready())"

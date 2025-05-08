@@ -1,0 +1,110 @@
+repo,commit_hash,author,date,message,file_path,commit_url,removed_lines,added_lines
+https://github.com/sindresorhus/got,f7500d474e4f54003682c998d81a3aa9ce61612c,Vsevolod Strukchinsky,2015-10-16 17:27:05+05:00,"Rewrite tests with async/await :sparkling_heart:
+
+Closes #115",test\helpers.js,https://github.com/sindresorhus/got/commit/f7500d474e4f54003682c998d81a3aa9ce61612c,-	got.get(s.url).then(res => {,"+test('helpers - callback mode', async t => {
++	t.is((await got.get(s.url)).body, 'ok');
++test('helpers - promise mode', async t => {
++	t.is((await got.get(s.url)).body, 'ok');
++		await got.get(`${s.url}/404`);
++		await got.get('.com', {retries: 0});"
+https://github.com/sindresorhus/got,2b1453734a0b51e5b5663b29c258a831dfe926f8,Sindre Sorhus,2018-05-01 14:45:08+07:00,"Require Node.js 8
+
+#418",index.js,https://github.com/sindresorhus/got/commit/2b1453734a0b51e5b5663b29c258a831dfe926f8,"-		return pify(fs.stat)(body.path).then(stat => stat.size);
+-			.then(size => {
+-				.then(data => {","+const getBodySize = async opts => {
++		const {size} = await util.promisify(fs.stat)(body.path);
++	setImmediate(async () => {
++			uploadBodySize = await getBodySize(opts);
++		ee.on('response', async res => {
++				data = await stream;"
+https://github.com/sindresorhus/got,2b1453734a0b51e5b5663b29c258a831dfe926f8,Sindre Sorhus,2018-05-01 14:45:08+07:00,"Require Node.js 8
+
+#418",test\cancel.js,https://github.com/sindresorhus/got/commit/2b1453734a0b51e5b5663b29c258a831dfe926f8,-			getStream(req).then(() => {,"+		s.on('/abort', async (req, res) => {
++			await getStream(req);"
+https://github.com/sindresorhus/got,2b1453734a0b51e5b5663b29c258a831dfe926f8,Sindre Sorhus,2018-05-01 14:45:08+07:00,"Require Node.js 8
+
+#418",test\helpers\server.js,https://github.com/sindresorhus/got/commit/2b1453734a0b51e5b5663b29c258a831dfe926f8,"-	return getPort().then(port => {
+-	return getPort().then(port => {","+exports.createServer = async () => {
++	const port = await getPort();
++exports.createSSLServer = async options => {
++	const port = await getPort();"
+https://github.com/sindresorhus/got,8cc6e03de0b4a9a26457d040cc758f6efa9b77d8,Szymon Marczak,2019-04-02 10:43:31+02:00,Use preconfigured Got instance in tests (#765),test\cancel.ts,https://github.com/sindresorhus/got/commit/8cc6e03de0b4a9a26457d040cc758f6efa9b77d8,"-	ee.aborted = new Promise((resolve, reject) => {
+-	const aborted = new Promise((resolve, reject) => {","+		server.all('/abort', async (request, response) => {
++test('does not retry after cancelation', withServer, async (t, server, got) => {
++	await t.throwsAsync(gotPromise, CancelError);
++	await t.notThrowsAsync(promise, 'Request finished instead of aborting.');
++test('cancels in-progress request', withServer, async (t, server, got) => {
++	await t.throwsAsync(gotPromise, CancelError);
++	await t.notThrowsAsync(promise, 'Request finished instead of aborting.');
++test('cancels in-progress request with timeout', withServer, async (t, server, got) => {
++	await t.throwsAsync(gotPromise, CancelError);
++	await t.notThrowsAsync(promise, 'Request finished instead of aborting.');
++test('cancel immediately', withServer, async (t, server, got) => {
++	await t.throwsAsync(gotPromise);
++	await t.notThrowsAsync(promise, 'Request finished instead of aborting.');"
+https://github.com/sindresorhus/got,71b8452efcd173d54700fb090cbe5664da702143,Michael Mok,2019-12-01 12:16:39+08:00,"Improve types (#946)
+
+Co-authored-by: Sindre Sorhus <sindresorhus@gmail.com>
+Co-authored-by: Szymon Marczak <36894700+szmarczak@users.noreply.github.com>",source\request-as-event-emitter.ts,https://github.com/sindresorhus/got/commit/71b8452efcd173d54700fb090cbe5664da702143,-const setImmediateAsync = () => new Promise(resolve => setImmediate(resolve));,"+const setImmediateAsync = async (): Promise<void> => new Promise(resolve => setImmediate(resolve));
++					let promises: Array<Promise<unknown>> = rawCookies.map(async (rawCookie: string) => options.cookieJar.setCookie(rawCookie, typedResponse.url));
++						promises = promises.map(async p => p.catch(() => {}));"
+https://github.com/sindresorhus/got,071bf5ed39a1262b1bf806067752395421090a23,Szymon Marczak,2019-12-08 21:59:32+01:00,"Fix the `responseType` option
+
+If `.buffer()` is used, it will use `binary` encoding.
+Otherwise it will use `options.encoding`.
+
+Fixes #958",source\as-promise.ts,https://github.com/sindresorhus/got/commit/071bf5ed39a1262b1bf806067752395421090a23,"-		const newPromise = promise.then(() => parseBody(finalResponse.body, responseType, finalResponse.statusCode));","+				body = await getStream.buffer(response, {encoding: 'binary'});"
+https://github.com/sindresorhus/got,b9a855d3728d9219ddbc5d25b90d21147b982119,Sindre Sorhus,2020-07-08 02:34:48+08:00,"Upgrade dependencies (#1345)
+
+Co-authored-by: Szymon Marczak <36894700+szmarczak@users.noreply.github.com>",source\core\index.ts,https://github.com/sindresorhus/got/commit/b9a855d3728d9219ddbc5d25b90d21147b982119,-									result.then((request: unknown): void => {,"+									// it rejects before it's `await`ed in `_makeRequest`.
++									(async () => {
++											const request = (await result) as ClientRequest;
++	async _onResponseBase(response: IncomingMessageWithTimings): Promise<void> {
++			// Normally we would have to use `void [await] this._beforeError(error)` everywhere,
++			// but since there's `void (async () => { ... })()` inside of it, we don't have to.
++	async _onResponse(response: IncomingMessageWithTimings): Promise<void> {
++			await this._onResponseBase(response);
++		void (async () => {
++					response.rawBody = await getBuffer(response);
++					// eslint-disable-next-line no-await-in-loop
++					error = await hook(error as RequestError);"
+https://github.com/sindresorhus/got,0d43f5fea0460977089236b58f2354307fbf27fc,Sindre Sorhus,2020-08-22 21:21:30+02:00,Upgrade dependencies (#1416),source\create.ts,https://github.com/sindresorhus/got/commit/0d43f5fea0460977089236b58f2354307fbf27fc,"-const delay = async (ms: number) => new Promise(resolve => setTimeout(resolve, ms));",+const delay = async (ms: number) => new Promise(resolve => {
+https://github.com/sindresorhus/got,0d43f5fea0460977089236b58f2354307fbf27fc,Sindre Sorhus,2020-08-22 21:21:30+02:00,Upgrade dependencies (#1416),test\http.ts,https://github.com/sindresorhus/got/commit/0d43f5fea0460977089236b58f2354307fbf27fc,"-	await new Promise(resolve => setTimeout(resolve, 10));",+	await new Promise(resolve => {
+https://github.com/sindresorhus/got,0d43f5fea0460977089236b58f2354307fbf27fc,Sindre Sorhus,2020-08-22 21:21:30+02:00,Upgrade dependencies (#1416),test\retry.ts,https://github.com/sindresorhus/got/commit/0d43f5fea0460977089236b58f2354307fbf27fc,"-				await new Promise((resolve, _) => setTimeout(resolve, 1000));",+				await new Promise(resolve => {
+https://github.com/sindresorhus/got,0d43f5fea0460977089236b58f2354307fbf27fc,Sindre Sorhus,2020-08-22 21:21:30+02:00,Upgrade dependencies (#1416),test\stream.ts,https://github.com/sindresorhus/got/commit/0d43f5fea0460977089236b58f2354307fbf27fc,"-							await new Promise(resolve => setTimeout(resolve, 50));",+							await new Promise(resolve => {
+https://github.com/sindresorhus/got,3f707e693db1e8566a1fd932f3820c16ca2cd347,Sindre Sorhus,2020-11-20 22:01:07+07:00,Upgrade dev dependencies (#1534),test\http.ts,https://github.com/sindresorhus/got/commit/3f707e693db1e8566a1fd932f3820c16ca2cd347,-	await new Promise(resolve => {,+	await new Promise<void>(resolve => {
+https://github.com/sindresorhus/got,3f707e693db1e8566a1fd932f3820c16ca2cd347,Sindre Sorhus,2020-11-20 22:01:07+07:00,Upgrade dev dependencies (#1534),test\https.ts,https://github.com/sindresorhus/got/commit/3f707e693db1e8566a1fd932f3820c16ca2cd347,-	await new Promise(resolve => {,+	await new Promise<void>(resolve => {
+https://github.com/sindresorhus/got,3c23eea5a096f6f8ea0edf3e2a27e1caca88acf9,Szymon Marczak,2021-04-11 07:20:28+02:00,Got 12 improvements (#1667),source\core\index.ts,https://github.com/sindresorhus/got/commit/3c23eea5a096f6f8ea0edf3e2a27e1caca88acf9,"-const waitForOpenFile = async (file: ReadStream): Promise<void> => new Promise((resolve, reject) => {","+			this.flush = async () => {
++				this.flush = async () => {};
++					this.flush = async () => {
++						this.flush = async () => {};
++	async flush() {
++			await this._finalizeBody();
++			await this._makeRequest();
++		void (async () => {
++				const success = await this._setRawBody(response);
++					backoff = await retryOptions.calculateDelay({
++					await new Promise<void>(resolve => {
++							// eslint-disable-next-line no-await-in-loop
++							await hook(typedError);
++		this.flush = async () => {};
++	private async _finalizeBody(): Promise<void> {
++			const uploadBodySize = await getBodySize(options.body, options.headers);
++	private async _onResponseBase(response: IncomingMessageWithTimings): Promise<void> {
++			let promises: Array<Promise<unknown>> = rawCookies.map(async (rawCookie: string) => {
++					await hook(updatedOptions, typedResponse);
++			const success = await this._setRawBody();
++	private async _setRawBody(from: Readable = this): Promise<boolean> {
++			const rawBody = await getBuffer(from);
++	private async _onResponse(response: IncomingMessageWithTimings): Promise<void> {
++					// TODO: remove this when `cacheable-request` supports async request functions.
++						// eslint-disable-next-line @typescript-eslint/promise-function-async
++								// it rejects before it's `await`ed in `_makeRequest`.
++								(async () => {
++										const request = (await result) as ClientRequest;
++	private async _createCacheableRequest(url: URL, options: RequestOptions): Promise<ClientRequest | ResponseLike> {
++	private async _makeRequest(): Promise<void> {
++			const cookieString: string = await cookieJar.getCookieString(options.url!.toString());
++			let requestOrResponse = await fn(url, this._requestOptions);
++				requestOrResponse = await options.getFallbackRequestFunction()(url, this._requestOptions);
++	private async _error(error: RequestError): Promise<void> {"

@@ -1,0 +1,1115 @@
+repo,commit_hash,author,date,message,file_path,commit_url,removed_lines,added_lines
+https://github.com/avajs/ava,387c30a056cdd3ef8510262ce2119031c8d18361,James Talmage,2015-11-22 00:59:03-05:00,"Breaking: t.end requires test be declared async
+
+Accessing `t.end` now throws an error unless the test is first
+declared async via `test.async([title], fn)`
+
+Reference:
+  https://github.com/sindresorhus/ava/issues/244
+
+(cherry picked from commit 28b1641)
+  Initial implementation of #244 - require explicit test.async",lib\test.js,https://github.com/avajs/ava/commit/387c30a056cdd3ef8510262ce2119031c8d18361,-			.then(function () {,"+	// TODO(jamestalmage): no only auto-ends in ""declared"" async mode `test.async(...)`. Should we drop auto-end behavior all together?
++	if (this.metadata.async && this.assertCount === this.planCount) {
++		if (!this.metadata.async) {
++	} else if (!this.metadata.async) {
++		if (this.metadata.async) {
++		throw new Error('t.end is not supported in this context. To use t.end as a callback, you must explicitly declare the test asynchronous via `test.async(testName, fn)` ');"
+https://github.com/avajs/ava,f8168153c798fd07e33d120d2a7448c4b8408db0,James Talmage,2015-11-24 16:07:47-05:00,"Breaking: t.plan() will not auto-end tests.
+
+AVA will no longer automatically end tests when you reach the plan limit.
+Users must explicitly call t.end().
+
+It is now an error to return an async object (promise/observable) from
+a legacy `test.async` test.
+
+Reference:
+  https://github.com/sindresorhus/ava/issues/244#issuecomment-159348943",lib\test.js,https://github.com/avajs/ava/commit/f8168153c798fd07e33d120d2a7448c4b8408db0,-			ret = ret.then(function () {,"+		if (this.metadata.async) {
++			self._setAssertError(new Error('Do not return ' + asyncType + ' from tests declared via `test.async(...)`, if you want to return a promise simply declare the test via `test(...)`'));"
+https://github.com/avajs/ava,f8168153c798fd07e33d120d2a7448c4b8408db0,James Talmage,2015-11-24 16:07:47-05:00,"Breaking: t.plan() will not auto-end tests.
+
+AVA will no longer automatically end tests when you reach the plan limit.
+Users must explicitly call t.end().
+
+It is now an error to return an async object (promise/observable) from
+a legacy `test.async` test.
+
+Reference:
+  https://github.com/sindresorhus/ava/issues/244#issuecomment-159348943",test\observable.js,https://github.com/avajs/ava/commit/f8168153c798fd07e33d120d2a7448c4b8408db0,-	}).run().then(function (a) {,"+test('returning an observable from a legacy async fn is an error', function (t) {"
+https://github.com/avajs/ava,f8168153c798fd07e33d120d2a7448c4b8408db0,James Talmage,2015-11-24 16:07:47-05:00,"Breaking: t.plan() will not auto-end tests.
+
+AVA will no longer automatically end tests when you reach the plan limit.
+Users must explicitly call t.end().
+
+It is now an error to return an async object (promise/observable) from
+a legacy `test.async` test.
+
+Reference:
+  https://github.com/sindresorhus/ava/issues/244#issuecomment-159348943",test\promise.js,https://github.com/avajs/ava/commit/f8168153c798fd07e33d120d2a7448c4b8408db0,-	}).run().then(function (a) {,"+test('returning a promise from a legacy async fn is an error', function (t) {"
+https://github.com/avajs/ava,e26bd05edef35238214676b3e7d2d2d8ec8a65e1,Juan Soto,2016-02-26 12:14:09+00:00,Close #536 PR: Move files argument to api.run(). Fixes #534,test\api.js,https://github.com/avajs/ava/commit/e26bd05edef35238214676b3e7d2d2d8ec8a65e1,-	api.run().then(function () {,"+	api.run([path.join(__dirname, 'fixture/async-await.js')])"
+https://github.com/avajs/ava,1c3c86c06c03ac86ee38679d25c72c954d75eb6f,Daniel Cousineau,2016-05-12 05:32:45-04:00,"Limited Process Pools (#791)
+
+New experimental `--concurrency` option. Note that `.only` behavior won't work reliably across test files when concurrency is limited.",test\api.js,https://github.com/avajs/ava/commit/1c3c86c06c03ac86ee38679d25c72c954d75eb6f,"-		.then(function (result) {
+-		.then(function (result) {
+-		.then(function () {
+-		.then(function () {
+-		.then(function () {
+-		.then(function (result) {
+-		.then(function (result) {
+-		.then(function (result) {
+-		.then(function (result) {
+-		.then(function (result) {
+-		.then(function (result) {
+-		.then(function (result) {
+-		.then(function (result) {
+-		.then(function (result) {
+-		.then(function (result) {
+-		.then(function (result) {
+-		.then(function (result) {
+-		.then(function (result) {
+-		.then(function (result) {
+-		.then(function (result) {
+-		.then(function (result) {
+-		.then(function (result) {
+-		.then(function (result) {
+-		.then(function () {
+-		.then(function () {
+-		.then(function (result) {
+-		.then(function (result) {
+-	).then(function (result) {
+-	api.run([path.resolve('test/fixture/es2015.js')]).then(function (result) {
+-	}).then(function (result) {
+-	]).then(function (result) {
+-		.then(
+-		.then(function (result) {
+-		.then(function (result) {
+-		.then(function (result) {
+-		.then(function (result) {
+-		.then(function (result) {","+	test(prefix + 'async/await support', function (t) {
++		api.run([path.join(__dirname, 'fixture/async-await.js')])
++			path.join(__dirname, 'fixture/async-await.js'),
++			['async-await', 'async function'].join(separator),
++			['async-await', 'arrow async function'].join(separator),"
+https://github.com/avajs/ava,88f50d2034ff32f05f96b3b5a6564e9dec0e895a,Juan Soto,2016-08-27 12:10:45-04:00,Upgrade tap and ensure asynchronous tests return promises (#1014),test\api.js,https://github.com/avajs/ava/commit/88f50d2034ff32f05f96b3b5a6564e9dec0e895a,-		api.run([path.resolve('test/fixture/es2015.js')]).then(function (result) {,"+		return api.run([path.join(__dirname, 'fixture/async-await.js')])"
+https://github.com/avajs/ava,8530fcdf304eed0e23b7915633f3a15fd1a4e65a,Sindre Sorhus,2016-11-22 15:33:40+07:00,"Drop support for Node.js 0.10 and 0.12
+
+Not complete, but a good start. I didn't want to cause conflicts with the open active PRs or work on the new test failure output.",test\cli.js,https://github.com/avajs/ava/commit/8530fcdf304eed0e23b7915633f3a15fd1a4e65a,"-	var processPromise = new Promise(function (resolve) {
+-	Promise.all([processPromise, stdout, stderr]).then(function (args) {","+test('improper use of t.throws from within an async callback will be reported to the console', t => {
++	execCli('fixture/improper-t-throws-async-callback.js', (err, stdout, stderr) => {"
+https://github.com/avajs/ava,8530fcdf304eed0e23b7915633f3a15fd1a4e65a,Sindre Sorhus,2016-11-22 15:33:40+07:00,"Drop support for Node.js 0.10 and 0.12
+
+Not complete, but a good start. I didn't want to cause conflicts with the open active PRs or work on the new test failure output.",test\concurrent.js,https://github.com/avajs/ava/commit/8530fcdf304eed0e23b7915633f3a15fd1a4e65a,"-	).run().then(function (result) {
+-	).run().then(function (result) {
+-	).run().then(function (result) {
+-	).run().then(function (result) {
+-	).run().then(function (result) {
+-	).run().then(function (result) {
+-	).run().then(function (result) {
+-	).run().then(function (result) {
+-	).run().then(function (result) {
+-	).run().then(function (result) {
+-	).run().then(function (result) {
+-	).run().then(function (result) {
+-	).run().then(function (result) {
+-	).run().then(function (result) {
+-	).run().then(function (result) {","+test('all async - no failure - no bail', t => {
++test('all async - no failure - bail', t => {
++test('last async - no failure - no bail', t => {
++test('mid async - no failure - no bail', t => {
++test('first async - no failure - no bail', t => {
++test('last async - no failure - bail', t => {
++test('mid async - no failure - bail', t => {
++test('first async - no failure - bail', t => {
++test('all async - begin failure - bail', t => {
++test('all async - mid failure - bail', t => {
++test('all async - end failure - bail', t => {
++test('all async - begin failure - no bail', t => {
++test('all async - mid failure - no bail', t => {
++test('all async - end failure - no bail', t => {
++test('all async - multiple failure - no bail', t => {"
+https://github.com/avajs/ava,8530fcdf304eed0e23b7915633f3a15fd1a4e65a,Sindre Sorhus,2016-11-22 15:33:40+07:00,"Drop support for Node.js 0.10 and 0.12
+
+Not complete, but a good start. I didn't want to cause conflicts with the open active PRs or work on the new test failure output.",test\observable.js,https://github.com/avajs/ava/commit/8530fcdf304eed0e23b7915633f3a15fd1a4e65a,"-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {","+test('returning an observable from a legacy async fn is an error', t => {"
+https://github.com/avajs/ava,8530fcdf304eed0e23b7915633f3a15fd1a4e65a,Sindre Sorhus,2016-11-22 15:33:40+07:00,"Drop support for Node.js 0.10 and 0.12
+
+Not complete, but a good start. I didn't want to cause conflicts with the open active PRs or work on the new test failure output.",test\promise.js,https://github.com/avajs/ava/commit/8530fcdf304eed0e23b7915633f3a15fd1a4e65a,"-	return new Promise(function (resolve) {
+-	return new Promise(function (resolve, reject) {
+-		return Promise.resolve(true).then(function () {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-		var promise = new Promise(function (resolve, reject) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-		return pass().then(function () {
+-	}).run().then(function (result) {
+-		return pass().then(function () {
+-	}).run().then(function (result) {
+-		return fail().then(function () {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {","+test('returning a promise from a legacy async fn is an error', t => {"
+https://github.com/avajs/ava,8530fcdf304eed0e23b7915633f3a15fd1a4e65a,Sindre Sorhus,2016-11-22 15:33:40+07:00,"Drop support for Node.js 0.10 and 0.12
+
+Not complete, but a good start. I didn't want to cause conflicts with the open active PRs or work on the new test failure output.",test\runner.js,https://github.com/avajs/ava/commit/8530fcdf304eed0e23b7915633f3a15fd1a4e65a,"-	runner.run({}).then(function () {
+-	runner.run({}).then(function () {
+-	runner.run({}).then(function () {
+-	runner.run({}).then(function () {
+-	runner.run({}).then(function (stats) {
+-	runner.run({}).then(function (stats) {
+-	runner.run({}).then(function (stats) {
+-	runner.run(options).then(function (stats) {
+-	runner.run({}).then(function () {
+-	runner.run({}).then(function () {
+-	runner.run({}).then(function () {
+-	runner.run({}).then(function (stats) {
+-	runner.run({}).then(function (stats) {
+-	runner.run({}).then(function (stats) {
+-	runner.run({}).then(function (stats) {
+-	runner.run({}).then(function (stats) {
+-	runner.run({}).then(function (stats) {
+-	runner.run({}).then(function (stats) {
+-	runner.run({}).then(function (stats) {","+test('options.bail will bail out (async)', t => {
++test('options.bail + serial - tests will never happen (async)', t => {"
+https://github.com/avajs/ava,8530fcdf304eed0e23b7915633f3a15fd1a4e65a,Sindre Sorhus,2016-11-22 15:33:40+07:00,"Drop support for Node.js 0.10 and 0.12
+
+Not complete, but a good start. I didn't want to cause conflicts with the open active PRs or work on the new test failure output.",test\sequence.js,https://github.com/avajs/ava/commit/8530fcdf304eed0e23b7915633f3a15fd1a4e65a,"-	).run().then(function (result) {
+-	).run().then(function (result) {
+-	).run().then(function (result) {
+-	).run().then(function (result) {
+-	).run().then(function (result) {
+-	).run().then(function (result) {
+-	).run().then(function (result) {
+-	).run().then(function (result) {
+-	).run().then(function (result) {
+-	).run().then(function (result) {
+-	).run().then(function (result) {
+-	).run().then(function (result) {
+-	).run().then(function (result) {
+-	).run().then(function (result) {
+-	).run().then(function (result) {","+test('all async - no failure - no bail', t => {
++test('all async - no failure - bail', t => {
++test('last async - no failure - no bail', t => {
++test('mid async - no failure - no bail', t => {
++test('first async - no failure - no bail', t => {
++test('last async - no failure - bail', t => {
++test('mid async - no failure - bail', t => {
++test('first async - no failure - bail', t => {
++test('all async - begin failure - bail', t => {
++test('all async - mid failure - bail', t => {
++test('all async - end failure - bail', t => {
++test('all async - begin failure - no bail', t => {
++test('all async - mid failure - no bail', t => {
++test('all async - end failure - no bail', t => {
++test('all async - multiple failure - no bail', t => {"
+https://github.com/avajs/ava,8530fcdf304eed0e23b7915633f3a15fd1a4e65a,Sindre Sorhus,2016-11-22 15:33:40+07:00,"Drop support for Node.js 0.10 and 0.12
+
+Not complete, but a good start. I didn't want to cause conflicts with the open active PRs or work on the new test failure output.",test\test.js,https://github.com/avajs/ava/commit/8530fcdf304eed0e23b7915633f3a15fd1a4e65a,"-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-		a.notThrows(delay(20).then(function () {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {
+-	}).run().then(function (result) {","+test('run async functions after last planned assertion', t => {
++test('planned async assertion', t => {
++test('async assertion with `.end()`', t => {"
+https://github.com/avajs/ava,61cdd0941517a08b6aa526f623ba8ce6957e7783,Sindre Sorhus,2017-01-07 17:41:09+07:00,More ES2015ification,test\api.js,https://github.com/avajs/ava/commit/61cdd0941517a08b6aa526f623ba8ce6957e7783,"-		.then(function (result) {
+-	).then(function (result) {
+-			.then(function (result) {
+-			.then(function (result) {
+-			.then(function (result) {
+-			.then(function (result) {
+-			.then(function () {
+-			.then(function () {
+-			.then(function () {
+-			.then(function (result) {
+-			.then(function (result) {
+-			.then(function (result) {
+-			.then(function (result) {
+-			.then(function (result) {
+-			.then(function (result) {
+-			.then(function (result) {
+-			.then(function (result) {
+-			.then(function (result) {
+-			.then(function (result) {
+-			.then(function (result) {
+-			.then(function (result) {
+-			.then(function (result) {
+-			.then(function (result) {
+-			.then(function (result) {
+-			.then(function (result) {
+-			.then(function (result) {
+-			.then(function (result) {
+-			.then(function (result) {
+-			.then(function (result) {
+-			.then(function (result) {
+-			.then(function (result) {
+-			.then(function () {
+-			.then(function () {
+-			.then(function (result) {
+-		return api.run([path.resolve('test/fixture/es2015.js')]).then(function (result) {
+-		}).then(function (result) {
+-		]).then(function (result) {
+-			.then(function (result) {
+-			.then(function (result) {
+-			.then(function (result) {
+-			.then(function (result) {
+-			.then(function (result) {
+-		]).then(function (result) {
+-			.then(function (result) {
+-			.then(function (result) {","+	test(prefix + 'async/await support', t => {"
+https://github.com/avajs/ava,affbb457445c792e62ea3c954e1af7e03cf7a8ee,Mark Wubben,2017-04-03 14:09:41+01:00,"Fail tests that finish with pending assertions
+
+`t.throws()` and `t.notThrows()` can be called with an observable or
+promise. This commit forces users to wait for the assertion to complete
+before finishing the test. Usually this means the test has to be written
+like:
+
+```js
+test(async t => {
+  await t.throws(Promise.reject(new Error()))
+})
+```
+
+Or for callback tests:
+
+```js
+test.cb(t => {
+  t.throws(Promise.reject(new Error())).then(t.end)
+})
+```
+
+This simplifies internal logic and helps discourage code like in #1327.
+Anecdotally users are surprised by the previous behavior where a
+synchronous test worked with an asynchronous assertion
+(https://github.com/avajs/ava/issues/1327#issuecomment-291122432).
+
+Fixes #1327.",test\test.js,https://github.com/avajs/ava/commit/affbb457445c792e62ea3c954e1af7e03cf7a8ee,"-		a.notThrows(delay(20).then(() => {
+-	}).run().then(passed => {
+-	}).run().then(passed => {
+-	}).run().then(passed => {
+-	}).run().then(passed => {
+-	}).run().then(passed => {","+test('fails if async test ends while there are pending assertions', t => {"
+https://github.com/avajs/ava,8955e15ad3cd928532c6804feb1ec6eaf8240786,Mark Wubben,2017-09-24 16:56:58+01:00,"Lint test fixtures
+
+Work around https://github.com/sindresorhus/xo/issues/65 by invoking XO
+from within the `test/fixture` directory.
+
+Fix linting issues. Most were harmless, but it did turn out that
+`babel-plugin-test-doubler.js` no longer doubled tests.",test\fixture\long-stack-trace\test.js,https://github.com/avajs/ava/commit/8955e15ad3cd928532c6804feb1ec6eaf8240786,"-	const resolve = await Promise.resolve().then(function outer() {
+-    return Promise.resolve().then(function inner() {
+-    	return Promise.resolve().then(function evenMoreInner() {",+	await Bluebird.resolve().then(() => {
+https://github.com/avajs/ava,705b787e3e09f4e2af0ed381ee1a1e30e1c73575,Mark Wubben,2018-02-05 16:21:22+00:00,Remove 'with pool' prefix from API tests,test\api.js,https://github.com/avajs/ava/commit/705b787e3e09f4e2af0ed381ee1a1e30e1c73575,"-			.then(result => {
+-			.then(result => {
+-			.then(result => {
+-			.then(result => {
+-			.then(() => {
+-			.then(() => {
+-			.then(() => {
+-			.then(result => {
+-			.then(result => {
+-			.then(result => {
+-			.then(result => {
+-			.then(result => {
+-			.then(result => {
+-			.then(result => {
+-			.then(result => {
+-			.then(result => {
+-			.then(result => {
+-			.then(result => {
+-			.then(result => {
+-			.then(result => {
+-			.then(result => {
+-			.then(result => {
+-			.then(result => {
+-			.then(result => {
+-			.then(result => {
+-			.then(result => {
+-			.then(result => {
+-			.then(result => {
+-			.then(result => {
+-			.then(() => {
+-			.then(() => {
+-			.then(result => {
+-			.then(result => {
+-		return api.run([path.resolve('test/fixture/es2015.js')]).then(result => {
+-		}).then(result => {
+-		]).then(result => {
+-			.then(result => {
+-			.then(result => {
+-			.then(result => {
+-			.then(result => {
+-			.then(result => {
+-			.then(result => {
+-		]).then(result => {","+test('async/await support', t => {
++	return api.run([path.join(__dirname, 'fixture/async-await.js')])
++		path.join(__dirname, 'fixture/async-await.js'),
++		['async-await', 'async function'].join(separator),
++		['async-await', 'arrow async function'].join(separator),"
+https://github.com/avajs/ava,3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,2019-04-20 17:19:31+02:00,"Require Node.js 8.9.4
+
+* Remove support for `--debug` and `--debug-brk` CLI flags
+* Refactor to utilize object rest/spread and async/await",bench\run.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,-	return runTests(args).then(result => {,"+Promise.each(combined, async definition => {
++	const result = await runTests(args);"
+https://github.com/avajs/ava,3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,2019-04-20 17:19:31+02:00,"Require Node.js 8.9.4
+
+* Remove support for `--debug` and `--debug-brk` CLI flags
+* Refactor to utilize object rest/spread and async/await",lib\api.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,"-			.then(files => {
+-					return emittedRun.then(() => {
+-					.then(() => this._setupPrecompiler())
+-					.then(precompilation => {
+-							.findTestHelpers().then(helpers => {
+-					.then(precompilation => {
+-							return this._computeForkExecArgv().then(execArgv => {
+-								worker.promise.then(() => { // eslint-disable-line max-nested-callbacks
+-					.then(() => {
+-		return getPort().then(port => {","+	async run(files, runtimeOptions = {}) {
++			files = await new AvaFiles({cwd: apiOptions.resolveTestsFrom, files, extensions: this._allExtensions}).findTestFiles();
++			await this.emit('run', {
++			let precompilation = await this._setupPrecompiler();
++				const helpers = await new AvaFiles({cwd: this.options.resolveTestsFrom, extensions: this._allExtensions}).findTestHelpers();
++			await Bluebird.map(files, async file => {
++				const execArgv = await this._computeForkExecArgv();
++	async _computeForkExecArgv() {
++		const port = await getPort();"
+https://github.com/avajs/ava,3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,2019-04-20 17:19:31+02:00,"Require Node.js 8.9.4
+
+* Remove support for `--debug` and `--debug-brk` CLI flags
+* Refactor to utilize object rest/spread and async/await",lib\assert.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,"-				const intermediate = promise.then(value => {
+-				const intermediate = promise.then(noop, reason => {","+				const intermediate = promise.then(value => { // eslint-disable-line promise/prefer-await-to-then
++				const intermediate = promise.then(noop, reason => { // eslint-disable-line promise/prefer-await-to-then"
+https://github.com/avajs/ava,3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,2019-04-20 17:19:31+02:00,"Require Node.js 8.9.4
+
+* Remove support for `--debug` and `--debug-brk` CLI flags
+* Refactor to utilize object rest/spread and async/await",lib\ava-files.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,-		.then(flatten),+		.then(flatten) // eslint-disable-line promise/prefer-await-to-then
+https://github.com/avajs/ava,3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,2019-04-20 17:19:31+02:00,"Require Node.js 8.9.4
+
+* Remove support for `--debug` and `--debug-brk` CLI flags
+* Refactor to utilize object rest/spread and async/await",lib\cli.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,"-		}).then(() => {
+-		api.run(files).then(runStatus => {","+exports.run = async () => { // eslint-disable-line complexity
++			await del('*', {
++		const runStatus = await api.run(files);"
+https://github.com/avajs/ava,3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,2019-04-20 17:19:31+02:00,"Require Node.js 8.9.4
+
+* Remove support for `--debug` and `--debug-brk` CLI flags
+* Refactor to utilize object rest/spread and async/await",lib\runner.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,"-			return this.runSingle(runnable).then(result => {
+-		}, waitForSerial).then(() => ({allPassed, storedResults}));
+-		return runnable.run().then(result => {
+-		return this.runMultiple(hooks, this.serial).then(outcome => {
+-		return this.runHooks(this.tasks.beforeEach, contextRef, hookSuffix).then(hooksOk => {
+-			return this.runSingle(test).then(result => {
+-		}).then(hooksAndTestOk => {
+-			return this.runHooks(this.tasks.afterEachAlways, contextRef, hookSuffix).then(alwaysOk => {
+-		const serialPromise = beforePromise.then(beforeHooksOk => {
+-				return prev.then(prevOk => {
+-		const concurrentPromise = Promise.all([beforePromise, serialPromise]).then(prevOkays => {
+-			})).then(allOkays => allOkays.every(ok => ok));
+-			.then(ok => ok && this.runHooks(this.tasks.after, contextRef))
+-			.then(() => this.runHooks(this.tasks.afterAlways, contextRef))
+-			.then(() => {
+-			.then(() => this.emit('finish'), err => this.emit('error', err));","+	async runMultiple(runnables) {
++		const runAndStoreResult = async runnable => {
++			const result = await this.runSingle(runnable);
++		await runnables.reduce((prev, runnable) => {
++	async runSingle(runnable) {
++		const result = await runnable.run();
++	async runHooks(tasks, contextRef, titleSuffix) {
++		const outcome = await this.runMultiple(hooks, this.serial);
++	async runTest(task, contextRef) {
++		if (await this.runHooks(this.tasks.beforeEach, contextRef, hookSuffix)) {
++			const result = await this.runSingle(test);
++				hooksAndTestOk = await this.runHooks(this.tasks.afterEach, contextRef, hookSuffix);
++		const alwaysOk = await this.runHooks(this.tasks.afterEachAlways, contextRef, hookSuffix);
++	async start() {
++		const serialPromise = beforePromise.then(beforeHooksOk => { // eslint-disable-line promise/prefer-await-to-then
++			return serialTests.reduce(async (prev, task) => {
++				const prevOk = await prev;
++		const concurrentPromise = Promise.all([beforePromise, serialPromise]).then(async ([beforeHooksOk, serialOk]) => { // eslint-disable-line promise/prefer-await-to-then
++			const allOkays = await Promise.all(concurrentTests.map(task => {
++			const ok = await concurrentPromise;
++				await this.runHooks(this.tasks.after, contextRef);
++			await this.runHooks(this.tasks.afterAlways, contextRef);
++			await this.emit('finish');
++			await this.emit('error', error);"
+https://github.com/avajs/ava,3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,2019-04-20 17:19:31+02:00,"Require Node.js 8.9.4
+
+* Remove support for `--debug` and `--debug-brk` CLI flags
+* Refactor to utilize object rest/spread and async/await",lib\test.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,"-			.then(() => {
+-					.then(() => resolve(this.finishPromised()));","+			.then(() => { // eslint-disable-line promise/prefer-await-to-then
++					.then(() => resolve(this.finishPromised())); // eslint-disable-line promise/prefer-await-to-then"
+https://github.com/avajs/ava,3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,2019-04-20 17:19:31+02:00,"Require Node.js 8.9.4
+
+* Remove support for `--debug` and `--debug-brk` CLI flags
+* Refactor to utilize object rest/spread and async/await",lib\watcher.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,"-			this.watcher.busy.then(() => {
+-				.then(runStatus => {
+-			this.busy.then(() => {","+		const timer = setTimeout(async () => {
++			await this.watcher.busy;
++				.then(runStatus => { // eslint-disable-line promise/prefer-await-to-then
++		stdin.on('data', async data => {
++			await this.busy;"
+https://github.com/avajs/ava,3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,2019-04-20 17:19:31+02:00,"Require Node.js 8.9.4
+
+* Remove support for `--debug` and `--debug-brk` CLI flags
+* Refactor to utilize object rest/spread and async/await",lib\worker\ipc.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,"-	const promise = pendingPings.then(() => {
+-	}).then(() => {","+async function flush() {
++	const promise = pendingPings.then(async () => { // eslint-disable-line promise/prefer-await-to-then
++		await emitter.once('pong');
++	await promise;"
+https://github.com/avajs/ava,3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,2019-04-20 17:19:31+02:00,"Require Node.js 8.9.4
+
+* Remove support for `--debug` and `--debug-brk` CLI flags
+* Refactor to utilize object rest/spread and async/await",lib\worker\subprocess.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,"-		return ipc.flush().then(() => process.exit()); // eslint-disable-line unicorn/no-process-exit
+-	ipc.peerFailed.then(() => {","+	async function exit(code) {
++		await ipc.flush();
++	ipc.peerFailed.then(() => { // eslint-disable-line promise/prefer-await-to-then"
+https://github.com/avajs/ava,2ce19993c759c9351206cdd49622aae24e7079fd,Nikita Volodin,2019-04-22 06:26:15-04:00,"Manage assertions through a class
+
+The assertions no longer need to be explicitly bound to the test instance, but are passed closed methods instead. This will allow new `ExecutionContext`s to be instantiated for the upcoming `t.try()` assertion.",lib\assert.js,https://github.com/avajs/ava/commit/2ce19993c759c9351206cdd49622aae24e7079fd,"-				const intermediate = promise.then(value => { // eslint-disable-line promise/prefer-await-to-then
+-				const intermediate = promise.then(noop, reason => { // eslint-disable-line promise/prefer-await-to-then","+				const intermediate = Promise.resolve(promise).then(value => { // eslint-disable-line promise/prefer-await-to-then
++				const intermediate = Promise.resolve(promise).then(noop, error => { // eslint-disable-line promise/prefer-await-to-then"
+https://github.com/avajs/ava,83b43a58593ea3a4e1fd271099184963ccdb7d4c,Mark Wubben,2020-01-02 16:14:52+01:00,"Allow CLI to select a subset of test files
+
+Rather than providing paths to specific test files, allow
+micromatch-compatible patterns to be provided on the CLI. These then
+select a subset of test files.
+
+This does mean that the files patterns in AVA's configuration need to
+select all desired test files: you can no longer run a different file.
+
+Fixes #2281.",test\watcher.js,https://github.com/avajs/ava/commit/83b43a58593ea3a4e1fd271099184963ccdb7d4c,"-		return delay().then(() => {
+-		}).then(() => {","+	test('reruns previous tests and update snapshots when ""u"" is entered on stdin', async t => {
++		await debounce();
++		await delay();
++		await delay();"
+https://github.com/avajs/ava,8bdcf8be148478d766087cebe4cb6bbb2b5bc976,Mark Wubben,2020-01-05 16:40:10+01:00,Anticipate asynchronous loads,lib\worker\subprocess.js,https://github.com/avajs/ava/commit/8bdcf8be148478d766087cebe4cb6bbb2b5bc976,-ipc.options.then(options => {,"+ipc.options.then(async options => {
++	const load = async ref => {
++		for await (const ref of (options.require || [])) {
++			const mod = await load(ref);
++		await load(testPath);"
+https://github.com/avajs/ava,5a335729eab820a7ea1a17ab1c9425efd58803c8,Mark Wubben,2020-01-18 16:48:00+01:00,"Fix fail-fast interrupt test
+
+Listen for the peer-failure notification before resuming tests. Then
+verify the test execution was interrupted.
+
+That's still not enough on Windows, where the passes-slow test results aren't always received. So only test for that when they are.",test\api.js,https://github.com/avajs/ava/commit/5a335729eab820a7ea1a17ab1c9425efd58803c8,-		.then(runStatus => {,"+test('fail-fast mode - multiple files & interrupt', async t => {
++	const runStatus = await api.run({files: [fails, passesSlow]});"
+https://github.com/avajs/ava,5a335729eab820a7ea1a17ab1c9425efd58803c8,Mark Wubben,2020-01-18 16:48:00+01:00,"Fix fail-fast interrupt test
+
+Listen for the peer-failure notification before resuming tests. Then
+verify the test execution was interrupted.
+
+That's still not enough on Windows, where the passes-slow test results aren't always received. So only test for that when they are.",test\fixture\fail-fast\multiple-files\passes-slow.js,https://github.com/avajs/ava/commit/5a335729eab820a7ea1a17ab1c9425efd58803c8,"-	return new Promise(resolve => setTimeout(resolve, 60000));","+test.serial('first pass', async t => {
++	await pEvent(process, 'message', message => {"
+https://github.com/avajs/ava,60784a513876ec9b508c92e92dd6191853151729,Mark Wubben,2020-03-29 18:07:38+02:00,Upgrade XO,lib\runner.js,https://github.com/avajs/ava/commit/60784a513876ec9b508c92e92dd6191853151729,-				waitForSerial = prev.then(() => {,"+		await runnables.reduce((previous, runnable) => {
++			return serialTests.reduce(async (previous, task) => {
++				const previousOk = await previous;"
+https://github.com/avajs/ava,60784a513876ec9b508c92e92dd6191853151729,Mark Wubben,2020-03-29 18:07:38+02:00,Upgrade XO,test-tap\test-try-commit.js,https://github.com/avajs/ava/commit/60784a513876ec9b508c92e92dd6191853151729,"-			.then(res => {
+-			.then(res => {
+-			.then(res => {","+		const result = await a.try(b => b.pass());
++		const result = await tryFn(b => b.pass());
++		await result.commit();
++		const result = await a.try(b => b.fail());
++		await result.discard();
++		const result = await a.try(b => b.pass());
++		const result = await a.try((b, value1, value2) => {
++		const result = await a.try(b => {
++		const [result1, result2, result3] = await Promise.all([
++		const result = await a.try(async b => {
++			const result = await b.try(c => {
++		const result = await a.try(b => b.pass());
++		const result = await a.try(() => {});
++		const [result1, result2] = await Promise.all([
++		const result = await a.try(b => b.fail());
++		const result = await a.try(b => b.pass());
++		const result = await a.try(b => b.pass());
++		const result = await a.try(b => {
++		const result = await a.try(b => {
++		const result = await attempt;
++		const result = await a.try(b => {
++		const result = await a.try(b => b.fail());
++		const result = await a.try(b => {
++		const result = await a.try(macro);
++		const [result1, result2] = await a.try([
++		const [result3, result4] = await a.try([
++		const [result1, result2, result3] = await Promise.all([
++		const result = await a.try(async b => {
++		const result = await a.try(b => {
++		await result.commit();
++		const result = await a.try(b => {"
+https://github.com/avajs/ava,7eb23dddcf5a87eb3d371473286a5cce9b246b8f,Oskar Löfgren,2020-04-19 14:55:17+02:00,Remove now unnecessary `finishPromised()` from lib/test.js,lib\test.js,https://github.com/avajs/ava/commit/7eb23dddcf5a87eb3d371473286a5cce9b246b8f,"-					.then(() => resolve(this.finishPromised())); // eslint-disable-line promise/prefer-await-to-then
+-		return new Promise(resolve => {","+					.then(() => resolve(this.finish())); // eslint-disable-line promise/prefer-await-to-then
++	async finish() {"
+https://github.com/avajs/ava,0e5cc7dc2b1512d0abe9bfba57b26888eedea0cf,Daniele Belardi,2021-03-07 18:56:52+01:00,"Run test files in worker threads
+
+Add `--worker-threads` to use worker_threads to run tests. By default
+the option is enabled.
+
+Co-authored-by: Mark Wubben <mark@novemberborn.net>",lib\worker\base.js,https://github.com/avajs/ava/commit/0e5cc7dc2b1512d0abe9bfba57b26888eedea0cf,"-ipc.options.then(async options => {
+-	ipc.peerFailed.then(() => { // eslint-disable-line promise/prefer-await-to-then","+const run = async options => {
++		await channel.flush();
++	channel.peerFailed.then(() => { // eslint-disable-line promise/prefer-await-to-then
++	channel.options.then(run).catch(onError); // eslint-disable-line promise/prefer-await-to-then"
+https://github.com/avajs/ava,0e5cc7dc2b1512d0abe9bfba57b26888eedea0cf,Daniele Belardi,2021-03-07 18:56:52+01:00,"Run test files in worker threads
+
+Add `--worker-threads` to use worker_threads to run tests. By default
+the option is enabled.
+
+Co-authored-by: Mark Wubben <mark@novemberborn.net>",lib\worker\channel.js,https://github.com/avajs/ava/commit/0e5cc7dc2b1512d0abe9bfba57b26888eedea0cf,"-exports.options = pEvent(process, 'message', selectAvaMessage('options')).then(message => message.ava.options);","+		await pEvent(handle.channel, 'message', selectAvaMessage('pong'));"
+https://github.com/avajs/ava,0e5cc7dc2b1512d0abe9bfba57b26888eedea0cf,Daniele Belardi,2021-03-07 18:56:52+01:00,"Run test files in worker threads
+
+Add `--worker-threads` to use worker_threads to run tests. By default
+the option is enabled.
+
+Co-authored-by: Mark Wubben <mark@novemberborn.net>",test-tap\api.js,https://github.com/avajs/ava/commit/0e5cc7dc2b1512d0abe9bfba57b26888eedea0cf,"-		.then(runStatus => {
+-		.then(runStatus => {
+-		.then(runStatus => {
+-		.then(runStatus => {
+-		.then(runStatus => {
+-		.then(runStatus => {
+-		.then(runStatus => {
+-		.then(runStatus => {
+-		.then(runStatus => {
+-		.then(runStatus => {
+-		.then(runStatus => {
+-		.then(runStatus => {
+-		.then(runStatus => {
+-		.then(runStatus => {
+-		.then(runStatus => {
+-		.then(runStatus => {
+-		.then(runStatus => {
+-		.then(runStatus => {
+-		.then(runStatus => {
+-		.then(runStatus => {
+-		.then(() => {
+-		.then(() => {
+-		.then(runStatus => {
+-		.then(runStatus => {
+-	]}).then(runStatus => {
+-	]}).then(runStatus => {","+	test(`fail-fast mode - workerThreads: ${opt.workerThreads} - multiple files & interrupt`, async t => {
++		const runStatus = await api.run({files: [fails, passesSlow]});"
+https://github.com/avajs/ava,8571b2a7f7ebfefcdc014e7a43b6c874b765b722,Mark Wubben,2021-03-13 18:04:38+01:00,"Remove test.cb()
+
+Fixes #2387.",test-tap\test-try-commit.js,https://github.com/avajs/ava/commit/8571b2a7f7ebfefcdc014e7a43b6c874b765b722,"-			.then(result => {
+-			.then(result => {
+-			.then(() => {
+-			.then(result => {
+-		setTimeout(() => a.try(b => b.pass()).then(result => result.commit()), 1e3);
+-		setTimeout(() => a.try(b => b.pass()).then(result => result.commit()), 2e3);
+-		setTimeout(() => a.try(b => b.pass()).then(result => result.commit()), 3e3);","+	const result1 = await ava(async a => {
++		await Promise.all(["
+https://github.com/avajs/ava,8571b2a7f7ebfefcdc014e7a43b6c874b765b722,Mark Wubben,2021-03-13 18:04:38+01:00,"Remove test.cb()
+
+Fixes #2387.",test-tap\test.js,https://github.com/avajs/ava/commit/8571b2a7f7ebfefcdc014e7a43b6c874b765b722,"-	return ava.cb(a => a.end()).run().then(result => {
+-	}).run().then(result => {
+-	}).run().then(result => {
+-	}).run().then(result => {
+-	return instance.run().then(result => {
+-	return instance.run().then(result => {
+-	return instance.run().then(result => {
+-	}).run().then(result => {
+-	}).run().then(result => {
+-	}).run().then(result => {
+-	}).run().then(result => {
+-	}).run().then(result => {
+-	}).run().then(result => {
+-	}).run().then(result => {
+-	}).run().then(result => {","+	return ava(async a => {
++		await delay(1234);
++	return ava(async a => {
++		await Promise.all(["
+https://github.com/avajs/ava,bdf2cf07e8010820a600cbc8f005be3715239e07,Daniele Belardi,2021-04-06 17:53:06+03:00,"Make shared workers available in worker threads only
+
+Now that AVA runs test files in worker threads, it makes sense for _shared_ workers to only be available in that execution mode. This makes for more efficient communication and will enable us to transfer byte arrays, message ports and even share memory.
+
+Separately this commit fixes how shared worker errors are reported.
+
+Co-authored-by: Mark Wubben <mark@novemberborn.net>",lib\worker\channel.js,https://github.com/avajs/ava/commit/bdf2cf07e8010820a600cbc8f005be3715239e07,"-exports.options = pEvent(handle.channel, 'message', selectAvaMessage('options')).then(message => message.ava.options);
+-	const ready = pEvent(channelEmitter, 'shared-worker-ready').then(() => { // eslint-disable-line promise/prefer-await-to-then","+	const ready = pEvent(ourPort, 'message', ({type}) => type === 'ready').then(() => { // eslint-disable-line promise/prefer-await-to-then"
+https://github.com/avajs/ava,c57067bfb69a9b685ea2b33624dee204ad369164,Mark Wubben,2021-06-06 15:39:52+02:00,"Switch to ESM for internals
+
+* Extract glob helpers that are needed in a CJS environment
+
+* Ensure ava/plugin works in a CJS environment
+
+Refactor and deploy some tricks so that ava/plugin is usable in a CJS environment, even if the rest of AVA's internals become ESM.
+
+* Ensure 'ava' can be imported in a CJS environment
+
+* Convert to ESM
+
+* Load yargs as CJS due to strange compatibility issues
+* Keep line number parsing code as CJS because it attempts to lazy-load dependencies
+* Shared workers are always loaded through a dynamic import
+* Shared worker filenames must now be file:// URLs, but you can provide a URL instance
+* Test file paths within shared workers are now file:// URLs
+* Error serialization and code excerpts now support ESM
+* Title prefixes in the reporters now correctly skip all test file extensions, not just `js`
+
+* CI: Increase delay on timeout test, mostly for Windows",lib\eslint-plugin-helper-worker.js,https://github.com/avajs/ava/commit/c57067bfb69a9b685ea2b33624dee204ad369164,"-		configCache.set(projectDir, loadConfig({resolveFrom: projectDir}).then(conf => { // eslint-disable-line promise/prefer-await-to-then","+const collectProviders = async ({conf, projectDir}) => {
++		const {level, main} = await providerManager.babel(projectDir);
++		const {level, main} = await providerManager.typescript(projectDir);
++		configCache.set(projectDir, loadConfig({resolveFrom: projectDir}).then(async conf => { // eslint-disable-line promise/prefer-await-to-then
++			const providers = await collectProviders({conf, projectDir});"
+https://github.com/avajs/ava,c57067bfb69a9b685ea2b33624dee204ad369164,Mark Wubben,2021-06-06 15:39:52+02:00,"Switch to ESM for internals
+
+* Extract glob helpers that are needed in a CJS environment
+
+* Ensure ava/plugin works in a CJS environment
+
+Refactor and deploy some tricks so that ava/plugin is usable in a CJS environment, even if the rest of AVA's internals become ESM.
+
+* Ensure 'ava' can be imported in a CJS environment
+
+* Convert to ESM
+
+* Load yargs as CJS due to strange compatibility issues
+* Keep line number parsing code as CJS because it attempts to lazy-load dependencies
+* Shared workers are always loaded through a dynamic import
+* Shared worker filenames must now be file:// URLs, but you can provide a URL instance
+* Test file paths within shared workers are now file:// URLs
+* Error serialization and code excerpts now support ESM
+* Title prefixes in the reporters now correctly skip all test file extensions, not just `js`
+
+* CI: Increase delay on timeout test, mostly for Windows",test-tap\reporters\mini.js,https://github.com/avajs/ava/commit/c57067bfb69a9b685ea2b33624dee204ad369164,"-		.then(() => {
+-		.then(buffer => report.assert(t, logFile, buffer))","+test(async t => {
++	const {default: Reporter} = await import('../../lib/reporters/default.js');"
+https://github.com/avajs/ava,c57067bfb69a9b685ea2b33624dee204ad369164,Mark Wubben,2021-06-06 15:39:52+02:00,"Switch to ESM for internals
+
+* Extract glob helpers that are needed in a CJS environment
+
+* Ensure ava/plugin works in a CJS environment
+
+Refactor and deploy some tricks so that ava/plugin is usable in a CJS environment, even if the rest of AVA's internals become ESM.
+
+* Ensure 'ava' can be imported in a CJS environment
+
+* Convert to ESM
+
+* Load yargs as CJS due to strange compatibility issues
+* Keep line number parsing code as CJS because it attempts to lazy-load dependencies
+* Shared workers are always loaded through a dynamic import
+* Shared worker filenames must now be file:// URLs, but you can provide a URL instance
+* Test file paths within shared workers are now file:// URLs
+* Error serialization and code excerpts now support ESM
+* Title prefixes in the reporters now correctly skip all test file extensions, not just `js`
+
+* CI: Increase delay on timeout test, mostly for Windows",test-tap\reporters\tap.js,https://github.com/avajs/ava/commit/c57067bfb69a9b685ea2b33624dee204ad369164,"-		.then(() => {
+-		.then(buffer => report.assert(t, logFile, buffer))","+test(async t => {
++	const {default: TapReporter} = await import('../../lib/reporters/tap.js');"
+https://github.com/avajs/ava,c57067bfb69a9b685ea2b33624dee204ad369164,Mark Wubben,2021-06-06 15:39:52+02:00,"Switch to ESM for internals
+
+* Extract glob helpers that are needed in a CJS environment
+
+* Ensure ava/plugin works in a CJS environment
+
+Refactor and deploy some tricks so that ava/plugin is usable in a CJS environment, even if the rest of AVA's internals become ESM.
+
+* Ensure 'ava' can be imported in a CJS environment
+
+* Convert to ESM
+
+* Load yargs as CJS due to strange compatibility issues
+* Keep line number parsing code as CJS because it attempts to lazy-load dependencies
+* Shared workers are always loaded through a dynamic import
+* Shared worker filenames must now be file:// URLs, but you can provide a URL instance
+* Test file paths within shared workers are now file:// URLs
+* Error serialization and code excerpts now support ESM
+* Title prefixes in the reporters now correctly skip all test file extensions, not just `js`
+
+* CI: Increase delay on timeout test, mostly for Windows",test-tap\reporters\verbose.js,https://github.com/avajs/ava/commit/c57067bfb69a9b685ea2b33624dee204ad369164,"-		.then(() => {
+-		.then(buffer => report.assert(t, logFile, buffer))","+test(async t => {
++	const {default: Reporter} = await import('../../lib/reporters/default.js');"
+https://github.com/avajs/ava,e8a497696a7c0f46d92c52770dbc34b70ee493fc,Mark Wubben,2021-09-12 22:00:38+02:00,"Update all the things
+
+* Test lockfile using npm 7.23
+
+* Workflow updates
+
+* Update codecov action
+* Cache npm dependencies
+* Simplify checkout
+
+* Bump minimal Node.js versions
+
+These should allow us to add features over AVA 4's lifetime using newly
+available Node.js APIs.
+
+* Update dev dependencies
+
+* Update to TypeScript 4.4 and latest tsd
+
+* Upgrade XO and reformat
+
+* Update dependencies
+
+* Rebuild lockfile
+
+* Run XO with Node.js 16
+
+It fails on older Node.js versions.",lib\plugin-support\shared-workers.js,https://github.com/avajs/ava/commit/e8a497696a7c0f46d92c52770dbc34b70ee493fc,"-			error: events.once(worker, 'error').then(([error]) => error) // eslint-disable-line promise/prefer-await-to-then","+			error: events.once(worker, 'error').then(([error]) => error), // eslint-disable-line promise/prefer-await-to-then"
+https://github.com/avajs/ava,e8a497696a7c0f46d92c52770dbc34b70ee493fc,Mark Wubben,2021-09-12 22:00:38+02:00,"Update all the things
+
+* Test lockfile using npm 7.23
+
+* Workflow updates
+
+* Update codecov action
+* Cache npm dependencies
+* Simplify checkout
+
+* Bump minimal Node.js versions
+
+These should allow us to add features over AVA 4's lifetime using newly
+available Node.js APIs.
+
+* Update dev dependencies
+
+* Update to TypeScript 4.4 and latest tsd
+
+* Upgrade XO and reformat
+
+* Update dependencies
+
+* Rebuild lockfile
+
+* Run XO with Node.js 16
+
+It fails on older Node.js versions.",lib\runner.js,https://github.com/avajs/ava/commit/e8a497696a7c0f46d92c52770dbc34b70ee493fc,"-				waitForSerial = previous.then(() => {
+-				waitForSerial.then(() => {","+			const allOkays = await Promise.all(concurrentTests.map(task => this.runTest(task, contextRef.copy())));"
+https://github.com/avajs/ava,e8a497696a7c0f46d92c52770dbc34b70ee493fc,Mark Wubben,2021-09-12 22:00:38+02:00,"Update all the things
+
+* Test lockfile using npm 7.23
+
+* Workflow updates
+
+* Update codecov action
+* Cache npm dependencies
+* Simplify checkout
+
+* Bump minimal Node.js versions
+
+These should allow us to add features over AVA 4's lifetime using newly
+available Node.js APIs.
+
+* Update dev dependencies
+
+* Update to TypeScript 4.4 and latest tsd
+
+* Upgrade XO and reformat
+
+* Update dependencies
+
+* Rebuild lockfile
+
+* Run XO with Node.js 16
+
+It fails on older Node.js versions.",test-tap\assert.js,https://github.com/avajs/ava/commit/e8a497696a7c0f46d92c52770dbc34b70ee493fc,"-	}).then(actual => {
+-	return assertions.notThrowsAsync(Promise.resolve(Symbol(''))).then(actual => {
+-	}).then(actual => {","+		await assertions.throwsAsync(() => Promise.reject(new Error('foo')), undefined);"
+https://github.com/avajs/ava,e8a497696a7c0f46d92c52770dbc34b70ee493fc,Mark Wubben,2021-09-12 22:00:38+02:00,"Update all the things
+
+* Test lockfile using npm 7.23
+
+* Workflow updates
+
+* Update codecov action
+* Cache npm dependencies
+* Simplify checkout
+
+* Bump minimal Node.js versions
+
+These should allow us to add features over AVA 4's lifetime using newly
+available Node.js APIs.
+
+* Update dev dependencies
+
+* Update to TypeScript 4.4 and latest tsd
+
+* Upgrade XO and reformat
+
+* Update dependencies
+
+* Rebuild lockfile
+
+* Run XO with Node.js 16
+
+It fails on older Node.js versions.",test-tap\test.js,https://github.com/avajs/ava/commit/e8a497696a7c0f46d92c52770dbc34b70ee493fc,"-	}).run().then(result => {
+-	}).run().then(result => {
+-	return ava(() => {}).run().then(result => {
+-	return ava(a => a.plan(0)).run().then(result => {
+-	}).run().then(result => {
+-	}).run().then(result => {
+-	}).run().then(result => {
+-		return a.throwsAsync(Promise.resolve()).then(() => {
+-	}).run().then(result => {
+-	}).run().then(result => {
+-	}).run().then(result => {
+-	}).run().then(result => {
+-	}).run().then(result => {
+-	}).run().then(result => {
+-		return Promise.resolve().then(() => a.pass());
+-	}).run().then(result => {
+-		return a.notThrowsAsync(delay(10), {value: 'foo'}).then(() => Promise.reject());
+-	}).run().then(result => {
+-	}).run().then(result => {
+-	}).run().then(result => {
+-	}).run().then(result => {
+-	}).run().then(result => {
+-	}).run().then(result => {
+-			delay(50).then(() => a.pass()),
+-			delay(100).then(() => a.pass()),
+-			delay(150).then(() => a.pass()),
+-	}).run().then(result => {
+-	}).run().then(result => {
+-	}).run().then(result => {
+-	}).run().then(result => {
+-	}).run().then(result => {","+test('record test duration', t => ava(async a => {
++	await delay(1234);
++test('fails if async test ends while there are pending assertions', t => ava(a => {
++test('timeout is refreshed on assert', t => ava(async a => {
++	await Promise.all([
++test('teardown without function callback fails', t => ava(a => a.throwsAsync(async () => {"
+https://github.com/avajs/ava,5a488932857427d113730ac004282ff51c9347ac,Mark Wubben,2021-11-01 13:43:46+01:00,Update XO and fix problems,lib\eslint-plugin-helper-worker.js,https://github.com/avajs/ava/commit/5a488932857427d113730ac004282ff51c9347ac,"-		configCache.set(projectDir, loadConfig({resolveFrom: projectDir}).then(async conf => { // eslint-disable-line promise/prefer-await-to-then","+		configCache.set(projectDir, loadConfig({resolveFrom: projectDir}).then(async conf => {"
+https://github.com/avajs/ava,5a488932857427d113730ac004282ff51c9347ac,Mark Wubben,2021-11-01 13:43:46+01:00,Update XO and fix problems,lib\runner.js,https://github.com/avajs/ava/commit/5a488932857427d113730ac004282ff51c9347ac,"-		const serialPromise = beforePromise.then(beforeHooksOk => { // eslint-disable-line promise/prefer-await-to-then
+-		const concurrentPromise = Promise.all([beforePromise, serialPromise]).then(async ([beforeHooksOk, serialOk]) => { // eslint-disable-line promise/prefer-await-to-then","+		const concurrentPromise = Promise.all([beforePromise, serialPromise]).then(async ([beforeHooksOk, serialOk]) => {"
+https://github.com/avajs/ava,9d3559338aab8c3de800404b2652747399fc1709,Evan Sosenko,2022-03-06 06:11:32-08:00,"Warn when unsupported ava.config.json files are encountered
+
+Co-authored-by: Mark Wubben <mark@novemberborn.net>",lib\eslint-plugin-helper-worker.js,https://github.com/avajs/ava/commit/9d3559338aab8c3de800404b2652747399fc1709,"-		configCache.set(projectDir, loadConfig({resolveFrom: projectDir}).then(async conf => {","+		configCache.set(projectDir, loadConfig({resolveFrom: projectDir}).then(async ({config: conf}) => {"
+https://github.com/avajs/ava,da3d2bcffbad0fe51c83220bb1e587b7b80d1707,Mark Wubben,2023-01-15 21:33:33+01:00,"Update dependencies and such
+
+* Upgrade XO and reformat
+
+* Update dev dependencies
+
+* Test with TypeScript 4.9
+
+* Update dependencies
+
+* Pin latest node@18 for Volta
+
+* Use npm@9
+
+* Rebuild lockfile
+
+* Select Node.js version from Volta pin in most CI jobs
+
+* Only pin npm when testing for lockfile churn; ensure npm@8 for Node.js 14",lib\plugin-support\shared-worker-loader.js,https://github.com/avajs/ava/commit/da3d2bcffbad0fe51c83220bb1e587b7b80d1707,-loadFactory(workerData.filename).then(factory => {,+	const factory = await loadFactory(workerData.filename);
+https://github.com/avajs/ava,da3d2bcffbad0fe51c83220bb1e587b7b80d1707,Mark Wubben,2023-01-15 21:33:33+01:00,"Update dependencies and such
+
+* Upgrade XO and reformat
+
+* Update dev dependencies
+
+* Test with TypeScript 4.9
+
+* Update dependencies
+
+* Pin latest node@18 for Volta
+
+* Use npm@9
+
+* Rebuild lockfile
+
+* Select Node.js version from Volta pin in most CI jobs
+
+* Only pin npm when testing for lockfile churn; ensure npm@8 for Node.js 14",lib\worker\base.js,https://github.com/avajs/ava/commit/da3d2bcffbad0fe51c83220bb1e587b7b80d1707,-	channel.options.then(run).catch(onError);,"+	options = await channel.options;
++	await run(options);"
+https://github.com/avajs/ava,da3d2bcffbad0fe51c83220bb1e587b7b80d1707,Mark Wubben,2023-01-15 21:33:33+01:00,"Update dependencies and such
+
+* Upgrade XO and reformat
+
+* Update dev dependencies
+
+* Test with TypeScript 4.9
+
+* Update dependencies
+
+* Pin latest node@18 for Volta
+
+* Use npm@9
+
+* Rebuild lockfile
+
+* Select Node.js version from Volta pin in most CI jobs
+
+* Only pin npm when testing for lockfile churn; ensure npm@8 for Node.js 14",test\shared-workers\workers-are-loaded-once\fixtures\_plugin.js,https://github.com/avajs/ava/commit/da3d2bcffbad0fe51c83220bb1e587b7b80d1707,-export const random = messages.next().then(({value}) => value).finally(() => messages.return());,+export const random = messages.next().then(({value}) => value).finally(() => messages.return()); // eslint-disable-line unicorn/prefer-top-level-await
+https://github.com/avajs/ava,b6fbd5847a5d460e9ce435ab52fde91ba1bd287a,Mark Wubben,2023-09-10 21:30:04+02:00,"Make assertions throw
+
+Fixes #3201.
+
+Assertions now throw a `TestFailure` error when they fail. This error is not exported or documented and should not be used or thrown manually. You cannot catch this error in order to recover from a failure, use `t.try()` instead.
+
+All assertions except for `throws` and `throwsAsync` now return `true` when they pass. This is useful for some of the assertions in TypeScript where they can be used as a type guard.
+
+Committing a failed `t.try()` result now also throws.",lib\test.js,https://github.com/avajs/ava/commit/b6fbd5847a5d460e9ce435ab52fde91ba1bd287a,-			.then(() => {,"+	async addPendingAssertion(promise) {
++			await promise;"
+https://github.com/avajs/ava,b6fbd5847a5d460e9ce435ab52fde91ba1bd287a,Mark Wubben,2023-09-10 21:30:04+02:00,"Make assertions throw
+
+Fixes #3201.
+
+Assertions now throw a `TestFailure` error when they fail. This error is not exported or documented and should not be used or thrown manually. You cannot catch this error in order to recover from a failure, use `t.try()` instead.
+
+All assertions except for `throws` and `throwsAsync` now return `true` when they pass. This is useful for some of the assertions in TypeScript where they can be used as a type guard.
+
+Committing a failed `t.try()` result now also throws.",test-tap\assert.js,https://github.com/avajs/ava/commit/b6fbd5847a5d460e9ce435ab52fde91ba1bd287a,"-		return fn().then(retval => {
+-		return fn().then(retval => {
+-test('.notThrowsAsync() returns undefined for a fulfilled promise', t => assertions.notThrowsAsync(Promise.resolve(Symbol(''))).then(actual => {
+-test('.notThrowsAsync() returns undefined for a fulfilled promise returned by the function', t => assertions.notThrowsAsync(() => Promise.resolve(Symbol(''))).then(actual => {","+async function failsWithAsync(t, fn, subset) {
++		await fn();
++test('.throwsAsync() fails if passed a bad expectation', async t => {
++	await failsWithAsync(t, () => assertions.throwsAsync(() => {}, true), {
++	await failsWithAsync(t, () => assertions.throwsAsync(() => {}, 'foo'), {
++	await failsWithAsync(t, () => assertions.throwsAsync(() => {}, /baz/), {
++	await failsWithAsync(t, () => assertions.throwsAsync(() => {}, class Bar {}), {
++	await failsWithAsync(t, () => assertions.throwsAsync(() => {}, {}), {
++	await failsWithAsync(t, () => assertions.throwsAsync(() => {}, []), {
++	await failsWithAsync(t, () => assertions.throwsAsync(() => {}, {any: {}}), {
++	await failsWithAsync(t, () => assertions.throwsAsync(() => {}, {code: {}}), {
++	await failsWithAsync(t, () => assertions.throwsAsync(() => {}, {instanceOf: null}), {
++	await failsWithAsync(t, () => assertions.throwsAsync(() => {}, {message: null}), {
++	await failsWithAsync(t, () => assertions.throwsAsync(() => {}, {name: null}), {
++	await failsWithAsync(t, () => assertions.throwsAsync(() => {}, {is: {}, message: '', name: '', of() {}, foo: null}), {
++test('.throwsAsync() fails if passed null', async t => {
++	await failsWithAsync(t, () => asserter.throwsAsync(() => {}, null), {
++test('.notThrowsAsync() fails if passed a bad value', async t => {
++	await failsWithAsync(t, () => assertions.notThrowsAsync('not a function'), {"
+https://github.com/avajs/ava,b15df539396a2b7ecfa1c13e8e67d29a66a601bc,Mark Wubben,2024-08-20 15:40:08+02:00,"Update dependencies & other general maintenance
+
+* Upgrade XO
+* Update TypeScript-related dependencies — Don't upgrade @sindresorhus/tsconfig to v6 since it requires TS 5.5 and we test with 5.2.
+* Update dev dependencies
+* Update dependencies
+* Rebuild lockfile
+* Upgrade CodeCov action
+* Update reporter log instructions and remove deprecation warnings
+* Make Node.js 22.6 the recommended development version
+* Remove Node.js 21 from the engines list: It's no longer maintained by Node.js itself, see also <https://github.com/avajs/ava/blob/main/docs/support-statement.md>.",lib\assert.js,https://github.com/avajs/ava/commit/b15df539396a2b7ecfa1c13e8e67d29a66a601bc,"-				const intermediate = Promise.resolve(promise).then(value => {
+-				const intermediate = Promise.resolve(promise).then(noop, error => {","+					Promise.resolve(retval).catch(noop); // eslint-disable-line promise/prefer-await-to-then
++					await thrower;
++					await thrower;
++				const intermediate = Promise.resolve(promise).then(value => { // eslint-disable-line promise/prefer-await-to-then
++					await nonThrower;
++				const intermediate = Promise.resolve(promise).then(noop, error => { // eslint-disable-line promise/prefer-await-to-then"
+https://github.com/avajs/ava,b15df539396a2b7ecfa1c13e8e67d29a66a601bc,Mark Wubben,2024-08-20 15:40:08+02:00,"Update dependencies & other general maintenance
+
+* Upgrade XO
+* Update TypeScript-related dependencies — Don't upgrade @sindresorhus/tsconfig to v6 since it requires TS 5.5 and we test with 5.2.
+* Update dev dependencies
+* Update dependencies
+* Rebuild lockfile
+* Upgrade CodeCov action
+* Update reporter log instructions and remove deprecation warnings
+* Make Node.js 22.6 the recommended development version
+* Remove Node.js 21 from the engines list: It's no longer maintained by Node.js itself, see also <https://github.com/avajs/ava/blob/main/docs/support-statement.md>.",lib\eslint-plugin-helper-worker.js,https://github.com/avajs/ava/commit/b15df539396a2b7ecfa1c13e8e67d29a66a601bc,"-		configCache.set(projectDir, loadConfig({resolveFrom: projectDir}).then(async ({config: conf}) => {","+		const {config: conf} = await loadConfig({resolveFrom: projectDir});
++		const providers = await collectProviders({conf, projectDir});"
+https://github.com/avajs/ava,b15df539396a2b7ecfa1c13e8e67d29a66a601bc,Mark Wubben,2024-08-20 15:40:08+02:00,"Update dependencies & other general maintenance
+
+* Upgrade XO
+* Update TypeScript-related dependencies — Don't upgrade @sindresorhus/tsconfig to v6 since it requires TS 5.5 and we test with 5.2.
+* Update dev dependencies
+* Update dependencies
+* Rebuild lockfile
+* Upgrade CodeCov action
+* Update reporter log instructions and remove deprecation warnings
+* Make Node.js 22.6 the recommended development version
+* Remove Node.js 21 from the engines list: It's no longer maintained by Node.js itself, see also <https://github.com/avajs/ava/blob/main/docs/support-statement.md>.",lib\plugin-support\shared-workers.js,https://github.com/avajs/ava/commit/b15df539396a2b7ecfa1c13e8e67d29a66a601bc,"-			error: events.once(worker, 'error').then(([error]) => tagWorkerError(error)),
+-		launched.statePromises.error.then(error => {","+const waitForError = async worker => {
++	const [error] = await events.once(worker, 'error');
++	fork.promise.finally(() => { // eslint-disable-line promise/prefer-await-to-then
++		launched.statePromises.error.then(error => { // eslint-disable-line promise/prefer-await-to-then
++			fork.promise.finally(() => { // eslint-disable-line promise/prefer-await-to-then"
+https://github.com/avajs/ava,b15df539396a2b7ecfa1c13e8e67d29a66a601bc,Mark Wubben,2024-08-20 15:40:08+02:00,"Update dependencies & other general maintenance
+
+* Upgrade XO
+* Update TypeScript-related dependencies — Don't upgrade @sindresorhus/tsconfig to v6 since it requires TS 5.5 and we test with 5.2.
+* Update dev dependencies
+* Update dependencies
+* Rebuild lockfile
+* Upgrade CodeCov action
+* Update reporter log instructions and remove deprecation warnings
+* Make Node.js 22.6 the recommended development version
+* Remove Node.js 21 from the engines list: It's no longer maintained by Node.js itself, see also <https://github.com/avajs/ava/blob/main/docs/support-statement.md>.",lib\runner.js,https://github.com/avajs/ava/commit/b15df539396a2b7ecfa1c13e8e67d29a66a601bc,"-		const serialPromise = beforePromise.then(beforeHooksOk => {
+-		const concurrentPromise = Promise.all([beforePromise, serialPromise]).then(async ([beforeHooksOk, serialOk]) => {","+		const serialPromise = beforePromise.then(beforeHooksOk => { // eslint-disable-line promise/prefer-await-to-then
++		const concurrentPromise = Promise.all([beforePromise, serialPromise]).then(async ([beforeHooksOk, serialOk]) => { // eslint-disable-line promise/prefer-await-to-then"
+https://github.com/avajs/ava,b15df539396a2b7ecfa1c13e8e67d29a66a601bc,Mark Wubben,2024-08-20 15:40:08+02:00,"Update dependencies & other general maintenance
+
+* Upgrade XO
+* Update TypeScript-related dependencies — Don't upgrade @sindresorhus/tsconfig to v6 since it requires TS 5.5 and we test with 5.2.
+* Update dev dependencies
+* Update dependencies
+* Rebuild lockfile
+* Upgrade CodeCov action
+* Update reporter log instructions and remove deprecation warnings
+* Make Node.js 22.6 the recommended development version
+* Remove Node.js 21 from the engines list: It's no longer maintained by Node.js itself, see also <https://github.com/avajs/ava/blob/main/docs/support-statement.md>.",lib\test.js,https://github.com/avajs/ava/commit/b15df539396a2b7ecfa1c13e8e67d29a66a601bc,-					.then(() => resolve(this.finish()));,"+					.catch(error => { // eslint-disable-line promise/prefer-await-to-then
++					.then(() => resolve(this.finish())); // eslint-disable-line promise/prefer-await-to-then"
+https://github.com/avajs/ava,b15df539396a2b7ecfa1c13e8e67d29a66a601bc,Mark Wubben,2024-08-20 15:40:08+02:00,"Update dependencies & other general maintenance
+
+* Upgrade XO
+* Update TypeScript-related dependencies — Don't upgrade @sindresorhus/tsconfig to v6 since it requires TS 5.5 and we test with 5.2.
+* Update dev dependencies
+* Update dependencies
+* Rebuild lockfile
+* Upgrade CodeCov action
+* Update reporter log instructions and remove deprecation warnings
+* Make Node.js 22.6 the recommended development version
+* Remove Node.js 21 from the engines list: It's no longer maintained by Node.js itself, see also <https://github.com/avajs/ava/blob/main/docs/support-statement.md>.",lib\watcher.js,https://github.com/avajs/ava/commit/b15df539396a2b7ecfa1c13e8e67d29a66a601bc,"-	fileTracer.update(findTests(cwdAndGlobs).then(testFiles => testFiles.map(path => ({
+-			fileTracer.busy.then(() => debounce.refresh());","+	fileTracer.update(findTests(cwdAndGlobs).then(testFiles => testFiles.map(path => ({ // eslint-disable-line promise/prefer-await-to-then
++			fileTracer.busy.then(() => debounce.refresh()); // eslint-disable-line promise/prefer-await-to-then
++		const current = this.#update(changes).finally(() => { // eslint-disable-line promise/prefer-await-to-then"
+https://github.com/avajs/ava,b15df539396a2b7ecfa1c13e8e67d29a66a601bc,Mark Wubben,2024-08-20 15:40:08+02:00,"Update dependencies & other general maintenance
+
+* Upgrade XO
+* Update TypeScript-related dependencies — Don't upgrade @sindresorhus/tsconfig to v6 since it requires TS 5.5 and we test with 5.2.
+* Update dev dependencies
+* Update dependencies
+* Rebuild lockfile
+* Upgrade CodeCov action
+* Update reporter log instructions and remove deprecation warnings
+* Make Node.js 22.6 the recommended development version
+* Remove Node.js 21 from the engines list: It's no longer maintained by Node.js itself, see also <https://github.com/avajs/ava/blob/main/docs/support-statement.md>.",lib\worker\base.js,https://github.com/avajs/ava/commit/b15df539396a2b7ecfa1c13e8e67d29a66a601bc,-	channel.peerFailed.then(() => {,+	channel.peerFailed.then(() => { // eslint-disable-line promise/prefer-await-to-then
+https://github.com/avajs/ava,b15df539396a2b7ecfa1c13e8e67d29a66a601bc,Mark Wubben,2024-08-20 15:40:08+02:00,"Update dependencies & other general maintenance
+
+* Upgrade XO
+* Update TypeScript-related dependencies — Don't upgrade @sindresorhus/tsconfig to v6 since it requires TS 5.5 and we test with 5.2.
+* Update dev dependencies
+* Update dependencies
+* Rebuild lockfile
+* Upgrade CodeCov action
+* Update reporter log instructions and remove deprecation warnings
+* Make Node.js 22.6 the recommended development version
+* Remove Node.js 21 from the engines list: It's no longer maintained by Node.js itself, see also <https://github.com/avajs/ava/blob/main/docs/support-statement.md>.",test\helpers\exec.js,https://github.com/avajs/ava/commit/b15df539396a2b7ecfa1c13e8e67d29a66a601bc,"-	const done = execaProcess.then(result => ({execa: true, result}), error => {","+	const done = execaProcess.then(result => ({execa: true, result}), error => { // eslint-disable-line promise/prefer-await-to-then"

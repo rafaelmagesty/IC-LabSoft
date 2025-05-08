@@ -1,0 +1,11 @@
+https://github.com/metabrainz/bookbrainz-site
+https://github.com/FredrikNoren/ungit
+https://github.com/gurumukhi/youtube-screenshot
+https://github.com/conradoqg/naivecoin
+https://github.com/fastify/fastify
+https://github.com/express-validator/express-validator
+https://github.com/mochajs/mocha
+https://github.com/avajs/ava
+https://github.com/sindresorhus/got
+https://github.com/dexie/Dexie.js
+https://github.com/ether/etherpad-lite

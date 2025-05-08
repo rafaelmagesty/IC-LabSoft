@@ -1,0 +1,14 @@
+repo,commit_hash,author,date,message,file_path,commit_url,removed_lines,added_lines
+https://github.com/express-validator/express-validator,34eb328b7fe066c47df776ae667366782d875e12,Gustavo Henke,2017-01-15 01:30:25-02:00,eslint: add initial config and fix offending code,test\withMessageAsyncTest.js,https://github.com/express-validator/express-validator/commit/34eb328b7fe066c47df776ae667366782d875e12,"-						return new Promise(function(resolve) {
+-						return new Promise(function(resolve, reject) {
+-						return new Promise(function(resolve) { resolve(); });
+-						return new Promise(function(resolve, reject) { reject(); });
+-					test.then(function() {","+  describe('on async validators', function() {
++    // Helper to handle resolving tests async"
+https://github.com/express-validator/express-validator,0d71a794fad3033bd6f7f0d25b26be7581e51d77,Gustavo Henke,2019-06-15 09:44:33+10:00,Make validators and sanitizers run in the order they are specified (#722),src\middlewares\one-of.ts,https://github.com/express-validator/express-validator/commit/0d71a794fad3033bd6f7f0d25b26be7581e51d77,-        return Promise.all(group.map(run)).then(errors => _.flatten(errors));,"+    const promises = chains.map(async chain => {
++      const groupPromises = group.map(async chain => {
++        await chain.run(req);
++      await Promise.all(groupPromises);
++      const allErrors = await Promise.all(promises);"
+https://github.com/express-validator/express-validator,f474e17ec92b0f7350ec6980cf8fbe0fe48dcaed,Gustavo Henke,2019-06-18 23:53:10+10:00,Context Builder (#724),src\chain\context-runner-impl.spec.ts,https://github.com/express-validator/express-validator/commit/f474e17ec92b0f7350ec6980cf8fbe0fe48dcaed,-  const item2Promise = new Promise(resolve => {,"+  const context = await contextRunner.run(req);
++  const context = await contextRunner.run(req);"

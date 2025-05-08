@@ -1,0 +1,97 @@
+repo,commit_hash,author,date,message,file_path,commit_url,removed_lines,added_lines
+https://github.com/mochajs/mocha,17cfdee9d6e08a604dfc850910d165cd85b4c2fd,Domenic Denicola,2014-03-13 21:10:01-04:00,"Fix up promise handling.
+
+Per comments in #329 we can factor out the calling into its own function.
+
+I also reused `this.resetTimeout()` instead of manually setting it, and added the timeout for promise case as well.",lib\runnable.js,https://github.com/mochajs/mocha/commit/17cfdee9d6e08a604dfc850910d165cd85b4c2fd,-        result.then(,+  // explicit async with `done` argument
+https://github.com/mochajs/mocha,5fc58458395d8a9bc75daae97042af78dc94cc7a,Christopher Hiller,2018-04-21 21:04:45-07:00,"reformat everything with Prettier
+
+Signed-off-by: Christopher Hiller <boneskull@boneskull.com>",lib\runnable.js,https://github.com/mochajs/mocha/commit/5fc58458395d8a9bc75daae97042af78dc94cc7a,-        .then(function () {,"+            '--async-only option in use without declaring `done()` or returning a promise'
++    'ms exceeded. For async tests and hooks, ensure ""done()"" is called; if returning a Promise, ensure it resolves.';"
+https://github.com/mochajs/mocha,12db9dbc9dd3b0ec31c182d0e41a6ec615735401,Christopher Hiller,2020-09-08 12:58:01-07:00,"implementation of global setup/teardown; closes #4308 (#4360)
+
+* implementation of global setup/teardown; closes #4308
+
+* move deprecate() and warn() from utils into errors module
+
+This avoids a circular dependency which arises when Mocha is bundled.
+
+These are private APIs.",test\integration\options\watch.spec.js,https://github.com/mochajs/mocha/commit/12db9dbc9dd3b0ec31c182d0e41a6ec615735401,"-      }).then(results => {
+-      }).then(results => {
+-      }).then(results => {
+-      }).then(results => {
+-    .then(() => change(mochaProcess))
+-    .then(() => sleep(2000))
+-    .then(() => {
+-    .then(data => {
+-  return new Promise(resolve => {","+    beforeEach(async function() {
++      const {dirpath, removeTempDir} = await createTempDir();
++    it('respects --fgrep on re-runs', async function() {"
+https://github.com/mochajs/mocha,6ceca82fdfd51341796caa523d696fa7621639cc,Christopher Hiller,2020-10-05 13:22:04-07:00,"make guarantees about orphaned processes
+
+- updates workerpool to v6.0.2, which guarantees child processes exit before `Pool#terminate()` resolves
+- cleanup `test/integration/options/parallel.spec.js`",test\integration\options\parallel.spec.js,https://github.com/mochajs/mocha/commit/6ceca82fdfd51341796caa523d696fa7621639cc,"-  ]).then(function(expected) {
+-    ).then(function(actual) {
+-  return compareReporters.call(this, reporter).then(function(result) {
+-      ).then(function(expected) {
+-      return invokeMochaAsync(esmArgs.concat('--no-parallel', glob))[1].then(
+-          return invokeMochaAsync(esmArgs.concat('--parallel', glob))[1].then(
+-      ).then(function(result) {
+-      return runMochaAsync('options/parallel/bail', ['--parallel']).then(
+-      ).then(function(expected) {
+-              ).then(function(expected) {
+-      return compareReporters.call(this, 'json').then(function(result) {
+-      return compareReporters.call(this, 'xunit').then(function(result) {","+async function compareReporters(reporter) {
++  const [actual, expected] = await Promise.all([
++async function assertReporterOutputEquality(reporter) {
++  const {actual, expected} = await compareReporters(reporter);
++async function waitForChildPids(pid) {
++    childPids = await pidtree(pid);
++    await new Promise(resolve => setTimeout(resolve, 100));
++      it('should fail gracefully', async function() {
++      it('should fail gracefully', async function() {
++    it('should have the same result as with --no-parallel', async function() {
++      const expected = await runMochaAsync('options/parallel/test-*', [
++    it('should have the same result as with --no-parallel', async function() {
++        await invokeMochaAsync([
++        await invokeMochaAsync([
++    it('should retry tests appropriately', async function() {
++    it('should bubble up an exception', async function() {
++    it('should error out', async function() {
++    it('should error out', async function() {
++    it('should error out', async function() {
++    it('should skip some tests', async function() {
++      const result = await runMochaAsync('options/parallel/test-*', [
++    it('should fail', async function() {
++    it('should skip some tests', async function() {
++      const result = await runMochaAsync('options/parallel/bail', [
++    it('should fail', async function() {
++    it('should be equivalent to running in serial', async function() {
++      const expected = await runMochaAsync('options/parallel/test-*', [
++          it('should have the same result as when run with --no-parallel', async function() {
++            const expected = await runMochaAsync('options/parallel/test-*', [
++      it('should have the same output as when run with --no-parallel', async function() {
++      it('should have the same output as when run with --no-parallel', async function() {
++      it('should have the same output as when run with --no-parallel', async function() {
++      it('should have the same output as when run with --no-parallel', async function() {
++      it('should have the same output as when run with --no-parallel', async function() {
++      it('should have the same output as when run with --no-parallel', async function() {
++      it('should have the same output as when run with --no-parallel', async function() {
++      it('should have the same output as when run with --no-parallel', async function() {
++      it('should fail due to incompatibility', async function() {
++      it('should fail due to incompatibility', async function() {
++      it('should fail due to incompatibility', async function() {
++      it('should have the same output as when run with --no-parallel', async function() {
++        const {expected, actual} = await compareReporters('json');
++      it('should have the same output as when run with --no-parallel', async function() {
++        const {expected, actual} = await compareReporters('xunit');
++      it('should not leave orphaned processes around', async function() {
++        const childPids = await waitForChildPids(pid);
++        await promise;
++            [pid, ...childPids].map(async childPid => {
++                pids = await pidtree(childPid, {root: true});
++      it('should not leave orphaned processes around', async function() {
++        const childPids = await waitForChildPids(pid);
++        await promise;
++            [pid, ...childPids].map(async childPid => {
++                pids = await pidtree(childPid, {root: true});"

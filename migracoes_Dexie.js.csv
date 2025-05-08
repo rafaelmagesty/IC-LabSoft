@@ -1,0 +1,775 @@
+repo,commit_hash,author,date,message,file_path,commit_url,removed_lines,added_lines
+https://github.com/dexie/Dexie.js,efd8d19d0e750aba0bf2461d68deabf6c6103274,David Fahlander,2014-03-07 21:46:21+01:00,"Tests failed in Chrome. Fixed.
+
+Tests failed in Chrome due to an incompatibility between Promises/A+ and
+indexedDB specifications. Worked around by slightly change the Promise
+implementaion to not use setImmediate()",src\sfdb.js,https://github.com/dexie/Dexie.js/commit/efd8d19d0e750aba0bf2461d68deabf6c6103274,"-        return new Promise(function (resolve, reject) {
+-            }).then(cb);
+-                    // put(),add() etc directy on db.table and not via db.transaction(). Let the promise.then() be called when transaction
+-            }).then(cb);
+-            }).then(cb);
+-            return this.limit(1).toArray(function(a){ return a[0]}).then(cb);
+-            return trappable ? new TrappablePromise(fn) : new Promise(fn);","+        //  Extension to Promise with a trap() method to enable ""ignore-and-continue"" for async ""loops""."
+https://github.com/dexie/Dexie.js,abc9649126287e5e8cf3bddf260934fda34b3eea,David Fahlander,2014-05-06 11:52:42+02:00,Releasing v0.97,dist\latest\Dexie.js,https://github.com/dexie/Dexie.js/commit/abc9649126287e5e8cf3bddf260934fda34b3eea,"-                // PLS data is bound to a Promise and any child Promise emitted through then() or resolve( new Promise() ).
+-            this.then(function (value) {
+-            var promise = new Promise(function (resolve, reject) {
+-            promise.then(function (val) {","+                                // clone obj before this async call. If caller modifies obj the line after put(), the IDB spec requires that it should not affect operation."
+https://github.com/dexie/Dexie.js,2d77b228d83a7d4b0ecc8e02bcc881f7fc88a7ac,David Fahlander,2014-05-23 01:33:58+02:00,Dexie.Syncable passes all tests now,addons\Dexie.Observable\Dexie.Observable.js,https://github.com/dexie/Dexie.js/commit/2d77b228d83a7d4b0ecc8e02bcc881f7fc88a7ac,"-                        return syncNodes.add(mySyncNode).then(function () {
+-                intercomm.add(msg).then(function (messageId) {
+-                        return new Promise(function (resolve, reject) {",+                    db._syncNodes.put(mySyncNode); // This async operation may be cancelled since the browser is closing down now.
+https://github.com/dexie/Dexie.js,2d77b228d83a7d4b0ecc8e02bcc881f7fc88a7ac,David Fahlander,2014-05-23 01:33:58+02:00,Dexie.Syncable passes all tests now,addons\Dexie.Syncable\Dexie.Syncable.js,https://github.com/dexie/Dexie.js/commit/2d77b228d83a7d4b0ecc8e02bcc881f7fc88a7ac,"-                    return db._syncNodes.update(node, { status: newStatus }).then(function (modified) {","+        // the provider more likely is using non-promise async APIs or other thenable implementations, we cannot assume that. Therefore, we need"
+https://github.com/dexie/Dexie.js,312a6d2eff5bdb46b965cbd1c0183280b597bdf5,David Fahlander,2014-06-11 14:21:44+02:00,"Version 0.9.7.2 Released
+
+For a complete change log, see history of src/Dexie.js from version
+0.9.7.1 to 0.9.7.2.",dist\latest\Dexie.js,https://github.com/dexie/Dexie.js/commit/312a6d2eff5bdb46b965cbd1c0183280b597bdf5,"-                                res.then(resume, openError);","+            // the provider more likely is using non-promise async APIs or other thenable implementations, we cannot assume that."
+https://github.com/dexie/Dexie.js,61a692d0ed4713f39d6ff1b56b490d32b311e6c1,David Fahlander,2014-06-16 23:38:19+02:00,Bugfixed and migrated Syncable&Observable to new transaction method,addons\Dexie.Observable\Dexie.Observable.js,https://github.com/dexie/Dexie.js/commit/61a692d0ed4713f39d6ff1b56b490d32b311e6c1,"-                        syncNodes.add(mySyncNode).then(function () {
+-                    return trans._intercomm.add(msg).then(function (messageId) {",+                    db._syncNodes.put(mySyncNode); // This async operation may be cancelled since the browser is closing down now.
+https://github.com/dexie/Dexie.js,548742612698ebcdd490ece3459ad6e2a0b72681,David Fahlander,2014-06-18 11:27:03+02:00,"Version 0.9.8 Released
+
+Version 0.9.8
+
+* New transaction style where there is no need to use provided table
+arguments. Instead, use db.[table] everywhere.
+* Sub-transaction support
+* Bugfixes in upgrade framework
+
+See commits in recent history for detailed changes.",dist\latest\Dexie.js,https://github.com/dexie/Dexie.js/commit/548742612698ebcdd490ece3459ad6e2a0b72681,"-                    var p = new Promise(function (resolve, reject) {
+-            return this.then(null, function (e) {","+        // the provider more likely is using non-promise async APIs or other thenable implementations, we cannot assume that."
+https://github.com/dexie/Dexie.js,849cdb4da69a623a7199f018652571d77f87ee92,David Fahlander,2015-04-10 09:38:55+02:00,"AMD support for Dexie.Observable #80
+
+Work in progress: AMD and CommonJS support for Dexie addons.
+
+Migrated Dexie.Observable to adapt to module environment.
+Moved API of Dexie.Observable: createUUID() static method now put on
+Dexie.Observable because it belongs there and not on Dexie.
+Changed how Dexie adapts to module environment",addons\Dexie.Observable\Dexie.Observable.js,https://github.com/dexie/Dexie.js/commit/849cdb4da69a623a7199f018652571d77f87ee92,"-                return origDelete.apply(this, arguments).then(function (result) {
+-                var promise = trans.tables._changes.add(change).then(function(rev) {
+-                }).then(function (rev) {
+-                        db._syncNodes.add(mySyncNode).then(function () {
+-                }).then(cleanup);
+-            }).then(function (nodeWasUpdated) {
+-                readChanges(Dexie.Observable.latestRevision[db.name]).then(cleanup).then(consumeIntercommMessages).finally(function () {
+-                }).then(function () {
+-                }).then(function () {
+-                    db._syncNodes.update(nodeID, { deleteTimeStamp: 1, lastHeartBeat: 0 }).then(cleanup);
+-                    return db._intercomm.add(msg).then(function (messageId) {
+-                            return new Promise(function (resolve, reject) {
+-                return res.then(function () {","+                        db._syncNodes.put(mySyncNode); // This async operation may be cancelled since the browser is closing down now.
++                db._syncNodes.put(mySyncNode); // This async operation may be cancelled since the browser is closing down now."
+https://github.com/dexie/Dexie.js,ec25bcba1fdfc4accc0adc91545c7c501a1f082f,David Fahlander,2015-11-10 16:48:30+01:00,"Build system with rollup to having source in es6 style modules and compile to umd for es5 in dist.
+
+To build: npm run build
+
+Still need to parse/replace comments regarding alpha stage. Need to script that.",src\Dexie.js,https://github.com/dexie/Dexie.js/commit/ec25bcba1fdfc4accc0adc91545c7c501a1f082f,"-                var blockedPromise = new Promise(function (resolve, reject) {
+-                            p.then(resolve, reject);
+-                            //   db.friends.put({name: ""Arne""}).then(function () {
+-                return new Promise(function (resolve, reject) {
+-            return new Promise(fn);
+-            return new Promise(function (resolve, reject) {
+-                                    res.then(resume, function (err) {
+-            return new Promise(function (resolve, reject) {
+-                new Promise(function () {
+-                                                // execution of Promise.then() callbacks until the're all done.
+-                    if (fake) return new Promise(fn); // Simplify the work for Intellisense/Code completion.
+-                    }).then(cb);
+-                    }).then(cb);
+-                                trans.tables[self.name].add(obj).then(resolve, reject);
+-                                }).then(function (count) {
+-                                }).then(resolve, reject);
+-                // PSD data is bound to a Promise and any child Promise emitted through then() or resolve( new Promise() ).
+-                this.tables[this.storeNames[0]].get(0).then(cb);
+-                        p = self.active ? new Promise(function (resolve, reject) {
+-                        p = new Promise(function (resolve, reject) {
+-                                self._promise(mode, fn, bWriteLock).then(resolve, reject);
+-                        return ctx.table._idbstore(READONLY, fn).then(cb);
+-                    if (fake) return Promise.resolve(0).then(cb);
+-                    }).then(cb);
+-                    return this.limit(1).toArray(function (a) { return a[0]; }).then(cb);
+-                    if (fake) return new Promise(this.eachKey.bind(this)).then(function(x) { return [x]; }).then(cb);
+-                    }).then(function () {
+-                    }).then(cb);
+-                    return this.limit(1).keys(function (a) { return a[0]; }).then(cb);
+-    // the caller of new Promise() can be certain that the promise wont be triggered the lines after constructing the promise. We fix this by using the member variable constructing to check
+-    // Also, the event new Promise().onuncatched is called in case no one catches a reject call. This is used for us to manually bubble any request
+-                            //newValue instanceof Promise ? newValue._then(resolve, reject) : newValue.then(resolve, reject);
+-                            newValue.then(resolve, reject);
+-            return new Promise(function (resolve, reject) {
+-            var p = new Promise(function (resolve, reject) {
+-            if (arguments.length === 1) return this.then(null, onRejected);
+-            if (typeof type === 'function') return this.then(null, function (e) {
+-            else return this.then(null, function (e) {
+-            return this.then(function (value) {
+-            var p = new Promise(function () { });
+-            var p = new Promise(function () { });
+-            return new Promise(function (resolve, reject) {
+-                    value.then(resolve, reject);
+-                return res.then(function () {
+-        return new Dexie(name).open().then(function(db) {
+-        }).then(cb);","+                            // clone obj before this async call. If caller modifies obj the line after put(), the IDB spec requires that it should not affect operation.
++    // the provider more likely is using non-promise async APIs or other thenable implementations, we cannot assume that."
+https://github.com/dexie/Dexie.js,7a2f428c137f436b2ae5a2fa5c0721def5398ffc,David Fahlander,2015-11-17 22:50:15+01:00,"Changed async() and spawn() to become truly Promise implementation agnostic, to the cost of not ensuring to return a Promise in case an exception is thrown before first yield (in which case exception is not encapsulated in a Promise) and in case the async function never yields a Thenable, in which case the async function will return the value as is.
+
+This is an experimental way as a test of how ES7 await/async should work - rather than hard coding it for the standard Promise, let it adjust to different Promise implementations as discussed in https://github.com/tc39/ecmascript-asyncawait/issues/40 and https://github.com/tc39/ecmascript-asyncawait/issues/73.",addons\dexie-yield\dist\dexie-yield.es6.js,https://github.com/dexie/Dexie.js/commit/7a2f428c137f436b2ae5a2fa5c0721def5398ffc,"-                    return Promise.all(next.value).then(onSuccess, onError);
+-                    return Promise.resolve(next.value).then(onSuccess, onError);
+-            return next.value.then(onSuccess, onError);",+    // Adjust db.transaction() to handle iterable functions as async without explicitely having to write async() around the transaction scope func:
+https://github.com/dexie/Dexie.js,fba60472254157b1c808f363f55d325ef68f744c,David Fahlander,2016-02-11 23:48:12+01:00,Build output,dist\dexie.es6.js,https://github.com/dexie/Dexie.js/commit/fba60472254157b1c808f363f55d325ef68f744c,"-            var blockedPromise = new Promise(function (resolve, reject) {
+-                        p.then(resolve, reject);
+-                        //   db.friends.put({name: ""Arne""}).then(function () {
+-            return new Promise(function (resolve, reject) {
+-        return new Promise(fn);
+-        return new Promise(function (resolve, reject) {
+-                                res.then(resume, function (err) {
+-        return new Promise(function (resolve, reject) {
+-            new Promise(function () {
+-                                            // execution of Promise.then() callbacks until the're all done.
+-                if (fake) return new Promise(fn); // Simplify the work for Intellisense/Code completion.
+-                }).then(cb);
+-                }).then(cb);
+-                            trans.tables[self.name].add(obj).then(resolve, reject);
+-                            }).then(function (count) {
+-                            }).then(resolve, reject);
+-            // PSD data is bound to a Promise and any child Promise emitted through then() or resolve( new Promise() ).
+-            this.tables[this.storeNames[0]].get(0).then(cb);
+-                    p = self.active ? new Promise(function (resolve, reject) {
+-                    p = new Promise(function (resolve, reject) {
+-                            self._promise(mode, fn, bWriteLock).then(resolve, reject);
+-                    return ctx.table._idbstore(READONLY, fn).then(cb);
+-                if (fake) return Promise.resolve(0).then(cb);
+-                }).then(cb);
+-                return this.limit(1).toArray(function (a) { return a[0]; }).then(cb);
+-                if (fake) return new Promise(this.eachKey.bind(this)).then(function(x) { return [x]; }).then(cb);
+-                }).then(function () {
+-                }).then(cb);
+-                return this.limit(1).keys(function (a) { return a[0]; }).then(cb);
+-// the caller of new Promise() can be certain that the promise wont be triggered the lines after constructing the promise. We fix this by using the member variable constructing to check
+-// Also, the event new Promise().onuncatched is called in case no one catches a reject call. This is used for us to manually bubble any request
+-                        //newValue instanceof Promise ? newValue._then(resolve, reject) : newValue.then(resolve, reject);
+-                        newValue.then(resolve, reject);
+-        return new Promise(function (resolve, reject) {
+-        var p = new Promise(function (resolve, reject) {
+-        if (arguments.length === 1) return this.then(null, onRejected);
+-        if (typeof type === 'function') return this.then(null, function (e) {
+-        else return this.then(null, function (e) {
+-        return this.then(function (value) {
+-        var p = new Promise(function () { });
+-        var p = new Promise(function () { });
+-        return new Promise(function (resolve, reject) {
+-                value.then(resolve, reject);
+-            return res.then(function () {
+-    return new Dexie(name).open().then(function(db) {
+-    return new Promise(function (resolve, reject) {
+-    }).then(cb);","+                                // clone obj before this async call. If caller modifies obj the line after put(), the IDB spec requires that it should not affect operation.
++        // the provider more likely is using non-promise async APIs or other thenable implementations, we cannot assume that."
+https://github.com/dexie/Dexie.js,f891815d9613b538ced0aebe463c52d0c1746b05,David Fahlander,2016-02-16 00:37:06+01:00,"Let applyStructure be used outside of Dexie
+
+applyStructure() is a function used internally by Dexie.mapToClass() and
+Dexie.defineClass() and can be a handy way to define a javascript
+interface in plain javascript. Could be handy to use outside of Dexie.
+Specifically in my own project. So I put it on Dexie as a static method.",src\Dexie.js,https://github.com/dexie/Dexie.js/commit/f891815d9613b538ced0aebe463c52d0c1746b05,"-            var blockedPromise = new Promise(function (resolve, reject) {
+-                        p.then(resolve, reject);
+-                        //   db.friends.put({name: ""Arne""}).then(function () {
+-            return new Promise(function (resolve, reject) {
+-        return new Promise(fn);
+-        return new Promise(function (resolve, reject) {
+-                                res.then(resume, function (err) {
+-        return new Promise(function (resolve, reject) {
+-            new Promise(function () {
+-                                            // execution of Promise.then() callbacks until the're all done.
+-                if (fake) return new Promise(fn); // Simplify the work for Intellisense/Code completion.
+-                }).then(cb);
+-                }).then(cb);
+-                            trans.tables[self.name].add(obj).then(resolve, reject);
+-                            }).then(function (count) {
+-                            }).then(resolve, reject);
+-            // PSD data is bound to a Promise and any child Promise emitted through then() or resolve( new Promise() ).
+-            this.tables[this.storeNames[0]].get(0).then(cb);
+-                    p = self.active ? new Promise(function (resolve, reject) {
+-                    return ctx.table._idbstore(READONLY, fn).then(cb);
+-                if (fake) return Promise.resolve(0).then(cb);
+-                }).then(cb);
+-                return this.limit(1).toArray(function (a) { return a[0]; }).then(cb);
+-                if (fake) return new Promise(this.eachKey.bind(this)).then(function(x) { return [x]; }).then(cb);
+-                }).then(function () {
+-                }).then(cb);
+-                return this.limit(1).keys(function (a) { return a[0]; }).then(cb);
+-// the caller of new Promise() can be certain that the promise wont be triggered the lines after constructing the promise. We fix this by using the member variable constructing to check
+-// Also, the event new Promise().onuncatched is called in case no one catches a reject call. This is used for us to manually bubble any request
+-                        //newValue instanceof Promise ? newValue._then(resolve, reject) : newValue.then(resolve, reject);
+-                        newValue.then(resolve, reject);
+-        return new Promise(function (resolve, reject) {
+-        var p = new Promise(function (resolve, reject) {
+-        if (arguments.length === 1) return this.then(null, onRejected);
+-        if (typeof type === 'function') return this.then(null, function (e) {
+-        else return this.then(null, function (e) {
+-        return this.then(function (value) {
+-        var p = new Promise(function () { });
+-        var p = new Promise(function () { });
+-        return new Promise(function (resolve, reject) {
+-                value.then(resolve, reject);
+-            return res.then(function () {
+-    return new Dexie(name).open().then(function(db) {
+-    return new Promise(function (resolve, reject) {
+-    }).then(cb);","+                                // clone obj before this async call. If caller modifies obj the line after put(), the IDB spec requires that it should not affect operation.
++        // the provider more likely is using non-promise async APIs or other thenable implementations, we cannot assume that."
+https://github.com/dexie/Dexie.js,effd7f4f23f70679febab995b126a556882362fc,David Fahlander,2016-03-03 00:22:53+01:00,"Preparing for ES6-ify plugins - ES6-ified the unit tests.
+
+* Rewrote build- and watch scripts to be more generic for use from plugins.
+* Using babel-node to execute npm run build.",build\build-utils.js,https://github.com/dexie/Dexie.js/commit/effd7f4f23f70679febab995b126a556882362fc,"-    return new Promise((resolve, reject) => {
+-    return readFile(source).then(content => new Promise((resolve, reject) =>
+-    )).then(gzipped => writeFile(destination, gzipped));
+-    return new Promise((resolve, reject) =>
+-    return new Promise((resolve, reject) =>
+-        .then(content => replace(content, replacements))
+-        .then(replacedContent => writeFile(filename, replacedContent));
+-            .then(onTimeout);
+-    .then(() =>rollup.rollup({ entry: ""tmp/Dexie.js"" }))
+-    .then(bundle =>bundle.write({
+-    .then(() => replaceInFile(""dist/dexie.js"", varsToReplace))
+-    .then(() => {
+-            return rollup.rollup({ entry: ""src/Dexie.js"" }).then(bundle =>
+-                .then(() => replaceInFile(""dist/dexie.es6.js"", varsToReplace));
+-    .then(() => {
+-    .then(() => {
+-    .then(() => {","+export async function build (optionsList, replacements) {
++    await mkdir(""tmp/"");
++    await Promise.all(
++        let files = flatten(await Promise.all(options.dirs.map(dir => readdir(dir))));
++        await rebuildFiles(options, replacements, files);
++export async function rebuildFiles(options, replacements, files) {
++    /*await Promise.all(files
++        await babelTransform(file, `tmp/${file}`);
++    //await Promise.all(bundles.map(bundleInfo => makeBundle(bundleInfo, replacements)));
++        await makeBundle(bundleInfo, replacements);
++async function makeBundle (bundleInfo, replacements) {
++    //await Promise.all(bundleInfo.rollups.map(rollupInfo => rollupAndMinify(rollupInfo)));
++        await rollupAndMinify(rollupInfo);
++        await copyFile (bundleInfo.entry, bundleInfo.dts);
++        await Promise.all(bundleInfo.targets
++async function rollupAndMinify(rollupInfo) {
++    let bundle = await rollup.rollup({
++    await bundle.write(rollupInfo.rollupCfg);
++        await writeFile(rollupInfo.min.file, result.code);
++            await writeFile(rollupInfo.min.map, result.map);
++            await gzip(rollupInfo.min.file, rollupInfo.min.gz);
++export async function buildAndWatch (optionsList, version) {
++    await build(optionsList, {
++        watch(options.dirs, throttle(50, async function (calls) {
++                    let anythingRebuilt = await rebuildFiles(options, {
++export async function gzip(source, destination) {
++    let content = await readFile(source);
++    let gzipped = await zlib.gzipAsync(content);
++    await fs.writeFileAsync(destination, gzipped);
++export async function replaceInFile(filename, replacements) {
++    let content = await readFile(filename);
++        await writeFile(filename, replacedContent);
++export async function readdir(dir) {
++    let files = await fs.readdirAsync(dir);
++async function mkdir (dir) {
++    if (!await fileExists(dir))
++        await fs.mkdirAsync(dir);"
+https://github.com/dexie/Dexie.js,1678e359f8bdc195c53eb070b884b41443f32ca5,David Fahlander,2016-03-03 15:36:03+01:00,Build outputs,dist\dexie.es6.js,https://github.com/dexie/Dexie.js/commit/1678e359f8bdc195c53eb070b884b41443f32ca5,"-                var blockedPromise = new Promise(function (resolve, reject) {
+-                            p.then(resolve, reject);
+-                            //   db.friends.put({name: ""Arne""}).then(function () {
+-                return new Promise(function (resolve, reject) {
+-            return new Promise(fn);
+-                                    res.then(resume, function (err) {
+-            return new Promise(function (resolve, reject) {
+-                                                // execution of Promise.then() callbacks until the're all done.
+-                    if (fake) return new Promise(fn); // Simplify the work for Intellisense/Code completion.
+-                    }).then(cb);
+-                    }).then(cb);
+-                                trans.tables[self.name].add(obj).then(resolve, reject);
+-                                }).then(function (count) {
+-                                }).then(resolve, reject);
+-                // PSD data is bound to a Promise and any child Promise emitted through then() or resolve( new Promise() ).
+-                this.tables[this.storeNames[0]].get(0).then(cb);
+-                        p = self.active ? new Promise(function (resolve, reject) {
+-                        p = new Promise(function (resolve, reject) {
+-                                self._promise(mode, fn, bWriteLock).then(resolve, reject);
+-                        return ctx.table._idbstore(READONLY, fn).then(cb);
+-                    if (fake) return Promise.resolve(0).then(cb);
+-                    }).then(cb);
+-                    return this.limit(1).toArray(function (a) { return a[0]; }).then(cb);
+-                    if (fake) return new Promise(this.eachKey.bind(this)).then(function(x) { return [x]; }).then(cb);
+-                    }).then(function () {
+-                    }).then(cb);
+-                    return this.limit(1).keys(function (a) { return a[0]; }).then(cb);
+-    // the caller of new Promise() can be certain that the promise wont be triggered the lines after constructing the promise. We fix this by using the member variable constructing to check
+-    // Also, the event new Promise().onuncatched is called in case no one catches a reject call. This is used for us to manually bubble any request
+-                            //newValue instanceof Promise ? newValue._then(resolve, reject) : newValue.then(resolve, reject);
+-                            newValue.then(resolve, reject);
+-            return new Promise(function (resolve, reject) {
+-            var p = new Promise(function (resolve, reject) {
+-            if (arguments.length === 1) return this.then(null, onRejected);
+-            if (typeof type === 'function') return this.then(null, function (e) {
+-            else return this.then(null, function (e) {
+-            return this.then(function (value) {
+-            var p = new Promise(function () { });
+-            var p = new Promise(function () { });
+-            return new Promise(function (resolve, reject) {
+-                    value.then(resolve, reject);
+-                return res.then(function () {
+-        return new Dexie(name).open().then(function(db) {
+-        return new Promise(function (resolve, reject) {
+-        }).then(cb);","+                            // clone obj before this async call. If caller modifies obj the line after put(), the IDB spec requires that it should not affect operation.
++    // the provider more likely is using non-promise async APIs or other thenable implementations, we cannot assume that."
+https://github.com/dexie/Dexie.js,d8d0e36662aa095642b73713274c502a3428afb9,David Fahlander,2016-03-15 01:13:18+01:00,Refactored out code to separate modules.,src\Dexie.js,https://github.com/dexie/Dexie.js/commit/d8d0e36662aa095642b73713274c502a3428afb9,"-                var blockedPromise = new Promise(function (resolve, reject) {
+-                            p.then(resolve, reject);
+-                            //   db.friends.put({name: ""Arne""}).then(function () {
+-                return new Promise(function (resolve, reject) {
+-            return new Promise(fn);
+-                return new Promise((resolve, reject) => db._whenReady(function () { resolve(db); }, function (e) { reject(e); }));
+-            return new Promise(function (resolve, reject) {
+-                                    res.then(resume, function (err) {
+-            return new Promise(function (resolve, reject) {
+-                                                // execution of Promise.then() callbacks until the're all done.
+-                    if (fake) return new Promise(fn); // Simplify the work for Intellisense/Code completion.
+-                    }).then(cb);
+-                    }).then(cb);
+-                                trans.tables[self.name].add(obj).then(resolve, reject);
+-                                }).then(function (count) {
+-                                }).then(resolve, reject);
+-                // PSD data is bound to a Promise and any child Promise emitted through then() or resolve( new Promise() ).
+-                this.tables[this.storeNames[0]].get(0).then(cb);
+-                        p = self.active ? new Promise(function (resolve, reject) {
+-                        p = new Promise(function (resolve, reject) {
+-                                self._promise(mode, fn, bWriteLock).then(resolve, reject);
+-                        return ctx.table._idbstore(READONLY, fn).then(cb);
+-                    if (fake) return Promise.resolve(0).then(cb);
+-                    }).then(cb);
+-                    return this.limit(1).toArray(function (a) { return a[0]; }).then(cb);
+-                    if (fake) return new Promise(this.eachKey.bind(this)).then(function(x) { return [x]; }).then(cb);
+-                    }).then(function () {
+-                    }).then(cb);
+-                    return this.limit(1).keys(function (a) { return a[0]; }).then(cb);
+-    // the caller of new Promise() can be certain that the promise wont be triggered the lines after constructing the promise. We fix this by using the member variable constructing to check
+-    // Also, the event new Promise().onuncatched is called in case no one catches a reject call. This is used for us to manually bubble any request
+-                            //newValue instanceof Promise ? newValue._then(resolve, reject) : newValue.then(resolve, reject);
+-                            newValue.then(resolve, reject);
+-            return new Promise(function (resolve, reject) {
+-            var p = new Promise(function (resolve, reject) {
+-            if (arguments.length === 1) return this.then(null, onRejected);
+-            if (typeof type === 'function') return this.then(null, function (e) {
+-            else return this.then(null, function (e) {
+-            return this.then(function (value) {
+-            var p = new Promise(function () { });
+-            var p = new Promise(function () { });
+-            return new Promise(function (resolve, reject) {
+-                    value.then(resolve, reject);
+-                return res.then(function () {
+-                        value.then(onSuccess, onError));
+-                value.constructor.all(values).then(onSuccess, onError) :
+-        return new Dexie(name).open().then(db=>{
+-        return new Promise(function (resolve, reject) {
+-        }).then(cb);","+                            // scopeFunc returned an iterable. Handle yield as await.
++                            // clone obj before this async call. If caller modifies obj the line after put(), the IDB spec requires that it should not affect operation.
++    // the provider more likely is using non-promise async APIs or other thenable implementations, we cannot assume that.
++Dexie.async = function (generatorFn) {"
+https://github.com/dexie/Dexie.js,c24218ca42e6ef8ede7a158d66a6372c3f005605,David Fahlander,2016-04-15 15:16:10+02:00,"WIP: Promise.js feels solid. Not tested at all. Very much reviewed and mippled with and documented the source.
+Dexie.js is NOT WORKING STATE.",src\Dexie.js,https://github.com/dexie/Dexie.js/commit/c24218ca42e6ef8ede7a158d66a6372c3f005605,"-            return new Promise((resolve, reject) => db._whenReady(function () { resolve(db); }, function (e) { reject(e); }));
+-                                            // execution of Promise.then() callbacks until the're all done.
+-            this.tables[this.storeNames[0]].get(0).then(cb);",+                        // scopeFunc returned an iterable. Handle yield as await.
+https://github.com/dexie/Dexie.js,c24218ca42e6ef8ede7a158d66a6372c3f005605,David Fahlander,2016-04-15 15:16:10+02:00,"WIP: Promise.js feels solid. Not tested at all. Very much reviewed and mippled with and documented the source.
+Dexie.js is NOT WORKING STATE.",src\Promise.js,https://github.com/dexie/Dexie.js/commit/c24218ca42e6ef8ede7a158d66a6372c3f005605,"-// the caller of new Promise() can be certain that the promise wont be triggered the lines after constructing the promise. We fix this by using the member variable constructing to check
+-// Also, the event new Promise().onuncatched is called in case no one catches a reject call. This is used for us to manually bubble any request
+-                            value.then(resolve, reject);
+-        var p = new Promise(function () { });
+-        var p = new Promise(function () { });",+    currentFulfiller = null; // To be able to have long stacks and follow async flow.
+https://github.com/dexie/Dexie.js,6604b56f3ad8772c1b4204e2159c9e5760900170,David Fahlander,2016-04-19 11:56:46+02:00,"New promise library seems to be complete.
+Works well in promise-tests but not yet adjusted Dexie for the new Promise class.
+Also, not yet tested the new interopability with standard promises.",src\Promise.js,https://github.com/dexie/Dexie.js/commit/6604b56f3ad8772c1b4204e2159c9e5760900170,"-        var p = new Promise((resolve, reject) => {",+export var flowFinalizers = []; // Finalizers to call when there are no more async calls scheduled.
+https://github.com/dexie/Dexie.js,261da9515065d5f5ac11d4b16aeb7f069f684b53,David Fahlander,2016-04-21 02:47:56+02:00,"WIP: Promise refactored and debugged.
+Dexie.js fails completely still. (Not any unit test succeeds except Promise tests).",src\Promise.js,https://github.com/dexie/Dexie.js/commit/261da9515065d5f5ac11d4b16aeb7f069f684b53,"-                                value.then(resolve, reject);
+-        return new Promise((resolve, reject) => {
+-        return new Promise(resolve => {",+export var tickFinalizers = []; // Finalizers to call when there are no more async calls scheduled within current physical tick.
+https://github.com/dexie/Dexie.js,91803ddb170abb75752ab12623e6ecd540806a5b,David Fahlander,2016-04-22 17:23:46+02:00,"Fixed transaction keep alive between ticks.
+BUT NOw we have a real problem: transaction unit tests fails when ran after each other but succeeds when running one by one. ?!!",src\Dexie.js,https://github.com/dexie/Dexie.js/commit/91803ddb170abb75752ab12623e6ecd540806a5b,"-            }).then(()=>{
+-            }).then(()=>{
+-        this._completion.then(()=>{this.on.complete.fire()}, e => {this.on.error.fire(e)});",+                            // scopeFunc returned an iterable. Handle yield as await.
+https://github.com/dexie/Dexie.js,f55275b5052eea510a42fceb97b963563151e769,David Fahlander,2016-04-26 15:30:46+02:00,WIP: It's starting to function on most unit tests. Still need to rewrite upgrade handling.,src\Dexie.js,https://github.com/dexie/Dexie.js/commit/f55275b5052eea510a42fceb97b963563151e769,"-            var blockedPromise = new Promise(function (resolve, reject) {
+-                        p.then(resolve, reject);
+-            return new Promise(function (resolve, reject) {
+-        return new Promise(fn);
+-        return new Promise(function (resolve, reject) {
+-                                res.then(resume, function (err) {
+-        }).then(function (){
+-                }).then(()=>{",+            // call and await all on('ready') subscribers:
+https://github.com/dexie/Dexie.js,4e9905c2d2286d2020d8788fe9853388b8057118,David Fahlander,2016-04-29 13:30:26+02:00,"* Code cleanup
+* Support for iterables in Promise.all() and Promise.race()
+* Support for iterables in WhereClause methods that takes arrays, such as anyOf()
+* No leaking arguments (https://github.com/petkaantonov/bluebird/wiki/Optimization-killers#32-leaking-arguments)
+* Removed much of false positives unhandled rejection logs. Still some remaining when exception is thrown in populate event.
+* Bugfix and new unit test: Calling db.open() a second time would always resolve even if an error occurred.",src\Dexie.js,https://github.com/dexie/Dexie.js/commit/4e9905c2d2286d2020d8788fe9853388b8057118,"-            value.constructor.all(values).then(onSuccess, onError) :",+                            // scopeFunc returned an iterator with throw-support. Handle yield as await.
+https://github.com/dexie/Dexie.js,990db78981417b9c1419ece72c777e22eff0b87b,David Fahlander,2016-04-29 14:20:22+02:00,Bugfix: bulk-methods didn't throw correctly if used in a readonly transaction.,src\Dexie.js,https://github.com/dexie/Dexie.js/commit/990db78981417b9c1419ece72c777e22eff0b87b,"-                if (fake) return new Promise(fn); // Simplify the work for Intellisense/Code completion.
+-                }).then(cb);
+-                        .then(()=>{}); // Resolve with undefined.
+-                            }).then(()=> {
+-                            }).then(lastAddedKey => {
+-                        promise.then(done).catch(BulkError, e => {
+-                            trans.tables[self.name].add(obj).then(resolve, reject);
+-                            }).then(function (count) {
+-                            }).then(resolve, reject);","+                        // clone obj before this async call. If caller modifies obj the line after put(), the IDB spec requires that it should not affect operation."
+https://github.com/dexie/Dexie.js,eb75db054c4372061c23700d4d4ddc0ff414efd9,David Fahlander,2016-05-10 01:53:09+02:00,Code restructuring only.,src\Dexie.js,https://github.com/dexie/Dexie.js/commit/eb75db054c4372061c23700d4d4ddc0ff414efd9,"-    return new Dexie(name).open().then(db=>{
+-    return new Promise(function (resolve, reject) {
+-    }).then(cb);","+        // the provider more likely is using non-promise async APIs or other thenable implementations, we cannot assume that.
++    async: function (generatorFn) {"
+https://github.com/dexie/Dexie.js,8dd6ff4d0edb15b75ff57088e490f9d34f31cf19,David Fahlander,2016-10-04 10:52:38+02:00,Rewritten to support both native and transpiled async await on all browsers and transilers. Not tested at all.,src\Promise.js,https://github.com/dexie/Dexie.js/commit/8dd6ff4d0edb15b75ff57088e490f9d34f31cf19,"-        var rv = new Promise((resolve, reject) => {","+    // await calls in Chrome and future IDB+Promise capable browsers)
++                // '.then' invoked lazily. Keep abreast of switching zones in an ES7 await compatible manner."
+https://github.com/dexie/Dexie.js,693f856184dddb181d6cccd6ac6534937368e861,David Fahlander,2016-10-06 15:41:39+02:00,"Works again after long day rewrite.
+However, I am not satisfied with patching own promises like I'm currently doing.",src\Promise.js,https://github.com/dexie/Dexie.js/commit/693f856184dddb181d6cccd6ac6534937368e861,"-                var rv = new Promise((resolve, reject) => {","+            return new Function(""let p=(async ()=>{})(); return [p, Object.getPrototypeOf(p)];"")();
++            return [P && P.resolve(), P && P.prototype]; // Support transpiled async functions
++        // Set this Promise to window.Promise so that Typescript 2.0's async functions will work on Firefox, Safari and IE, as well as with Zonejs and angular.
++        // Make native async functions work according to their standard specification but invoke our zones"
+https://github.com/dexie/Dexie.js,148fd41ce73b999895295543d299d8ddda7c2db9,David Fahlander,2016-10-25 21:39:35+02:00,wip debugging stuff. No clue.,src\Promise.js,https://github.com/dexie/Dexie.js/commit/148fd41ce73b999895295543d299d8ddda7c2db9,-        resolvedGlobalPromise.then(physicalTick);} ) }:,"+            return new Function(""let F = async ()=>{};let p=F(); return [p, Object.getPrototypeOf(p), F.constructor];"")();
++            return [P && P.resolve(), P && P.prototype, null]; // Support transpiled async functions
++    bStackIsEmpty = true; // To detect possible native await calls in 'then' method.
++                return targetZone.onforeign && targetZone.onforeign(); // Foreign async call has occurred.
++    bStackIsEmpty = true; // To detect possible native await calls in 'then' method."
+https://github.com/dexie/Dexie.js,148fd41ce73b999895295543d299d8ddda7c2db9,David Fahlander,2016-10-25 21:39:35+02:00,wip debugging stuff. No clue.,test\tests-asyncawait.js,https://github.com/dexie/Dexie.js/commit/148fd41ce73b999895295543d299d8ddda7c2db9,-    let mutationObserverPromise = new Promise(resolve=>{,"+            await 3;
++            ok(Dexie.currentTransaction === trans, ""Transaction persisted between await calls of primitive(!)"");
++            await db.transaction('r', db.items, async innerTrans => {
++                let x = await db.items.get(1);"
+https://github.com/dexie/Dexie.js,b5b2c0d70b10b51cf6682cdca970af0aba034164,David Fahlander,2016-10-25 23:44:11+02:00,"Middle of debugging
+Dexie.js line 1240.
+
+Test:
+
+http://localhost:8080/addons/Dexie.Syncable/test/test-syncable-dexie-tests.html?testNumber=15",src\Dexie.js,https://github.com/dexie/Dexie.js/commit/b5b2c0d70b10b51cf6682cdca970af0aba034164,"-                        self.add(obj).then(resolve, reject);
+-                        }).then(function (count) {
+-                        }).then(resolve, reject);
+-                    p = self.active ? new Promise(function (resolve, reject) {
+-                    p = new Promise(function (resolve, reject) {
+-                            self._promise(mode, fn, bWriteLock).then(resolve, reject);","+                // clone obj before this async call. If caller modifies obj the line after put(), the IDB spec requires that it should not affect operation."
+https://github.com/dexie/Dexie.js,68b6ee3dc3bab5cb6d376c094074e9db53ddc842,David Fahlander,2016-10-28 00:49:07+02:00,"Works on Chrome 55 beta now!
+Must remove debugger, console.log and make sure eslint works though. Also need to cleanup the code.",src\Promise.js,https://github.com/dexie/Dexie.js/commit/68b6ee3dc3bab5cb6d376c094074e9db53ddc842,"-        return possiblePromise.then(x => (decrementEspectedAwaits(taskId), x));","+            return new Function(""let p=(async ()=>{})();return [p,Object.getPrototypeOf(p)];"")();
++    ++task.echoes; // Will be 1 on first start (enough to prepare before knowing if we will expect an await in the task)"
+https://github.com/dexie/Dexie.js,68b6ee3dc3bab5cb6d376c094074e9db53ddc842,David Fahlander,2016-10-28 00:49:07+02:00,"Works on Chrome 55 beta now!
+Must remove debugger, console.log and make sure eslint works though. Also need to cleanup the code.",test\tests-asyncawait.js,https://github.com/dexie/Dexie.js/commit/68b6ee3dc3bab5cb6d376c094074e9db53ddc842,"-        return NativePromise.resolve().then(()=> {
+-    db.transaction('rw', db.items, TheAsyncFunction).then(()=>{","+            await Dexie.Promise.resolve();
++            ok(Dexie.currentTransaction === trans, ""Transaction persisted between await calls of Dexie.Promise synch"");
++        var p1 = db.transaction('r', db.items, async ()=> {
++            console.log(""Before await 3"");
++            await 3;
++            ok(Dexie.currentTransaction === trans, ""Should still be in same transaction 1.0 - after await 3"");
++            await 4;
++            ok(Dexie.currentTransaction === trans, ""Should still be in same transaction 1.0 - after await 4"");
++            await 5;
++            ok(Dexie.currentTransaction === trans, ""Should still be in same transaction 1.0 - after await 5"");
++            await db.items.get(1);
++            await 6;
++            ok(Dexie.currentTransaction === trans, ""Should still be in same transaction 1.1 - after await 6"");
++            await subFunc(1);
++            ok(Dexie.currentTransaction === trans, ""Should still be in same transaction 1.2 - after async subFunc()"");
++            await Promise.all([subFunc(11), subFunc(12), subFunc(13)]);
++            await subFunc2_syncResult();
++            ok(Dexie.currentTransaction === trans, ""Should still be in same transaction 1.4 - after async subFunc_syncResult()"");
++            await Promise.all([subFunc2_syncResult(), subFunc2_syncResult(), subFunc2_syncResult()]);
++        var p2 = db.transaction('r', db.items, async ()=> {
++            await 3;
++            ok(Dexie.currentTransaction === trans, ""Should still be in same transaction 2.0 - after await 3"");
++            await db.items.get(1);
++            await subFunc(2);
++            ok(Dexie.currentTransaction === trans, ""Should still be in same transaction 2.2 - after async subFunc()"");
++            await Promise.all([subFunc(21), subFunc(22), subFunc(23)]);
++            await subFunc2_syncResult();
++            ok(Dexie.currentTransaction === trans, ""Should still be in same transaction 2.4 - after async subFunc_syncResult()"");
++            await Promise.all([subFunc2_syncResult(), subFunc2_syncResult(), subFunc2_syncResult()]);
++        async function subFunc(n) {
++            console.log(""subFunc(""+n+""): before await 3, task: "" + JSON.stringify(Dexie.Promise.task));
++            await 3;
++            console.log(""subFunc(""+n+""): before await db. task: "" + JSON.stringify(Dexie.Promise.task));
++            let result = await db.items.get(2);
++            console.log(""subFunc(""+n+""): After await db. task: "" + JSON.stringify(Dexie.Promise.task));
++        async function subFunc2_syncResult() {
++            let result = await 3;
++asyncTest(""Should be able to await Promise.all()"", ()=>{
++    `return db.transaction('r', db.items, async (trans)=>{
++        await Promise.all([1,2,3, db.items.get(2)]);
++        await Promise.all([subAsync(), 2, 3, subAsync()]);
++        ok(Dexie.currentTransaction === trans, ""Still same transaction 2 - after await Promise.all([subAsync(), 2, 3, subAsync()]);"");
++        await db.items.get(1);
++        ok(Dexie.currentTransaction === trans, ""Still same transaction 3 - after await db.items.get(1);"");
++        await 3;
++        ok(Dexie.currentTransaction === trans, ""Still same transaction 4 - after await 3;"");
++    async function subAsync () {
++        await 1;
++        await db.items.get(77);"
+https://github.com/dexie/Dexie.js,7bbe9ca6e18564dd8ba2f7b4b7a1481dd9604e91,David Fahlander,2016-10-28 01:46:35+02:00,WIP: Cleaning up code,src\Dexie.js,https://github.com/dexie/Dexie.js/commit/7bbe9ca6e18564dd8ba2f7b4b7a1481dd9604e91,-                return Promise.resolve(returnValue).then(x => {,+                            // Support for native async await
+https://github.com/dexie/Dexie.js,d66c0427df2b1a0621e38fc2a0b0742230398787,David Fahlander,2016-10-31 14:45:54+01:00,Fix issue with IE WebWorker,src\Promise.js,https://github.com/dexie/Dexie.js/commit/d66c0427df2b1a0621e38fc2a0b0742230398787,"-        return possiblePromise.then(x => (decrementExpectedAwaits(taskId), x));","+            return new Function(""let F=async ()=>{};let p=F();return [p,Object.getPrototypeOf(p),Promise.resolve(),F];"")();"
+https://github.com/dexie/Dexie.js,1d67abec5eff183eefb28d2a0dcd57747ec0050e,David Fahlander,2016-10-31 14:59:29+01:00,"Possible to opt-out from native async handling
+Supporting native async functions requres zone echoing. But zone echoing has the side-effect of propagating transaction zones to MutationObservers. This commit makes it possible to opt-out from zone-echoing by not using a native async function as argument to db.transaction().",src\Dexie.js,https://github.com/dexie/Dexie.js/commit/1d67abec5eff183eefb28d2a0dcd57747ec0050e,-                            returnValue = returnValue.then(x => {,+                // Support for native async await.
+https://github.com/dexie/Dexie.js,53b6e41af41114254545462620cfefb439e9effd,David Fahlander,2016-11-01 11:17:26+01:00,"All tests pass with syncable addon, all browsers.",src\Promise.js,https://github.com/dexie/Dexie.js/commit/53b6e41af41114254545462620cfefb439e9effd,"-// the caller of new Promise() can be certain that the promise wont be triggered the lines after constructing the promise.
+-        var rv = new Promise((resolve, reject) => {
+-        return possiblePromise.then(","+//   native async / await.
++            return new Function(`let F=async ()=>{},p=F();return [p,Object.getPrototypeOf(p),Promise.resolve(),F.constructor];`)();
++// variables used for native await support
++var zoneEchoes = 0; // zoneEchoes is a must in order to persist zones between native await expressions.
++var totalEchoes = 0; // ID counter for micro-tasks. Used to detect possible native await in our Promise.prototype.then.
++            // Set this Promise to window.Promise so that transiled async functions will work on Firefox, Safari and IE, as well as with Zonejs and angular."
+https://github.com/dexie/Dexie.js,5bf23af41c25a31599a0016309b118c9b062e7cf,Christopher Hunt,2016-11-29 01:06:10-05:00,"Upgrade QUnit (#384)
+
+* Update QUnit. Fixes #381.
+
+Also changed the paths in karma.conf and run-unit-tests to point to the
+version which will be downloaded via npm.
+
+* Upgrade tests to avoid hanging on asyncawait.
+
+Also added the options that were previously in qunit to
+QUnit.config.urlConfig. This should address the comments in #381.",test\dexie-unittest-utils.js,https://github.com/dexie/Dexie.js/commit/5bf23af41c25a31599a0016309b118c9b062e7cf,"-                .then(start);
+-                .then(start);
+-        asyncTest(name, ()=>Promise.resolve().then(asyncFunction)
+-            .then(start));
+-        asyncTest(name, num, ()=>Promise.resolve().then(asyncFunction)
+-            .then(start));","+    label: ""Long async stacks"",
++    tooltip: ""Set Dexie.debug=true, turning on long async stacks on all"" +
++            let done = assert.async();
++            let done = assert.async();
++            let done = assert.async();
++            let done = assert.async();"
+https://github.com/dexie/Dexie.js,5bf23af41c25a31599a0016309b118c9b062e7cf,Christopher Hunt,2016-11-29 01:06:10-05:00,"Upgrade QUnit (#384)
+
+* Update QUnit. Fixes #381.
+
+Also changed the paths in karma.conf and run-unit-tests to point to the
+version which will be downloaded via npm.
+
+* Upgrade tests to avoid hanging on asyncawait.
+
+Also added the options that were previously in qunit to
+QUnit.config.urlConfig. This should address the comments in #381.",test\tests-asyncawait.js,https://github.com/dexie/Dexie.js/commit/5bf23af41c25a31599a0016309b118c9b062e7cf,"-    }).then(start);
+-    F(ok, equal, Dexie, db).catch(e => ok(false, e.stack || e)).then(start);
+-    }).then(start);
+-    }).then(start);","+        let done = assert.async();
++    let done = assert.async();
++test(""Should be able to use native async await"", function(assert) {
++    let done = assert.async();
++    let done = assert.async();
++    let done = assert.async();
++test(""Should be able to await Promise.all()"", (assert) => {
++    let done = assert.async();"
+https://github.com/dexie/Dexie.js,fa2219a13f254e94ecb39d0ea71aeda3b087e01e,Christopher Hunt,2016-12-06 01:00:12-05:00,"Update upgrade tests. (#293)
+
+Refactoring the upgrade tests in preparation for the updated
+upgrade framework.",test\tests-upgrading.js,https://github.com/dexie/Dexie.js/commit/fa2219a13f254e94ecb39d0ea71aeda3b087e01e,"-    }).then(function () {
+-    }).then(function () {
+-    }).then(function () {
+-    }).then(function () {
+-    }).then(function () {
+-    }).then(function () {
+-    }).then(function () {
+-    }).then(function (array) {
+-    }).then(function () {
+-    }).then(function () {
+-    }).then(function () {
+-    }).then(function (array) {
+-    }).then(function () {
+-    }).then(function () {
+-    }).then(function () {
+-    }).then(function () {
+-    }).then(function () {
+-    }).then(function() {
+-    }).then(function () {
+-        Dexie.delete(DBNAME).then(start);
+-        Dexie.delete(""raw-db"").then(start);","+    let done = assert.async();
++    let done = assert.async();"
+https://github.com/dexie/Dexie.js,b7664d05a8395fa20fac3eb0951600f9ed067366,David Fahlander,2016-12-21 17:08:00+01:00,"Fixes 2016 12 21 (#412)
+
+* Bug in rewritten Dexie.getDatabaseNames()
+* Added missing properties to typings (d.ts) files of Dexie.d.ts and Dexie.Observable.d.ts.
+* Dexie.Syncable: Correction of initial sync handling: 
+  * Don't await db.syncable.connect() to fulfill or reject each time the local database is opened. If DB has ever been synced with remote, we should rely on the offline state until connection is restablished. No need to halt queries while connecting.
+  * Very first time a database connects to a server, we MUST be online and wait for the connect to complete. Assume that the initial sync is essential for the application to function.
+* Correction after running various unit tests for the addons:
+  * Make sure to never reopen a closed database by accident.
+* Dexie.Syncable: Made 'url' index unique as it should be. Existing db's may be needing to increment their version.
+* Unit Test framework: Respect custom qUnit checkboxes.
+* Dexie bug: When outside a transaction, exception could be thrown instead of returning a rejected promise. This happened if either A) Database had been closed, B) indexedDB API was missing or C) Database had failed to open. Corrected so that a rejected promise is returned instead.
+* Dexie: Added `db.hasBeenClosed()`",addons\Dexie.Syncable\src\Dexie.Syncable.js,https://github.com/dexie/Dexie.js/commit/b7664d05a8395fa20fac3eb0951600f9ed067366,"-                let promise = new Promise(function(resolve, reject) {
+-                            return db.syncable.connect(protocolName, url, options).then(resolve).catch(err => {","+                            // Ok, now we know whether we should await the connect promise or not."
+https://github.com/dexie/Dexie.js,efc8c8f948b1c9637109eab69bd7b11cf656e78f,Nikolas Poniros,2016-12-30 15:27:31+01:00,"Externalize intercomm
+
+Add tests for intercomm in tests-observable-misc.js
+
+Fix bug where db.on('message') was called multiple times with the same
+message everytime sendMessage was called multiple times.
+Related to: https://github.com/dfahlander/Dexie.js/issues/429
+
+Add some comments in tests-observable-misc.js
+Remove unused code. It is incomplete and seems to refer to Syncable and
+the sync protocol. Tests for that are in Dexie.Syncable.",addons\Dexie.Observable\src\Dexie.Observable.js,https://github.com/dexie/Dexie.js/commit/efc8c8f948b1c9637109eab69bd7b11cf656e78f,"-                        return db._syncNodes.add(mySyncNode).then(function() {
+-            }).then (messageId => {
+-                    rv = new Promise(function(resolve, reject) {","+                db._syncNodes.put(mySyncNode.node); // This async operation may be cancelled since the browser is closing down now.
++        db._syncNodes.put(mySyncNode.node); // This async operation may be cancelled since the browser is closing down now."
+https://github.com/dexie/Dexie.js,f431a447c3dbf28b631562290ba24151b559788d,Christopher Hunt,2017-01-03 20:34:20-05:00,"Refactoring upgrade process (#395)
+
+* Initial implementation of new upgrade process.
+
+We now upgrade one version at a time per discussion in #105.
+
+* Remove for ... of, unused functions to address review comments.
+
+* Properly cache previous table definitions.
+
+* Fix WhereClause test, hang on upgrade test, and index adjustment.
+
+There were 2 bugs in the previous implementation:
+
+1. Database was not actually being closed in `_open`
+2. Object store indices were not properly adjusted to non-Dexie
+   index names.
+
+We now properly close the database and discern the object store
+applicable to a query using either the name or key, and set the
+index name more explicitly on open.
+
+Additionally, a test has been added to check that we can use a
+database without the previous version being specified.",test\tests-upgrading.js,https://github.com/dexie/Dexie.js/commit/f431a447c3dbf28b631562290ba24151b559788d,"-    }).then(() => {
+-        return db.open().then(function () {
+-        return db.open().then(function () {
+-        Dexie.delete(DBNAME).then(done);",+    let done = assert.async();
+https://github.com/dexie/Dexie.js,5b47ca710fc22f1ddd62a57f4b04820065040b6d,David Fahlander,2017-01-04 09:36:23+01:00,"Revert ""Refactoring upgrade process"" (#436)",src\Dexie.js,https://github.com/dexie/Dexie.js/commit/5b47ca710fc22f1ddd62a57f4b04820065040b6d,"-        return next.then(() => {
+-        }).then(() => {
+-        return fake || openComplete || PSD.letThrough ? fn() : new Promise((resolve, reject) => {
+-        return new Promise((resolve, reject) => {
+-            return dbReadyPromise.then(() => dbOpenError ? Promise.reject(dbOpenError) : db);
+-        })]).then((opened_db) => {
+-        }).then(() => {
+-        this._completion = new Promise((resolve, reject) => {
+-            return new Promise((resolve, reject) => {",+            // call and await all on('ready') subscribers:
+https://github.com/dexie/Dexie.js,50a019fbc4be8e4bb256d302f6b454b61fcd2ba1,David Fahlander,2017-04-28 17:01:58+02:00,"Firefox 53 supports async but still inconmpat w IDB! (#519)
+
+Unit tests fails for Firefox 53. The unit tests that fails are those that test native async-await support.
+
+As described in #317, browser vendors (now only Firefox and Safari) still have incompatibility between their native Promise and their native IDBTransaction implementations. Dexie works around this by using its own Promise implementation, but when it comes to native async/await, we are totally in the hands of the native promise compatiblity. Chrome, Opera and Microsoft Edge have solved their previous incompatibility issues and they support both native async/await and Promise/IDB compatibility. Firefox used to lack both, but now they created the async/await support without solving the Idb/Promise incompatibility.
+
+In summary, unit tests now do a feature test whether there is compatibility between IndexedDB transactions and Promise or not. If not compatible, we won't run those unit tests since they would fail badly with TransactionInactiveError.",test\tests-asyncawait.js,https://github.com/dexie/Dexie.js/commit/50a019fbc4be8e4bb256d302f6b454b61fcd2ba1,"-    Promise.resolve().then(()=>{
+-        return Promise.resolve().then(()=> {","+        ok (true, `Promise and IndexedDB is incompatible on this browser. Native async await fails in idb transaction by reality`)
++test(""Must not leak PSD zone"", async function(assert) {
++    let compatiblity = await idbAndPromiseCompatible.catch(e=>{
++        ok (true, `Promise and IndexedDB is incompatible on this browser. Native async await fails ""by design""`);
++test(""Must not leak PSD zone2"", async function(assert) {
++                ok (true, `Promise and IndexedDB is incompatible on this browser. Native async await fails ""by design"" for indexedDB transactions`);
++test(""Should be able to await Promise.all()"", async (assert) => {
++    let compatible = await idbAndPromiseCompatible.catch(()=>false);
++        ok (true, `Promise and IndexedDB is incompatible on this browser. Native async await fails ""by design"" for indexedDB transactions`);
++            ok (true, `Promise and IndexedDB is incompatible on this browser. Native async await fails ""by design"" for indexedDB transactions`);
++    let compatible = await idbAndPromiseCompatible.catch(()=>false);
++        ok (true, `Promise and IndexedDB is incompatible on this browser. Native async await fails ""by design"" for indexedDB transactions`);
++    let compatible = await idbAndPromiseCompatible.catch(()=>false);
++        ok (true, `Promise and IndexedDB is incompatible on this browser. Native async await fails ""by design"" for indexedDB transactions`);"
+https://github.com/dexie/Dexie.js,aad3ac3bd8234f5416cb68fe6a72bbd28574727e,David Fahlander,2017-09-05 13:48:04+02:00,"Safari: IDB/Promise plays boll, but you need to let IDB do the kick-off.",test\tests-asyncawait.js,https://github.com/dexie/Dexie.js/commit/aad3ac3bd8234f5416cb68fe6a72bbd28574727e,-        return idbAndPromiseCompatible.then(()=> {,"+            await db.items.get(1); // Just to prohibit IDB bug in Safari - must use transaction in initial tick!
++            await db.items.get(1); // Just to prohibit IDB bug in Safari - must use transaction in initial tick!
++        await db.items.get(1); // Just to prohibit IDB bug in Safari - must use transaction in initial tick!"
+https://github.com/dexie/Dexie.js,be6006611c3e620d67ad289b2b2f624817a77727,David Fahlander,2017-12-19 10:00:26+01:00,Formatted document,src\index.ts,https://github.com/dexie/Dexie.js/commit/be6006611c3e620d67ad289b2b2f624817a77727,"-        return new Dexie(name, {addons: []}).open().then(db=>{
+-        databaseLister.getDatabaseNames().then(cb) :","+    // the provider more likely is using non-promise async APIs or other thenable implementations, we cannot assume that.
++  async: function (generatorFn: Function) {"
+https://github.com/dexie/Dexie.js,9cd75ccda66640604e5ab8ee6c297e13a2f39f0d,David Fahlander,2017-12-19 13:46:14+01:00,"index.ts and dexie-static-props complete.
+Now, what's left is the implementation of the Dexie class methods + fix typings tests + build script.",src\index.ts,https://github.com/dexie/Dexie.js/commit/9cd75ccda66640604e5ab8ee6c297e13a2f39f0d,"-    return new Dexie(name, { addons: [] }).open().then(db => {
+-      databaseLister.getDatabaseNames().then(cb) :","+// async stack support and with a prototypal inheritance from DexieError and Error.
++// Let the async stack filter focus on app code and filter away frames from dexie.min.js:"
+https://github.com/dexie/Dexie.js,5fc483fdcc308ced989a2f1f85cef92d1c8c43be,dfahlander,2018-01-30 14:42:06+01:00,Refactor some bootstrapping.,src\classes\dexie\dexie-static-props.ts,https://github.com/dexie/Dexie.js/commit/5fc483fdcc308ced989a2f1f85cef92d1c8c43be,"-      return new Dexie(name, { addons: [] }).open().then(db => {
+-        databaseEnumerator.getDatabaseNames().then(cb) :",+  async: function (generatorFn: Function) {
+https://github.com/dexie/Dexie.js,8dd4d60f0a353a734db27648aad9340a48fde75b,dfahlander,2020-10-30 00:13:21+01:00,Implemented @ support and inactivate syncable for now,addons\dexie-cloud\test\unit\test-dexie-cloud-client.ts,https://github.com/dexie/Dexie.js/commit/8dd4d60f0a353a734db27648aad9340a48fde75b,"-db.cloud.connect(""ws://localhost:3000"").then(x => {
+-db.open().then(async ()=>{","+/*db.open().then(async ()=>{
++  const id = await db.table(""friends"").bulkPut([{name: ""Foo"", age: 33}]);
++promisedTest(""basic-test"", async ()=>{
++  await Dexie.delete(""argur"");
++  await db.open();
++  const id = await db.table(""friends"").add({name: ""Foo""});
++  let obj = await db.table(""friends"").get(id);
++  await db.table(""friends"").put({id, name: ""Bar""});
++  obj = await db.table(""friends"").get(id);"
+https://github.com/dexie/Dexie.js,50923d5d7dca8edb036ac69f59b7eee7542b3cc0,dfahlander,2021-02-23 22:20:51+01:00,WIP: dexie-cloud-addon not yet functional,addons\dexie-cloud\test\unit\test-dexie-cloud-client.ts,https://github.com/dexie/Dexie.js/commit/50923d5d7dca8edb036ac69f59b7eee7542b3cc0,-}).then(x => {,"+  await new Dexie(""argur"", {addons: []}).delete();
++  await db.cloud.configure({
++  const numFriends = await db.table(""friends"").count();"
+https://github.com/dexie/Dexie.js,f0781ba20eb6daf5ba666f9663b82d94a0c5e58b,dfahlander,2021-04-14 21:38:33+02:00,"Dexie cloud sync flow complete (dry).
+Authentication flow not complete.
+Doesn't compile.",addons\dexie-cloud\src\dexie-cloud-client.ts,https://github.com/dexie/Dexie.js/commit/f0781ba20eb6daf5ba666f9663b82d94a0c5e58b,-          .then((logins) => logins.find((l) => l.isLoggedIn) || ANONYMOUS_USER),"+      const initiallySynced = await db.transaction(""rw"", db.$syncState, async () => {
++        ] = await Promise.all([
++          await db.$syncState.put(options, ""options"");
++          await db.$syncState.put(schema, ""schema"");
++      //await verifySchema(db); // TODO: Can we remove this?!
++        await performInitialSync(db);
++        //await authenticate(db.cloud.options.databaseUrl, db.cloud.currentUser.value, )
++        await dexieCloudGlobalDB.transaction(
++          async () => {
++              if (!(await dexieCloudGlobalDB.swManagedDBs.get(dexie.name))) {
++                await dexieCloudGlobalDB.swManagedDBs.add({ db: dexie.name });
++              if (await dexieCloudGlobalDB.swManagedDBs.get(dexie.name)) {
++                await dexieCloudGlobalDB.swManagedDBs.delete(dexie.name);
++      syncWorker = await startSyncWorker(db); // Will be a noop if options.serviceWorker and we're not the SW."
+https://github.com/dexie/Dexie.js,6510b96f9cf581cf7af7d5a19e6cc3d11d0e6786,dfahlander,2021-04-16 22:48:21+02:00,Typing fixes - the addon compiles now,addons\dexie-cloud\test\unit\test-dexie-cloud-client.ts,https://github.com/dexie/Dexie.js/commit/6510b96f9cf581cf7af7d5a19e6cc3d11d0e6786,-  }).then(x => {,+  await Dexie.delete(db.name);
+https://github.com/dexie/Dexie.js,829767ec8b4dd139d4aaba25b47e44ef49fa8e07,dfahlander,2021-04-19 14:42:38+02:00,"Code reviewed + open db + store schema from server
+ServiceWorker: call db.open() to load db.cloud.options and db.cloud.schema.",addons\dexie-cloud\src\service-worker.ts,https://github.com/dexie/Dexie.js/commit/829767ec8b4dd139d4aaba25b47e44ef49fa8e07,"-  return new Promise(resolve => setTimeout(resolve, ms));","+    await db.dx.open(); // Makes sure db.cloud.options and db.cloud.schema are read from db,
++    await syncIfPossible(db, db.cloud.options, db.cloud.schema);
++        await sleep(60_000); // 1 minute"
+https://github.com/dexie/Dexie.js,6a46b70b49c527631090fc17315ce42007cbedc4,dfahlander,2021-06-24 01:39:39+02:00,"Debugged+fixed websocket reconnecting behavior +..
++...fixed persistance of dexie cloud schema's id prefixes.
++...renamed .synced to .markedForSync to not confuse it with whether the table has been synced or not. The meaning was not that - it was whether the table should be synced with server or not.",addons\dexie-cloud\src\WSObservable.ts,https://github.com/dexie/Dexie.js/commit/6a46b70b49c527631090fc17315ce42007cbedc4,"-    await new Promise((resolve, reject) => {","+      await new Promise((resolve, reject) => {"
+https://github.com/dexie/Dexie.js,c9e286281fd1e556e111e97323445491a5417487,dfahlander,2021-12-13 22:16:09+01:00,Resync on invite accepted,addons\dexie-cloud\src\sync\messagesFromServerQueue.ts,https://github.com/dexie/Dexie.js/commit/c9e286281fd1e556e111e97323445491a5417487,"-            await new Promise(resolve => setTimeout(resolve, 60000));
+-            await new Promise(resolve => setTimeout(resolve, 10000));","+            await new Promise((resolve) => setTimeout(resolve, 60000));
++            await new Promise((resolve) => setTimeout(resolve, 10000));"
+https://github.com/dexie/Dexie.js,3d6014288a3f3735de94cec04e0c0d50dd43392a,dfahlander,2021-12-15 17:00:28+01:00,Prettify file only,addons\dexie-cloud\src\authentication\setCurrentUser.ts,https://github.com/dexie/Dexie.js/commit/3d6014288a3f3735de94cec04e0c0d50dd43392a,-  await new Promise(resolve=>{,"+export async function setCurrentUser(
++  await db.transaction('rw', $logins, async (tx) => {
++    await Promise.all(
++  await new Promise((resolve) => {"
+https://github.com/dexie/Dexie.js,8bfcada2aa70a280e406dd5535375a374887af20,dfahlander,2023-05-30 14:36:49+02:00,"Adjusted the tests of dexie-react-hooks to work with
+eagerly resolving observables.",libs\dexie-react-hooks\test\index.ts,https://github.com/dexie/Dexie.js/commit/8bfcada2aa70a280e406dd5535375a374887af20,-    db.items.clear().then(async ()=>{,"+  async beforeEach(assert) {
++      await db.items.clear();
++  await waitTilEqual(
++  await waitTilEqual(
++  await waitTilEqual(
++  await waitTilEqual(
++  await waitTilEqual(
++  await waitTilOk(()=>{
++  await waitTilEqual(()=>divCurrent.textContent, ""Current itemID: 1Name: Hello"", ""We are now vieweing item 1"");
++  await waitTilEqual(()=>divCurrent.textContent, ""Current itemID: 2Name: World"", ""We are now vieweing item 2"");
++  await waitTilOk(()=>{
++  await waitTilOk(()=>/Something went wrong/.test(div.innerText), ""The error boundrary should be shown"");"
+https://github.com/dexie/Dexie.js,988d73f1130e6487dd8382a19a108f17e84983ab,dfahlander,2023-07-06 03:14:03+02:00,"Fix customer issue: ReadOnlyError in liveQuery.
+Problem was that schedulePhysicalTick() in promise.js did derive the async context into arbritary promise continuations.",src\helpers\promise.js,https://github.com/dexie/Dexie.js/commit/988d73f1130e6487dd8382a19a108f17e84983ab,-    () => {resolvedGlobalPromise.then(physicalTick);},+        // Make sure to reset the async context to globalPSD before
+https://github.com/dexie/Dexie.js,311492f73852a517d7c522b1c394a070591d3b1f,dfahlander,2023-10-05 11:23:20+02:00,"Improvements of dexie-cloud-addon:
+* Don't throw if license is invalid.
+* Let expired/invalid user login and pull data (but not sync changes)
+* Allow change user without logging out first
+* db.cloud.logout() - logs out current user.
+* Request confirmation in case there are unsynced changes on logout",addons\dexie-cloud\src\authentication\setCurrentUser.ts,https://github.com/dexie/Dexie.js/commit/311492f73852a517d7c522b1c394a070591d3b1f,-  await new Promise((resolve) => {,"+      await user.save();
++  await waitUntil(db.cloud.currentUser, (currentUser) => currentUser.userId === user.userId);"
+https://github.com/dexie/Dexie.js,200bf86cfa3cf7b9cb01fd0b9ae245ad0e19d84c,dfahlander,2023-11-28 00:31:07+01:00,"Made the test even more naughty by spawning async function.
+Removed the old test that never reproduced anything.",test\tests-misc.js,https://github.com/dexie/Dexie.js/commit/200bf86cfa3cf7b9cb01fd0b9ae245ad0e19d84c,"-    await new Promise(resolve => setTimeout(resolve, 10));
+-                    await db.metrics.add({ id: ""id1"", name: ""a"", time: 1 }).then(() => {","+                const result = await db.metrics.toArray();
++                //await 3;
++                async function foo() {
++                    await db.metrics.toArray();
++                foo(); // Be naughty and spawn promises that we don't await."
+https://github.com/dexie/Dexie.js,fdd9844dc1bb4b81876ed6f144134f34ccc950fb,dfahlander,2024-05-29 15:31:13+02:00,"Dexie-cloud addon websocket client-side rate-limits:
+Decrease pause period from 10 to 1 second when more than 10 WebSocket messages per 10 seconds limit is reached.
++ simplify the loop + make it confifurable with const variables in top of the module.
+Remove the panic pause of one minute if getting into the limit over and over. Instead let it do it but at most 10 messages per second.
+If we see this becoming a problem we could enforce a limit on the server instead.",addons\dexie-cloud\src\sync\messagesFromServerQueue.ts,https://github.com/dexie/Dexie.js/commit/fdd9844dc1bb4b81876ed6f144134f34ccc950fb,"-            await new Promise((resolve) => setTimeout(resolve, 60000));
+-            await new Promise((resolve) => setTimeout(resolve, 10000));","+          await new Promise((resolve) => setTimeout(resolve, PAUSE_PERIOD));"
+https://github.com/dexie/Dexie.js,92542c7e420a126e1a244d2c59482b1fe814dee4,David Fahlander,2024-10-16 14:06:48+02:00,Bugfix: some YJS updates were never sent to server,addons\dexie-cloud\src\yjs\createYClientUpdateObservable.ts,https://github.com/dexie/Dexie.js/commit/92542c7e420a126e1a244d2c59482b1fe814dee4,-          .then((syncer) => syncer?.unsentFrom || 1);,"+            liveQuery(async () => {
++              const addedUpdates = await listUpdatesSince("
+https://github.com/dexie/Dexie.js,7ec8ce3da8dc8659da11d5d49d54b4e6194640c7,David Fahlander,2024-11-15 16:52:05+01:00,"Fix erratic livequery tests. (#2095)
+
+Change how we wait until an expected result is emitted from a live query.
+Current tests were more prone to timing issues and race conditions. Now we instead do the following for those tests:
+1. Define the expected results
+2. Subscribe to live query and wait until the expected results arrive, or a timeout of 500 ms happens.
+
+The thing is that liveQueries might emit a previous result at first, so by ignoring temporary outdated results we're not prone to timing issues.
+
+Co-authored-by: David Fahlander <david@dexie.org>",test\tests-live-query.js,https://github.com/dexie/Dexie.js/commit/7ec8ce3da8dc8659da11d5d49d54b4e6194640c7,"-      const promise = new Promise((resolve, rej) => {
+-            new Promise((_, rej) => setTimeout(()=>rej(new Error(""Timeout"")), timeout))","+  await tester.waitTilDeepEqual([{id: 1}, {id: 2}, {id: 3}], ""First callback should give initally populated content"");
++  await tester.waitTilDeepEqual([{id:-1}, {id: 1}, {id: 2}, {id: 3}], ""2nd callback should give updated content"");
++  await tester.waitTilDeepEqual([{id:-1}, {id: 1}, {id: 3}], ""3rd callback should wake up when deletion was made"");
++  await tester.waitTilDeepEqual([], ""Items are deleted"");
++  await tester.waitTilDeepEqual([{id: 10},{id: 0},{id: -10}], ""Reacts on bulkAdd"");
++  await tester.waitTilDeepEqual([{id: 0},{id: -10}], ""Should have deleted items where id > 0"");
++  await tester.waitTilDeepEqual([{id:1},{id:2},{id:3}], ""Initial items are correct"");
++  await tester.waitTilDeepEqual([{id:1},{id:2},{id:3},{id:88}], ""The livequery emitted correct result after bulk operation"");
++  await tester.waitTilDeepEqual([
++  console.log(""After await promise"", performance.now());
++  await tester.waitTilDeepEqual([
++  await tester.waitTilDeepEqual(["
