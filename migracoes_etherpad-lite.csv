@@ -1,28 +1,4 @@
 repo,commit_hash,author,date,message,file_path,commit_url,removed_lines,added_lines
-https://github.com/ether/etherpad-lite,7389e90cd0ab3f26b044ef8b839f34052bf157d3,Manuel Knitza,2013-02-10 02:37:17+01:00,update jquery 1.7.1 -> 1.9.1,src\static\js\jquery.js,https://github.com/ether/etherpad-lite/commit/7389e90cd0ab3f26b044ef8b839f34052bf157d3,"-										returned.promise().then( newDefer.resolve, newDefer.reject, newDefer.notify );
--					args[ i ].promise().then( resolveFunc(i), deferred.reject, progressFunc(i) );
--					jqXHR.then( tmp, tmp );","+	rboolean = /^(?:checked|selected|autofocus|autoplay|async|controls|defer|disabled|hidden|loop|multiple|open|readonly|required|scoped)$/i,
-+									async: false,
-+				script.async = true;
-+					if ( !s.async ) {"
-https://github.com/ether/etherpad-lite,eedae98e2fe133adf783c0d297c84c9787375649,Ray Bellis,2019-01-25 15:15:16+00:00,"db/PadManager.js: convert sanitizePadId() to Promises
-
-The function is now iterative rather than recursive.",src\node\db\PadManager.js,https://github.com/ether/etherpad-lite/commit/eedae98e2fe133adf783c0d297c84c9787375649,"-    return new Promise(resolve => sanitizePadId(padId, resolve));","+exports.sanitizePadId = async function sanitizePadId(padId) {
-+    let exists = await exports.doesPadExist(padId);"
-https://github.com/ether/etherpad-lite,b664eb488cc59271947d2adb1d0162c5ca7962c9,Ray Bellis,2019-02-08 14:46:05+00:00,ImportHandler.js: ensure import connection closing happens at the right point,src\node\handler\ImportHandler.js,https://github.com/ether/etherpad-lite/commit/b664eb488cc59271947d2adb1d0162c5ca7962c9,"-  doImport(req, res, padId).then(result => {","+  await padMessageHandler.updatePadClients(pad);
-+  if (await fsp_exists(srcFile)) {
-+  if (await fsp_exists(destFile)) {"
-https://github.com/ether/etherpad-lite,2ce798339d42bf426e19dbad93ea729fcf41820e,John McLear,2020-06-06 18:57:52+00:00,"Revert ""tests: updating mocha and refactoring the custom html reporter using events""
-
-This reverts commit df1629c7b9898e5d9bc787dd2c96e4176271cddc.",tests\frontend\lib\mocha.js,https://github.com/ether/etherpad-lite/commit/2ce798339d42bf426e19dbad93ea729fcf41820e,"-      .then(canNotify)
--      .then(function() {
--      return Notification.requestPermission().then(function(permission) {
-- *   .then(() => mocha.run(failures => process.exitCode = failures ? 1 : 0))
--    return new Promise(function(resolve) {
--      result.then(","+  this.sync = ! this.async;
-+  if (this.async) {
-+  // async"
-https://github.com/ether/etherpad-lite,8756fed80dd9b97a418ce292843b389b79e348b0,Richard Hansen,2020-09-10 18:12:20-04:00,PadMessageHandler: Use `await` instead of `p.then()`,src\node\handler\PadMessageHandler.js,https://github.com/ether/etherpad-lite/commit/8756fed80dd9b97a418ce292843b389b79e348b0,-      return p.then(authorInfo => {,+      const authorInfo = await (cached ? Promise.resolve(cached) : authorManager.getAuthor(author));
 https://github.com/ether/etherpad-lite,346111250e87fa82b3f8e955a6fb24cd219870d0,Richard Hansen,2020-09-16 16:59:00-04:00,"utils: Fix promise creation accounting bug in promises.timesLimit
 
 Before this change, `promises.timesLimit()` created `concurrency - 1`
@@ -37,9 +13,7 @@ Also:
     created promises are resolved.
   * Reject concurrency of 0 (unless total is 0).
   * Document the function.
-  * Add tests.",src\node\utils\promises.js,https://github.com/ether/etherpad-lite/commit/346111250e87fa82b3f8e955a6fb24cd219870d0,-      .then(_internalRun),"+// and each remaining Promise will be created once one of the earlier Promises resolves.) This async
-+exports.timesLimit = async (total, concurrency, promiseCreator) => {
-+  await Promise.all(promises);"
+  * Add tests.",src\node\utils\promises.js,https://github.com/ether/etherpad-lite/commit/346111250e87fa82b3f8e955a6fb24cd219870d0,.then(_internalRun),await Promise.all(promises);
 https://github.com/ether/etherpad-lite,a000a93dc644aa32f5ad9a0385837981f57edc44,Richard Hansen,2020-09-21 00:42:29-04:00,"Refactor startup/shutdown for tests
 
   * `src/node/server.js` can now be run as a script (for normal
@@ -57,232 +31,23 @@ https://github.com/ether/etherpad-lite,a000a93dc644aa32f5ad9a0385837981f57edc44,
       * call `terminate()` on the Threads.Pool to stop the workers
   * Exit with exit code 0 (instead of 1) on SIGTERM.
   * Export the HTTP server so that tests can get the HTTP server's
-    port via `server.address().port` when `settings.port` is 0.",src\node\server.js,https://github.com/ether/etherpad-lite/commit/a000a93dc644aa32f5ad9a0385837981f57edc44,"-    .then(plugins.update)
--    .then(function() {","+exports.start = async () => {
-+  await util.promisify(npm.load)();
-+    await db.init();
-+    await plugins.update();
-+    await hooks.aCallAll('loadSettings', {settings});
-+    await hooks.aCallAll('createServer');
-+exports.stop = async () => {
-+  await new Promise(async (resolve, reject) => {
-+    await hooks.aCallAll('shutdown');
-+exports.exit = async (err) => {
-+    await exports.stop();"
-https://github.com/ether/etherpad-lite,50e402193bc3939779075331077c242ce44418f6,Richard Hansen,2020-10-13 20:44:07-04:00,"tests: `waitForPromise()` test improvements
-
-  * Avoid a false positive if a Promise that is expected to reject
-    doesn't reject.
-  * Use modern JavaScript language features: arrow functions,
-    `const`/`let` instead of `var`.
-  * Remove the tests that test Promise behavior.
-  * Add new test that checks that it returns a Promise.",tests\frontend\specs\helper.js,https://github.com/ether/etherpad-lite/commit/50e402193bc3939779075331077c242ce44418f6,-        }).then(function() {,"+    it('returns a Promise', async function() {
-+      await helper.waitForPromise(() => false, 1500)
-+      await helper.waitForPromise(() => { checks++; return false; }, 2000, 100)"
-https://github.com/ether/etherpad-lite,3e140162149009a7c4bb12d5e23c906c85c7089e,Richard Hansen,2020-10-09 18:19:46-04:00,"tests: Include the filename in the test output
-
-Also some minor consistency cleanups.",tests\backend\specs\promises.js,https://github.com/ether/etherpad-lite/commit/3e140162149009a7c4bb12d5e23c906c85c7089e,-    const promise = new Promise((resolve) => {,"+    it('honors concurrency', async function() {
-+    it('creates another when one completes', async function() {
-+    it('creates the expected total number of promises', async function() {
-+        await promise;
-+    it('resolves', async function() {
-+      await timesLimitPromise;
-+    it('does not create too many promises if total < concurrency', async function() {
-+        await promise;
-+      await timesLimitPromise;
-+    it('accepts total === 0, concurrency > 0', async function() {
-+      await promises.timesLimit(0, concurrency, makePromise);
-+    it('accepts total === 0, concurrency === 0', async function() {
-+      await promises.timesLimit(0, 0, makePromise);
-+    it('rejects total > 0, concurrency === 0', async function() {
-+      await assert.rejects(promises.timesLimit(total, 0, makePromise), RangeError);"
-https://github.com/ether/etherpad-lite,36aceb3aba1e688757c964a110b6b14f4920ce4d,Richard Hansen,2020-10-08 01:42:49-04:00,"hooks: Rewrite `callAll` and `aCallAll` for consistency
-
-Rewrite the `callAll` and `aCallAll` functions to support all
-reasonable hook behaviors and to report errors for unreasonable
-behaviors (e.g., calling the callback twice).
-
-Now a hook function like the following works as expected when invoked
-by `aCallAll`:
-
-```
-exports.myHookFn = (hookName, context, cb) => {
-  cb('some value');
-  return;
-};
-```",src\static\js\pluginfw\hooks.js,https://github.com/ether/etherpad-lite/commit/36aceb3aba1e688757c964a110b6b14f4920ce4d,"-      return new Promise(function(resolve, reject) {","+async function callHookFnAsync(hook, context) {
-+  return await new Promise((resolve, reject) => {
-+    // Wrap ret in a Promise so that hook functions can be async (or otherwise return a Promise).
-+exports.aCallAll = async (hookName, context, cb) => {
-+  return await resultsPromise;"
+    port via `server.address().port` when `settings.port` is 0.",src\node\server.js,https://github.com/ether/etherpad-lite/commit/a000a93dc644aa32f5ad9a0385837981f57edc44,".then(plugins.update)
+.then(function() {","await hooks.aCallAll('loadSettings', {settings});
+await hooks.aCallAll('loadSettings', {settings});"
 https://github.com/ether/etherpad-lite,6a8563eeab0b2f9f31ca24b2e6739bc46239703d,Richard Hansen,2020-11-10 01:20:05-05:00,"import/export: Simplify exportEtherpadAdditionalContent processing
 
 Also:
   * Improve parallelization
-  * Refine the documentation",src\node\utils\ExportEtherpad.js,https://github.com/ether/etherpad-lite/commit/6a8563eeab0b2f9f31ca24b2e6739bc46239703d,-    hooks.aCallAll('exportEtherpadAdditionalContent').then((prefixes) => {,"+  const prefixes = await hooks.aCallAll('exportEtherpadAdditionalContent');
-+  await Promise.all(prefixes.map(async (prefix) => {
-+    data[key] = await db.get(key);"
-https://github.com/ether/etherpad-lite,6a8563eeab0b2f9f31ca24b2e6739bc46239703d,Richard Hansen,2020-11-10 01:20:05-05:00,"import/export: Simplify exportEtherpadAdditionalContent processing
-
-Also:
-  * Improve parallelization
-  * Refine the documentation",src\node\utils\ImportEtherpad.js,https://github.com/ether/etherpad-lite/commit/6a8563eeab0b2f9f31ca24b2e6739bc46239703d,-        hooks.aCallAll('exportEtherpadAdditionalContent').then((prefixes) => {,+      for (const prefix of await hooks.aCallAll('exportEtherpadAdditionalContent')) {
-https://github.com/ether/etherpad-lite,8a918fbc46f28fec9510a2953f2fdc5a08008427,Richard Hansen,2020-11-13 13:59:20-05:00,plugins: `async`ify more functions,src\static\js\pluginfw\installer.js,https://github.com/ether/etherpad-lite/commit/8a918fbc46f28fec9510a2953f2fdc5a08008427,"-        .then(plugins.update)
--        .then(function() { cb(null) })
--        .then(plugins.update)
--        .then(function() { cb(null) })","+const loadNpm = async () => {
-+  await util.promisify(npm.load)({});
-+exports.uninstall = async (pluginName, cb = null) => {
-+    await loadNpm();
-+    await util.promisify(npm.commands.uninstall)([pluginName]);
-+    await hooks.aCallAll('pluginUninstall', {pluginName});
-+    await plugins.update();
-+exports.install = async (pluginName, cb = null) => {
-+    await loadNpm();
-+    await util.promisify(npm.commands.install)([pluginName]);
-+    await hooks.aCallAll('pluginInstall', {pluginName});
-+    await plugins.update();"
-https://github.com/ether/etherpad-lite,8a918fbc46f28fec9510a2953f2fdc5a08008427,Richard Hansen,2020-11-13 13:59:20-05:00,plugins: `async`ify more functions,src\static\js\pluginfw\plugins.js,https://github.com/ether/etherpad-lite/commit/8a918fbc46f28fec9510a2953f2fdc5a08008427,"-  return Promise.all(p).then(function() {
--  }).then(callInit);","+const callInit = async () => {
-+  await Promise.all(Object.keys(defs.plugins).map(async (plugin_name) => {
-+      await fs.stat(ep_init);
-+  await Promise.all(Object.keys(packages).map(
-+    async (pluginName) => await loadPlugin(packages, pluginName, plugins, parts)));
-+  await callInit();"
-https://github.com/ether/etherpad-lite,b8d07a42eb211b4bfad6f578c6aa6c8bc51573e9,Richard Hansen,2020-11-23 13:21:51-05:00,lint: Run `eslint --fix` on `bin/` and `tests/`,tests\backend\specs\caching_middleware.js,https://github.com/ether/etherpad-lite/commit/b8d07a42eb211b4bfad6f578c6aa6c8bc51573e9,"-        .then((res) => {
--        .then((res) => {
--        .then((res) => {
--        .then((res) => {
--        .then((res) => {
--        .then((res) => {","+  before(async function () {
-+  beforeEach(async function () {
-+  afterEach(async function () {
-+    before(async function () {
-+    it('gets packages uncompressed without Accept-Encoding gzip', async function () {
-+      await Promise.all(packages.map(async (resource) => agent.get(resource)
-+    it('gets packages compressed with Accept-Encoding gzip', async function () {
-+      await Promise.all(packages.map(async (resource) => agent.get(resource)
-+    it('does not cache content-encoding headers', async function () {
-+    before(async function () {
-+    it('gets packages uncompressed without Accept-Encoding gzip', async function () {
-+      await Promise.all(packages.map(async (resource) => agent.get(resource)
-+    it('gets packages compressed with Accept-Encoding gzip', async function () {
-+      await Promise.all(packages.map(async (resource) => agent.get(resource)
-+    it('does not cache content-encoding headers', async function () {"
-https://github.com/ether/etherpad-lite,8e5fd19db2dbbfacf61b2cc223614a0517d4a15b,Richard Hansen,2020-11-23 13:24:19-05:00,lint: Run `eslint --fix` on `src/`,src\node\db\GroupManager.js,https://github.com/ether/etherpad-lite/commit/8e5fd19db2dbbfacf61b2cc223614a0517d4a15b,-    return padManager.getPad(padID).then(pad => pad.remove());,"+exports.listAllGroups = async function () {
-+  let groups = await db.get('groups');
-+exports.deleteGroup = async function (groupID) {
-+  const group = await db.get(`group:${groupID}`);
-+  await Promise.all(Object.keys(group.pads).map((padID) => padManager.getPad(padID).then((pad) => pad.remove())));
-+  const group2sessions = await db.get(`group2sessions:${groupID}`);
-+  await Promise.all(Object.keys(sessions).map((session) => sessionManager.deleteSession(session)));
-+  await db.remove(`group2sessions:${groupID}`);
-+  await db.remove(`group:${groupID}`);
-+  await db.set('groups', newGroups);
-+exports.doesGroupExist = async function (groupID) {
-+  const group = await db.get(`group:${groupID}`);
-+exports.createGroup = async function () {
-+  await db.set(`group:${groupID}`, {pads: {}});
-+  await db.set('groups', newGroups);
-+exports.createGroupIfNotExistsFor = async function (groupMapper) {
-+  const groupID = await db.get(`mapper2group:${groupMapper}`);
-+    const exists = await exports.doesGroupExist(groupID);
-+  const result = await exports.createGroup();
-+  await db.set(`mapper2group:${groupMapper}`, result.groupID);
-+exports.createGroupPad = async function (groupID, padName, text) {
-+  const groupExists = await exports.doesGroupExist(groupID);
-+  const padExists = await padManager.doesPadExists(padID);
-+  await db.setSub(`group:${groupID}`, ['pads', padID], 1);
-+exports.listPads = async function (groupID) {
-+  const exists = await exports.doesGroupExist(groupID);
-+  const result = await db.getSub(`group:${groupID}`, ['pads']);"
-https://github.com/ether/etherpad-lite,8e5fd19db2dbbfacf61b2cc223614a0517d4a15b,Richard Hansen,2020-11-23 13:24:19-05:00,lint: Run `eslint --fix` on `src/`,src\node\db\Pad.js,https://github.com/ether/etherpad-lite/commit/8e5fd19db2dbbfacf61b2cc223614a0517d4a15b,"-    return this.getRevisionChangeset(item).then(changeset => {
--    return authorManager.getAuthorColorId(author).then(colorId => {
--    return this.getChatMessage(entryObject.entryNum).then(entry => {
--    let p = db.get(""pad:"" + sourceID + "":chat:"" + i).then(chat => {
--    let p = db.get(""pad:"" + sourceID + "":revs:"" + i).then(rev => {
--  await new Promise(resolve => setTimeout(resolve, 10));","+  await db.set(`pad:${this.id}`, dbObject);
-+  await Promise.all(neededChangesets.map((item) => this.getRevisionChangeset(item).then((changeset) => {
-+  await Promise.all(authors.map((author) => authorManager.getAuthorColorId(author).then((colorId) => {
-+  const entry = await db.get(`pad:${this.id}:chat:${entryNum}`);
-+  await Promise.all(neededEntries.map((entryObject) => this.getChatMessage(entryObject.entryNum).then((entry) => {
-+  const value = await db.get(`pad:${this.id}`);
-+  const pad = await db.get(`pad:${sourceID}`);
-+    await db.setSub(`group:${destGroupID}`, ['pads', destinationID], 1);
-+  await new Promise((resolve) => setTimeout(resolve, 10));
-+    const groupExists = await groupManager.doesGroupExist(destGroupID);
-+  const exists = await padManager.doesPadExist(destinationID);
-+    const pad = await padManager.getPad(destinationID);
-+  const sourcePad = await padManager.getPad(sourceID);
-+    await db.setSub(`group:${destGroupID}`, ['pads', destinationID], 1);
-+  const newPad = await padManager.getPad(destinationID, '\n');
-+    const group = await db.get(`group:${groupID}`);
-+    await db.remove(`readonly2pad:${readonlyID}`);
-+    await db.remove(`pad:${padID}:chat:${i}`, null);
-+    await db.remove(`pad:${padID}:revs:${i}`, null);"
-https://github.com/ether/etherpad-lite,8e5fd19db2dbbfacf61b2cc223614a0517d4a15b,Richard Hansen,2020-11-23 13:24:19-05:00,lint: Run `eslint --fix` on `src/`,src\node\handler\ExportHandler.js,https://github.com/ether/etherpad-lite/commit/8e5fd19db2dbbfacf61b2cc223614a0517d4a15b,"-      await new Promise(resolve => setTimeout(resolve, 100));","+  const hookFileName = await hooks.aCallFirst('exportFileName', padId);
-+    const pad = await exportEtherpad.getPadRaw(padId);
-+    const txt = await exporttxt.getPadTXTDocument(padId, req.params.rev);
-+      const newHTML = await hooks.aCallFirst('exportHTMLSend', html);
-+    const result = await hooks.aCallAll('exportConvert', {srcFile, destFile, req, res});
-+      await new Promise((resolve) => setTimeout(resolve, 100));"
-https://github.com/ether/etherpad-lite,8e5fd19db2dbbfacf61b2cc223614a0517d4a15b,Richard Hansen,2020-11-23 13:24:19-05:00,lint: Run `eslint --fix` on `src/`,src\node\handler\ImportHandler.js,https://github.com/ether/etherpad-lite/commit/8e5fd19db2dbbfacf61b2cc223614a0517d4a15b,"-      await new Promise(resolve => setTimeout(resolve, 100));","+  const result = await hooks.aCallAll('import', {srcFile, destFile, fileEnding});
-+    const _pad = await padManager.getPad(padId);
-+    const _text = await fsp_readFile(srcFile, 'utf8');
-+    const buf = await fsp_readFile(destFile);
-+    text = await fsp_readFile(destFile, 'utf8');
-+      await new Promise((resolve) => setTimeout(resolve, 100));"
-https://github.com/ether/etherpad-lite,8e5fd19db2dbbfacf61b2cc223614a0517d4a15b,Richard Hansen,2020-11-23 13:24:19-05:00,lint: Run `eslint --fix` on `src/`,src\node\handler\PadMessageHandler.js,https://github.com/ether/etherpad-lite/commit/8e5fd19db2dbbfacf61b2cc223614a0517d4a15b,"-    return authorManager.getAuthor(authorId).then(author => {
--       promises.push( pad.getRevisionChangeset(revNum).then(result => cs.changeset = result ));
--       promises.push(    pad.getRevisionAuthor(revNum).then(result => cs.author = result    ));
--       promises.push(      pad.getRevisionDate(revNum).then(result => cs.timestamp = result ));
--    return composePadChangesets(padId, item.start, item.end).then(changeset => {
--    return pad.getRevisionDate(revNum).then(revDate => {
--  let p3 = getPadLines(padId, startNum - 1).then(_lines => {
--    return pad.getRevisionChangeset(revNum).then(changeset => changesets[revNum] = changeset);
--      return authorManager.getAuthor(s.author).then(author => {","+    const color = await authorManager.getAuthorColorId(session.author);
-+exports.sendChatMessageToPadClients = async function (time, userId, text, padId) {
-+  const pad = await padManager.getPad(padId);
-+  const userName = await authorManager.getAuthorName(userId);
-+  const pad = await padManager.getPad(padId);
-+  const chatMessages = await pad.getChatMessages(start, end);
-+  const pad = await padManager.getPad(thisSession.padId);
-+      const c = await pad.getRevisionChangeset(r);
-+exports.updatePadClients = async function (pad) {
-+  const padIds = await readOnlyManager.getIds(message.padId);
-+  const value = await authorManager.getAuthor(authorID);
-+  const pad = await padManager.getPad(padIds.padId);
-+  const currentTime = await pad.getRevisionDate(pad.getHeadRevisionNumber());
-+  await Promise.all(authors.map((authorId) => authorManager.getAuthor(authorId).then((author) => {
-+  const padIds = await readOnlyManager.getIds(message.padId);
-+    const data = await getChangesetInfo(padIds.padId, start, end, granularity);
-+  const pad = await padManager.getPad(padId);
-+  const pad = await padManager.getPad(padId);
-+async function composePadChangesets(padId, startNum, endNum) {
-+  const pad = await padManager.getPad(padId);
-+  await Promise.all(changesetsNeeded.map((revNum) => pad.getRevisionChangeset(revNum).then((changeset) => changesets[revNum] = changeset)));
-+exports.padUsers = async function (padID) {"
-https://github.com/ether/etherpad-lite,8e5fd19db2dbbfacf61b2cc223614a0517d4a15b,Richard Hansen,2020-11-23 13:24:19-05:00,lint: Run `eslint --fix` on `src/`,src\node\hooks\express\tests.js,https://github.com/ether/etherpad-lite/commit/8e5fd19db2dbbfacf61b2cc223614a0517d4a15b,-        .then(specFiles => specFiles.map(spec => {,"+  args.app.get('/tests/frontend/specs_list.js', async (req, res) => {
-+    const [coreTests, pluginTests] = await Promise.all([
-+exports.getPluginTests = async function (callback) {
-+  const plugins = await readdir(moduleDir);"
-https://github.com/ether/etherpad-lite,8e5fd19db2dbbfacf61b2cc223614a0517d4a15b,Richard Hansen,2020-11-23 13:24:19-05:00,lint: Run `eslint --fix` on `src/`,src\node\utils\padDiff.js,https://github.com/ether/etherpad-lite/commit/8e5fd19db2dbbfacf61b2cc223614a0517d4a15b,-    return this._pad.getRevision(rev).then(revision => {,"+PadDiff.prototype._createClearAuthorship = async function (rev) {
-+  const atext = await this._pad.getInternalRevisionAText(rev);
-+PadDiff.prototype._createClearStartAtext = async function (rev) {
-+  const changeset = await this._createClearAuthorship(rev);
-+PadDiff.prototype._getChangesetsInBulk = async function (startRev, count) {
-+  await Promise.all(revisions.map((rev) => this._pad.getRevision(rev).then((revision) => {
-+PadDiff.prototype._createDiffAtext = async function () {
-+    const {changesets, authors} = await this._getChangesetsInBulk(rev, bulkSize);
-+PadDiff.prototype.getHtml = async function () {
-+  const atext = await this._createDiffAtext();
-+  const authorColors = await this._pad.getAllAuthorColors();
-+PadDiff.prototype.getAuthors = async function () {"
-https://github.com/ether/etherpad-lite,ff19181cd1157695cc375c076509bb80f80c1c77,Richard Hansen,2020-12-08 03:20:59-05:00,lint: Fix some straightforward ESLint errors,src\node\db\DB.js,https://github.com/ether/etherpad-lite/commit/ff19181cd1157695cc375c076509bb80f80c1c77,"-  return new Promise((resolve, reject) => {","+exports.init = async () => await new Promise((resolve, reject) => {
-+    exports.get = async (key) => {
-+      const result = await get(key);
-+    exports.getSub = async (key, sub) => {
-+      const result = await getSub(key, sub);"
+  * Refine the documentation",src\node\utils\ExportEtherpad.js,https://github.com/ether/etherpad-lite/commit/6a8563eeab0b2f9f31ca24b2e6739bc46239703d,hooks.aCallAll('exportEtherpadAdditionalContent').then((prefixes) => {,await Promise.all(prefixes.map(async (prefix) => {
+https://github.com/ether/etherpad-lite,8a918fbc46f28fec9510a2953f2fdc5a08008427,Richard Hansen,2020-11-13 13:59:20-05:00,plugins: `async`ify more functions,src\static\js\pluginfw\installer.js,https://github.com/ether/etherpad-lite/commit/8a918fbc46f28fec9510a2953f2fdc5a08008427,".then(plugins.update)
+.then(function() { cb(null) })","await hooks.aCallAll('pluginInstall', {pluginName});
+await plugins.update();"
+https://github.com/ether/etherpad-lite,8a918fbc46f28fec9510a2953f2fdc5a08008427,Richard Hansen,2020-11-13 13:59:20-05:00,plugins: `async`ify more functions,src\static\js\pluginfw\plugins.js,https://github.com/ether/etherpad-lite/commit/8a918fbc46f28fec9510a2953f2fdc5a08008427,return Promise.all(p).then(function() {,await callInit();
+https://github.com/ether/etherpad-lite,b8d07a42eb211b4bfad6f578c6aa6c8bc51573e9,Richard Hansen,2020-11-23 13:21:51-05:00,lint: Run `eslint --fix` on `bin/` and `tests/`,tests\backend\specs\caching_middleware.js,https://github.com/ether/etherpad-lite/commit/b8d07a42eb211b4bfad6f578c6aa6c8bc51573e9,".then((res) => {
+.then((res) => {","before(async function () {
+it('gets packages uncompressed without Accept-Encoding gzip', async function () {"
+https://github.com/ether/etherpad-lite,8e5fd19db2dbbfacf61b2cc223614a0517d4a15b,Richard Hansen,2020-11-23 13:24:19-05:00,lint: Run `eslint --fix` on `src/`,src\node\db\GroupManager.js,https://github.com/ether/etherpad-lite/commit/8e5fd19db2dbbfacf61b2cc223614a0517d4a15b,return padManager.getPad(padID).then(pad => pad.remove());,const group2sessions = await db.get(`group2sessions:${groupID}`);
+https://github.com/ether/etherpad-lite,8e5fd19db2dbbfacf61b2cc223614a0517d4a15b,Richard Hansen,2020-11-23 13:24:19-05:00,lint: Run `eslint --fix` on `src/`,src\node\db\Pad.js,https://github.com/ether/etherpad-lite/commit/8e5fd19db2dbbfacf61b2cc223614a0517d4a15b,"await new Promise(resolve => setTimeout(resolve, 10));",const groupExists = await groupManager.doesGroupExist(destGroupID);
 https://github.com/ether/etherpad-lite,2fdc73735599b5c8f68bf5555be9f6c71c7454de,John McLear,2021-01-18 08:53:15+00:00,"bugfix, lint and refactor all bin scripts (#4617)
 
 * bugfix, lint and refactor all bin scripts
@@ -329,181 +94,31 @@ to minimize the diff to develop
 
 * for squash: use double quotes to improve readability
 
-Co-authored-by: Richard Hansen <rhansen@rhansen.org>",bin\deleteAllGroupSessions.js,https://github.com/ether/etherpad-lite/commit/2fdc73735599b5c8f68bf5555be9f6c71c7454de,"-    .then(() => {
--          .then((res) => {
--                  .then((res) => {","+(async () => {
-+  const apiVersionResponse = await api.get('/api/');
-+  const groupsResponse = await api.get(`/api/${apiVersion}/listAllGroups?apikey=${apikey}`);
-+    const sessionsResponse = await api.get(sessionURI);
-+      await api.post(deleteURI); // delete"
-https://github.com/ether/etherpad-lite,2fdc73735599b5c8f68bf5555be9f6c71c7454de,John McLear,2021-01-18 08:53:15+00:00,"bugfix, lint and refactor all bin scripts (#4617)
-
-* bugfix, lint and refactor all bin scripts
-
-* for squash: throw Error(message) rather than log(message); throw Error()
-
-* for squash: Exit non-0 on unhandled Promise rejection
-
-Many of the recent lint changes have converted normal functions to
-async functions, and an error thrown in an async function does not
-cause Node.js to exit by default.
-
-* for squash: fix `require()` paths
-
-* for squash: remove erroneous `Object.keys()` call
-
-* for squash: fix missing `continue` statements
-
-* for squash: Fix HTTP method for deleteSession
-
-* for squash: delete erroneous throw
-
-Throw is only for errors, not successful completion.
-
-* for squash: redo migrateDirtyDBtoRealDB.js to fix async bugs
-
-* for squash: fix erroneous use of `for..of`
-
-* for squash: Add line break between statements
-
-* for squash: put closing paren on same line as last arg
-
-* for squash: Move `log()` back up where it was
-
-to minimize the diff to develop
-
-* for squash: indentation fixes
-
-* for squash: typo fix
-
-* for squash: wrap long lines
-
-* for squash: use `util.callbackify` to silence promise/no-callback-in-promise warning
-
-* for squash: use double quotes to improve readability
-
-Co-authored-by: Richard Hansen <rhansen@rhansen.org>",bin\rebuildPad.js,https://github.com/ether/etherpad-lite/commit/2fdc73735599b5c8f68bf5555be9f6c71c7454de,"-      newPad.saveToDatabase().then(() => callback(), callback);",+const async = require('ep_etherpad-lite/node_modules/async');
-https://github.com/ether/etherpad-lite,5ecb3f9f3742800afdc45be3b3c90818a488ac80,John McLear,2021-01-21 21:06:52+00:00,lint: src/node/db/GroupManager.js,src\node\db\GroupManager.js,https://github.com/ether/etherpad-lite/commit/5ecb3f9f3742800afdc45be3b3c90818a488ac80,-  await Promise.all(Object.keys(group.pads).map((padID) => padManager.getPad(padID).then((pad) => pad.remove())));,"+exports.listAllGroups = async () => {
-+exports.deleteGroup = async (groupID) => {
-+  await Promise.all(Object.keys(group.pads)
-+exports.doesGroupExist = async (groupID) => {
-+exports.createGroup = async () => {
-+exports.createGroupIfNotExistsFor = async (groupMapper) => {
-+exports.createGroupPad = async (groupID, padName, text) => {
-+exports.listPads = async (groupID) => {"
-https://github.com/ether/etherpad-lite,f0c26c9ba2fccc987d267ae81096d2d50abbb0e3,John McLear,2021-01-21 21:06:52+00:00,lint: src/node/db/Pad.js,src\node\db\Pad.js,https://github.com/ether/etherpad-lite/commit/f0c26c9ba2fccc987d267ae81096d2d50abbb0e3,"-  await Promise.all(neededChangesets.map((item) => this.getRevisionChangeset(item).then((changeset) => {
--  await Promise.all(authors.map((author) => authorManager.getAuthorColorId(author).then((colorId) => {
--  await Promise.all(neededEntries.map((entryObject) => this.getChatMessage(entryObject.entryNum).then((entry) => {
--    const p = db.get(`pad:${sourceID}:chat:${i}`).then((chat) => db.set(`pad:${destinationID}:chat:${i}`, chat));
--    const p = db.get(`pad:${sourceID}:revs:${i}`).then((rev) => db.set(`pad:${destinationID}:revs:${i}`, rev));","+  await Promise.all(
-+  await Promise.all(
-+  await Promise.all("
-https://github.com/ether/etherpad-lite,532bde71f77bb04f11b7ddd26d9db4b9e3e555ca,John McLear,2021-01-21 21:06:52+00:00,lint: src/node/handler/PadMessageHandler.js,src\node\handler\PadMessageHandler.js,https://github.com/ether/etherpad-lite/commit/532bde71f77bb04f11b7ddd26d9db4b9e3e555ca,"-  const p1 = Promise.all(compositesChangesetNeeded.map((item) => composePadChangesets(padId, item.start, item.end).then((changeset) => {
--  const p2 = Promise.all(revTimesNeeded.map((revNum) => pad.getRevisionDate(revNum).then((revDate) => {
--  await Promise.all(changesetsNeeded.map((revNum) => pad.getRevisionChangeset(revNum).then((changeset) => changesets[revNum] = changeset)));","+  if ((await hooks.aCallAll('handleMessage', context)).some((m) => m == null)) {
-+const handleSaveRevisionMessage = async (socket, message) => {
-+const handleChatMessage = async (socket, message) => {
-+exports.sendChatMessageToPadClients = async (time, userId, text, padId) => {
-+const handleGetChatMessages = async (socket, message) => {
-+const handleUserInfoUpdate = async (socket, message) => {
-+const handleUserChanges = async (socket, message) => {
-+exports.updatePadClients = async (pad) => {
-+  // via async.forEach with sequential for() loop. There is no real
-+const handleSwitchToPad = async (socket, message, _authorID) => {
-+const handleClientReady = async (socket, message, authorID) => {
-+const handleChangesetRequest = async (socket, message) => {
-+const getChangesetInfo = async (padId, startNum, endNum, granularity) => {
-+const getPadLines = async (padId, revNum) => {
-+const composePadChangesets = async (padId, startNum, endNum) => {
-+  await Promise.all(changesetsNeeded.map(
-+exports.padUsers = async (padID) => {"
+Co-authored-by: Richard Hansen <rhansen@rhansen.org>",bin\deleteAllGroupSessions.js,https://github.com/ether/etherpad-lite/commit/2fdc73735599b5c8f68bf5555be9f6c71c7454de,".then(() => {
+.then((res) => {
+.then((res) => {","const apiVersionResponse = await api.get('/api/');
+const groupsResponse = await api.get(`/api/${apiVersion}/listAllGroups?apikey=${apikey}`);
+const sessionsResponse = await api.get(sessionURI);"
+https://github.com/ether/etherpad-lite,5ecb3f9f3742800afdc45be3b3c90818a488ac80,John McLear,2021-01-21 21:06:52+00:00,lint: src/node/db/GroupManager.js,src\node\db\GroupManager.js,https://github.com/ether/etherpad-lite/commit/5ecb3f9f3742800afdc45be3b3c90818a488ac80,await Promise.all(Object.keys(group.pads).map((padID) => padManager.getPad(padID).then((pad) => pad.remove())));,await Promise.all(Object.keys(group.pads)
+https://github.com/ether/etherpad-lite,f0c26c9ba2fccc987d267ae81096d2d50abbb0e3,John McLear,2021-01-21 21:06:52+00:00,lint: src/node/db/Pad.js,src\node\db\Pad.js,https://github.com/ether/etherpad-lite/commit/f0c26c9ba2fccc987d267ae81096d2d50abbb0e3,"await Promise.all(neededChangesets.map((item) => this.getRevisionChangeset(item).then((changeset) => {
+await Promise.all(authors.map((author) => authorManager.getAuthorColorId(author).then((colorId) => {
+await Promise.all(neededEntries.map((entryObject) => this.getChatMessage(entryObject.entryNum).then((entry) => {","await Promise.all(
+await Promise.all(
+await Promise.all("
 https://github.com/ether/etherpad-lite,725023fe5883ebc67723948a98e7c06042216fc0,Richard Hansen,2020-12-22 01:01:37-05:00,"server: Refactor `stop()` to avoid no-async-promise-executor lint error
 
-Also log when Etherpad has stopped.",src\node\server.js,https://github.com/ether/etherpad-lite/commit/725023fe5883ebc67723948a98e7c06042216fc0,"-  await new Promise(async (resolve, reject) => {",+  await Promise.race([
-https://github.com/ether/etherpad-lite,b3dda3b11c23f36942d283c0974a3664268f6242,John McLear,2021-01-19 16:37:12+00:00,lint: src/static/js/pluginfw/*.js,src\static\js\pluginfw\hooks.js,https://github.com/ether/etherpad-lite/commit/b3dda3b11c23f36942d283c0974a3664268f6242,"-      .then((result) => (result === undefined) ? [] : result))).then((results) => _.flatten(results, 1));","+const callHookFnAsync = async (hook, context) => {"
+Also log when Etherpad has stopped.",src\node\server.js,https://github.com/ether/etherpad-lite/commit/725023fe5883ebc67723948a98e7c06042216fc0,"await new Promise(async (resolve, reject) => {",await Promise.race([
 https://github.com/ether/etherpad-lite,708206449a888ed46a0acdf52de68d996778696d,Richard Hansen,2021-01-31 19:11:48-05:00,"hooks: Factor out callback attachment
 
-The separate function will be reused in a future commit.",src\static\js\pluginfw\hooks.js,https://github.com/ether/etherpad-lite/commit/708206449a888ed46a0acdf52de68d996778696d,"-      .then((result) => (result === undefined) ? [] : result)))
--      .then(flatten1);
--  if (cb != null) resultsPromise = resultsPromise.then((val) => cb(null, val), cb);","+exports.aCallAll = async (hookName, context, cb = null) => {
-+  if (cb != null) return await attachCallback(exports.aCallAll(hookName, context), cb);
-+  const results = await Promise.all(hooks.map((hook) => callHookFnAsync(hook, context)"
-https://github.com/ether/etherpad-lite,22d02dbcbf3da3e8373f52cb99572144e1bd2e98,Richard Hansen,2021-01-31 18:56:06-05:00,hooks: Factor out value normalization,src\static\js\pluginfw\hooks.js,https://github.com/ether/etherpad-lite/commit/22d02dbcbf3da3e8373f52cb99572144e1bd2e98,-      .then((result) => (result === undefined) ? [] : result)));,"+  const results = await Promise.all(
-+      hooks.map(async (hook) => normalizeValue(await callHookFnAsync(hook, context))));"
-https://github.com/ether/etherpad-lite,77f480d954bcefd99c176e87604d47aa9b8848ee,Richard Hansen,2021-02-01 00:03:06-05:00,hooks: Asyncify `aCallFirst`,src\static\js\pluginfw\hooks.js,https://github.com/ether/etherpad-lite/commit/77f480d954bcefd99c176e87604d47aa9b8848ee,"-    return new Promise((resolve, reject) => {","+const aCallFirst = async (hookName, context, predicate = null) => {
-+    const val = await util.promisify(hookCallWrapper)(hook, hookName, context);"
-https://github.com/ether/etherpad-lite,294f2a251f15df7dea7b4f50328b0bd7775a4269,Richard Hansen,2021-02-07 01:57:37-05:00,"lint: Fix bugs and style issues introduced in PR #4718
-
-This fixes issues introduced in commit
-f8a19c4527cd1f4dd38ee45cf5769d47652421e0.",src\tests\frontend\specs\scrollTo.js,https://github.com/ether/etherpad-lite/commit/294f2a251f15df7dea7b4f50328b0bd7775a4269,"-    await new Promise((resolve, reject) => helper.newPad({","+    before(async function () {
-+      await new Promise((resolve, reject) => helper.newPad({
-+    it('Scrolls down to Line 4', async function () {
-+      await helper.waitForPromise(() => {"
-https://github.com/ether/etherpad-lite,5b327b63acdc5fb8bc96f75dde37082142b03d25,Richard Hansen,2021-02-08 23:48:20-05:00,server: Simplify gating of state transition waiters,src\node\server.js,https://github.com/ether/etherpad-lite/commit/5b327b63acdc5fb8bc96f75dde37082142b03d25,"-      await new Promise((resolve) => runningCallbacks.push(resolve));
--      await new Promise((resolve) => stoppedCallbacks.push(resolve));
--      await new Promise((resolve) => exitCallbacks.push(resolve));","+      await startDoneGate;
-+      await stopDoneGate;
-+      await exitGate;"
-https://github.com/ether/etherpad-lite,ebdb2798ff857260b308b7552040758bafdc6dcd,Richard Hansen,2021-02-09 00:03:05-05:00,"server: Fix handling of errors during startup and shutdown
-
-Before, an unhandled rejection or uncaught exception during startup
-would cause `exports.exit()` to wait forever for startup completion.
-Similarly, an error during shutdown would cause `exports.exit()` to
-wait forever for shutdown to complete. Now any error during startup or
-shutdown triggers an immediate exit.",src\node\server.js,https://github.com/ether/etherpad-lite/commit/ebdb2798ff857260b308b7552040758bafdc6dcd,"-    new Promise((resolve, reject) => {","+      return await exports.start();
-+    await util.promisify(npm.load)();
-+    await db.init();
-+    await plugins.update();
-+    await hooks.aCallAll('loadSettings', {settings});
-+    await hooks.aCallAll('createServer');
-+    return await exports.exit(err);
-+    await Promise.race([
-+    return await exports.exit(err);"
-https://github.com/ether/etherpad-lite,5cc191f185d0b48e513a5b088aea08353507a783,Richard Hansen,2021-02-11 15:16:45-05:00,Minify: Replace `async.forEach()` with `Promise.all()`,src\node\utils\Minify.js,https://github.com/ether/etherpad-lite/commit/5cc191f185d0b48e513a5b088aea08353507a783,"-      requestURI(resourceURI, 'GET', {}).then(([status, headers, body]) => {","+    Promise.all(filenames.map(async (filename) => {
-+      const [status, , body] = await requestURI(resourceURI, 'GET', {});
-+  Promise.all(folders2check.map(async (path) => {
-+    const files = await util.promisify(fs.readdir)(path);
-+    await Promise.all(files.map(async (filename) => {
-+      const stats = await util.promisify(fs.stat)(`${path}/${filename}`);"
-https://github.com/ether/etherpad-lite,e573276755d88fa80bcc17c11a55dc97575d5060,Richard Hansen,2021-02-11 16:08:32-05:00,Minify: Asyncify `getAceFile()`,src\node\utils\Minify.js,https://github.com/ether/etherpad-lite/commit/e573276755d88fa80bcc17c11a55dc97575d5060,"-    })).then(() => callback(null, data), (err) => callback(err || new Error(err)));","+const getAceFile = async () => {
-+  let data = await util.promisify(fs.readFile)(`${ROOT_DIR}js/ace.js`, 'utf8');
-+  await Promise.all(filenames.map(async (filename) => {
-+    const [status, , body] = await requestURI(resourceURI, 'GET', {});"
-https://github.com/ether/etherpad-lite,5d7c07e81cede2ac5ddc9503c5ad69f101ca5675,Richard Hansen,2021-02-11 16:26:03-05:00,Minify: Asyncify `lastModifiedDateOfEverything()`,src\node\utils\Minify.js,https://github.com/ether/etherpad-lite/commit/5d7c07e81cede2ac5ddc9503c5ad69f101ca5675,"-  })).then(() => callback(null, latestModification), (err) => callback(err || new Error(err)));","+const lastModifiedDateOfEverything = async () => {
-+  await Promise.all(folders2check.map(async (path) => {"
-https://github.com/ether/etherpad-lite,dd7ea1a8f9ee91e16db13379f0b0124e061fea6e,Richard Hansen,2021-02-11 16:54:25-05:00,Minify: Asyncify `statFile()`,src\node\utils\Minify.js,https://github.com/ether/etherpad-lite/commit/dd7ea1a8f9ee91e16db13379f0b0124e061fea6e,-    lastModifiedDateOfEverything().then(,"+const statFile = async (filename, dirStatLimit) => {
-+    return [await lastModifiedDateOfEverything(), true];
-+      stats = await util.promisify(fs.stat)(ROOT_DIR + filename);
-+        const [date] = await statFile(path.dirname(filename), dirStatLimit - 1);"
-https://github.com/ether/etherpad-lite,073052ac661b0e7f239a0861a7c2b8c4ae1f8016,Richard Hansen,2021-02-11 17:15:31-05:00,Minify: Asyncify `minify()`,src\node\utils\Minify.js,https://github.com/ether/etherpad-lite/commit/073052ac661b0e7f239a0861a7c2b8c4ae1f8016,-  return await new Promise((resolve) => {,"+  return await new Promise((resolve, reject) => {
-+const minify = async (req, res) => {
-+    [date, exists] = await statFile(filename, 3);
-+      content = await getFileCompressed(filename, contentType);"
-https://github.com/ether/etherpad-lite,7efca7dc7d87c23467f74badb8c527a492a71b0a,Richard Hansen,2021-02-11 19:31:42-05:00,Minify: Don't ignore request headers in `requestURI()`,src\node\utils\Minify.js,https://github.com/ether/etherpad-lite/commit/7efca7dc7d87c23467f74badb8c527a492a71b0a,"-  return await new Promise((resolve, reject) => {","+const requestURI = async (url, method, headers) => await new Promise((resolve, reject) => {"
-https://github.com/ether/etherpad-lite,f9ec49d7ac06d8896b12d6cf5b3b0b0594b9f225,Richard Hansen,2021-02-13 01:43:08-05:00,tests: Improve `/admin/settings` restart test,src\tests\frontend\specs\adminsettings.js,https://github.com/ether/etherpad-lite/commit/f9ec49d7ac06d8896b12d6cf5b3b0b0594b9f225,"-    return new Promise((resolve) => setTimeout(resolve, ms));","+    const getUptime = async () => {
-+        const {httpUptime} = await $.ajax({
-+    await helper.waitForPromise(async () => {
-+      const uptime = await getUptime();
-+    await helper.waitForPromise(async () => {
-+      const uptime = await getUptime();"
-https://github.com/ether/etherpad-lite,fba55fa6cf2d2728bcbc9aef4d3cc71389e591b1,Richard Hansen,2020-10-05 17:47:50-04:00,ImportHandler: Refactor `doImport()` for readability,src\node\handler\ImportHandler.js,https://github.com/ether/etherpad-lite/commit/fba55fa6cf2d2728bcbc9aef4d3cc71389e591b1,-  }).then(() => {,"+exports.doImport = async (req, res, padId) => {
-+    directDatabaseAccess = await doImport(req, res, padId);"
-https://github.com/ether/etherpad-lite,1cfbf88f7c62d66a6c686757ae5e405126d6768e,Richard Hansen,2021-02-18 01:26:16-05:00,run_cmd: Enhance with ability to return stdout as string,src\node\utils\run_cmd.js,https://github.com/ether/etherpad-lite/commit/1cfbf88f7c62d66a6c686757ae5e405126d6768e,"-  const p = new Promise((resolve, reject) => {","+ *     await runCmd(['ls', '-l']);
-+ *     const stdout = await runCmd(['ls', '-l'], {stdio: [null, 'string']});
-+ *     const stdout = await p; // Or: await p.stdout;
-+ *     const stderr = await p.stderr;
-+ *     await runCmd(['ls', '-l'], {stdio: [null, (line) => console.log(line)]});
-+      p[[null, 'stdout', 'stderr'][fd]] = stdioStringPromises[fd] = (async () => {
-+        for await (const chunk of streams[fd]) chunks.push(chunk);
-+  proc.on('exit', async (code, signal) => {
-+    const [, stdout] = await Promise.all(stdioStringPromises);"
-https://github.com/ether/etherpad-lite,3ca15898854bfe6815fda48841da378fae84e8fd,Richard Hansen,2021-02-22 18:19:48-05:00,"Revert ""tests: fix importexport frontend tests (#4827)""
-
-I'm going to split this into separate commits.
-
-This reverts commit 9b03f8f6abde2c57a675dd75af3c9331bab8205a.",src\tests\frontend\specs\importexport.js,https://github.com/ether/etherpad-lite/commit/3ca15898854bfe6815fda48841da378fae84e8fd,-    await new Promise(,"+      async: false,
-+      async: false,"
-https://github.com/ether/etherpad-lite,9cd67cd99079b2fe1f3a9d9a1a625a2f2eabee07,Richard Hansen,2021-02-27 00:22:46-05:00,PadMessageHandler: Delete unnecessary use of `Promise.then()`,src\node\handler\PadMessageHandler.js,https://github.com/ether/etherpad-lite/commit/9cd67cd99079b2fe1f3a9d9a1a625a2f2eabee07,-      return authorManager.getAuthor(s.author).then((author) => {,+      const author = await authorManager.getAuthor(s.author);
+The separate function will be reused in a future commit.",src\static\js\pluginfw\hooks.js,https://github.com/ether/etherpad-lite/commit/708206449a888ed46a0acdf52de68d996778696d,".then((result) => (result === undefined) ? [] : result)))
+.then(flatten1);
+if (cb != null) resultsPromise = resultsPromise.then((val) => cb(null, val), cb);","exports.aCallAll = async (hookName, context, cb = null) => {
+if (cb != null) return await attachCallback(exports.aCallAll(hookName, context), cb);
+const results = await Promise.all(hooks.map((hook) => callHookFnAsync(hook, context)"
+https://github.com/ether/etherpad-lite,5cc191f185d0b48e513a5b088aea08353507a783,Richard Hansen,2021-02-11 15:16:45-05:00,Minify: Replace `async.forEach()` with `Promise.all()`,src\node\utils\Minify.js,https://github.com/ether/etherpad-lite/commit/5cc191f185d0b48e513a5b088aea08353507a783,"requestURI(resourceURI, 'GET', {}).then(([status, headers, body]) => {","const [status, , body] = await requestURI(resourceURI, 'GET', {});"
+https://github.com/ether/etherpad-lite,dd7ea1a8f9ee91e16db13379f0b0124e061fea6e,Richard Hansen,2021-02-11 16:54:25-05:00,Minify: Asyncify `statFile()`,src\node\utils\Minify.js,https://github.com/ether/etherpad-lite/commit/dd7ea1a8f9ee91e16db13379f0b0124e061fea6e,lastModifiedDateOfEverything().then(,"return [await lastModifiedDateOfEverything(), true];"
+https://github.com/ether/etherpad-lite,f9ec49d7ac06d8896b12d6cf5b3b0b0594b9f225,Richard Hansen,2021-02-13 01:43:08-05:00,tests: Improve `/admin/settings` restart test,src\tests\frontend\specs\adminsettings.js,https://github.com/ether/etherpad-lite/commit/f9ec49d7ac06d8896b12d6cf5b3b0b0594b9f225,"return new Promise((resolve) => setTimeout(resolve, ms));",const getUptime = async () => {
+https://github.com/ether/etherpad-lite,9cd67cd99079b2fe1f3a9d9a1a625a2f2eabee07,Richard Hansen,2021-02-27 00:22:46-05:00,PadMessageHandler: Delete unnecessary use of `Promise.then()`,src\node\handler\PadMessageHandler.js,https://github.com/ether/etherpad-lite/commit/9cd67cd99079b2fe1f3a9d9a1a625a2f2eabee07,return authorManager.getAuthor(s.author).then((author) => {,const author = await authorManager.getAuthor(s.author);
 https://github.com/ether/etherpad-lite,3a34db84e693a1b3e053855bfd2b24a9975a0555,Richard Hansen,2021-02-27 02:22:57-05:00,"tests: Refine CachingMiddleware tests
 
   * Lint functions
@@ -513,92 +128,16 @@ https://github.com/ether/etherpad-lite,3a34db84e693a1b3e053855bfd2b24a9975a0555,
   * Put each resource fetch into its own test case
   * Check for 200 status code
   * Use `.expect()` to check header value
-  * Use `.expect(fn)` instead of `.then(fn)`",src\tests\backend\specs\caching_middleware.js,https://github.com/ether/etherpad-lite/commit/3a34db84e693a1b3e053855bfd2b24a9975a0555,"-          .then((res) => {
--          .then((res) => {
--          .then((res) => assert.equal(res.header['content-encoding'], undefined));
--          .then((res) => assert.equal(res.header['content-encoding'], 'gzip'));
--          .then((res) => assert.equal(res.header['content-encoding'], undefined));
--          .then((res) => {
--          .then((res) => {
--          .then((res) => assert.equal(res.header['content-encoding'], undefined));
--          .then((res) => assert.equal(res.header['content-encoding'], 'gzip'));
--          .then((res) => assert.equal(res.header['content-encoding'], undefined));","+  after(async function () {
-+      before(async function () {
-+          it(resource, async function () {
-+            await agent.get(resource)
-+          it(resource, async function () {
-+            await agent.get(resource)
-+      it('does not cache content-encoding headers', async function () {
-+        await agent.get(packages[0])
-+        await agent.get(packages[0])
-+        await agent.get(packages[0])"
-https://github.com/ether/etherpad-lite,a17f9bf3cfc745a44d0e57b77912e346ffd3ce1c,Richard Hansen,2021-02-25 21:11:30-05:00,"ace: Build the outer and inner iframes programmatically
-
-This makes the code easier to read and it silences Chrome's
-`document.write()` warning:
-https://developers.google.com/web/updates/2016/08/removing-document-write",src\static\js\ace.js,https://github.com/ether/etherpad-lite/commit/a17f9bf3cfc745a44d0e57b77912e346ffd3ce1c,"-      await new Promise((resolve, reject) => window.plugins.ensure(
--      await new Promise((resolve, reject) => window.Ace2Inner.init(
--      await new Promise((resolve) => { window.onload = () => resolve(); });
--      await new Promise((resolve) => setTimeout(resolve, 0));
--    await new Promise((resolve, reject) => {","+const eventFired = async (obj, event, cleanups = [], predicate = () => true) => {
-+  await new Promise((resolve, reject) => {
-+const pollCondition = async (predicate, cleanups, pollPeriod, timeout) => {
-+  await new Promise((resolve) => setTimeout(resolve, 0));
-+    await new Promise((resolve) => setTimeout(resolve, pollPeriod));
-+const frameReady = async (frame) => {
-+    await Promise.race([
-+    await frameReady(outerFrame);
-+    await frameReady(innerFrame);
-+    await eventFired(requireKernel, 'load');
-+    await new Promise((resolve, reject) => innerWindow.plugins.ensure(
-+    await new Promise((resolve, reject) => innerWindow.Ace2Inner.init("
-https://github.com/ether/etherpad-lite,912f0f195faf19b11a5db928b3846fbb09388004,Richard Hansen,2021-03-03 17:30:20-05:00,"Revert ""ace: Build the outer and inner iframes programmatically""
-
-This reverts commit a17f9bf3cfc745a44d0e57b77912e346ffd3ce1c, which
-caused a mysterious bug with the line numbers. Revert to avoid
-blocking a new release while I figure out the bug.",src\static\js\ace.js,https://github.com/ether/etherpad-lite/commit/912f0f195faf19b11a5db928b3846fbb09388004,"-  await new Promise((resolve, reject) => {
--  await new Promise((resolve) => setTimeout(resolve, 0));
--    await new Promise((resolve) => setTimeout(resolve, pollPeriod));
--    await new Promise((resolve, reject) => innerWindow.plugins.ensure(
--    await new Promise((resolve, reject) => innerWindow.Ace2Inner.init(","+    iframeHTML.push(scriptTag(`(async () => {
-+      await new Promise((resolve, reject) => window.plugins.ensure(
-+      await new Promise((resolve, reject) => window.Ace2Inner.init(
-+    const outerScript = `(async () => {
-+      await new Promise((resolve) => { window.onload = () => resolve(); });
-+      await new Promise((resolve) => setTimeout(resolve, 0));
-+    await new Promise((resolve, reject) => {"
-https://github.com/ether/etherpad-lite,404486069c204cbec840aa802fc6a18dac013418,Richard Hansen,2021-02-25 21:11:30-05:00,"ace: Build the outer and inner iframes programmatically
-
-This makes the code easier to read and it silences Chrome's
-`document.write()` warning:
-https://developers.google.com/web/updates/2016/08/removing-document-write
-
-This is a redo of commit a17f9bf3cfc745a44d0e57b77912e346ffd3ce1c,
-which was reverted in commit 912f0f195faf19b11a5db928b3846fbb09388004
-due to a CSS bug.",src\static\js\ace.js,https://github.com/ether/etherpad-lite/commit/404486069c204cbec840aa802fc6a18dac013418,"-      await new Promise((resolve, reject) => window.plugins.ensure(
--      await new Promise((resolve, reject) => window.Ace2Inner.init(
--      await new Promise((resolve) => { window.onload = () => resolve(); });
--      await new Promise((resolve) => setTimeout(resolve, 0));
--    await new Promise((resolve, reject) => {","+const eventFired = async (obj, event, cleanups = [], predicate = () => true) => {
-+  await new Promise((resolve, reject) => {
-+const pollCondition = async (predicate, cleanups, pollPeriod, timeout) => {
-+  await new Promise((resolve) => setTimeout(resolve, 0));
-+    await new Promise((resolve) => setTimeout(resolve, pollPeriod));
-+const frameReady = async (frame) => {
-+    await Promise.race([
-+    await frameReady(outerFrame);
-+    await frameReady(innerFrame);
-+    await eventFired(requireKernel, 'load');
-+    await new Promise((resolve, reject) => innerWindow.plugins.ensure(
-+    await new Promise((resolve, reject) => innerWindow.Ace2Inner.init("
-https://github.com/ether/etherpad-lite,50fdadab7d3e640370a393a8cb8380e32fe51cc3,Richard Hansen,2021-03-17 18:40:42-04:00,ExportHandler: Pass the error unmodified,src\node\handler\ExportHandler.js,https://github.com/ether/etherpad-lite/commit/50fdadab7d3e640370a393a8cb8380e32fe51cc3,"-      await new Promise((resolve, reject) => {","+      await util.promisify(convertor.convertFile)(srcFile, destFile, type);"
-https://github.com/ether/etherpad-lite,b2c0837cf5f037ed2498808d9a2f0ed09072a912,Richard Hansen,2021-03-18 01:01:47-04:00,import/export: Promisify Abiword and LibreOffice conversion,src\node\handler\ImportHandler.js,https://github.com/ether/etherpad-lite/commit/b2c0837cf5f037ed2498808d9a2f0ed09072a912,"-      await new Promise((resolve, reject) => {","+        await converter.convertFile(srcFile, destFile, exportExtension);"
-https://github.com/ether/etherpad-lite,81e36cf3c77bffbf2f352d7fbf3d7da611a5fa11,Richard Hansen,2021-03-19 16:21:25-04:00,Ace2Inner: Promisify `init()`,src\static\js\ace.js,https://github.com/ether/etherpad-lite/commit/81e36cf3c77bffbf2f352d7fbf3d7da611a5fa11,"-    await new Promise((resolve, reject) => innerWindow.Ace2Inner.init(",+    await innerWindow.Ace2Inner.init(info);
-https://github.com/ether/etherpad-lite,e2bfe2fd10b9947d51391951be0d00dd109a2a9a,Richard Hansen,2021-03-19 16:35:36-04:00,pad_editor: Promisify `init()`,src\static\js\pad_editor.js,https://github.com/ether/etherpad-lite/commit/e2bfe2fd10b9947d51391951be0d00dd109a2a9a,"-      self.ace.init('editorcontainer', '').then(","+    init: async (initialViewOptions, _pad) => {
-+      await self.ace.init('editorcontainer', '');"
-https://github.com/ether/etherpad-lite,eb3cff5b3adb47b9d8918c021247e5c36cdb7bea,Richard Hansen,2021-03-19 03:43:21-04:00,"LibreOffice: Remove unnecessary callbackification
-
-`async.queue` will do the right thing if passed an `async` function.",src\node\utils\LibreOffice.js,https://github.com/ether/etherpad-lite/commit/eb3cff5b3adb47b9d8918c021247e5c36cdb7bea,"-    (task, cb) => doConvertTask(task).then(() => cb(), (err) => cb(err || new Error(err))), 1);","+const queue = async.queue(doConvertTask, 1);"
+  * Use `.expect(fn)` instead of `.then(fn)`",src\tests\backend\specs\caching_middleware.js,https://github.com/ether/etherpad-lite/commit/3a34db84e693a1b3e053855bfd2b24a9975a0555,".then((res) => {
+.then((res) => assert.equal(res.header['content-encoding'], undefined));
+.then((res) => assert.equal(res.header['content-encoding'], 'gzip'));
+.then((res) => assert.equal(res.header['content-encoding'], undefined));","it(resource, async function () {
+it('does not cache content-encoding headers', async function () {
+it('does not cache content-encoding headers', async function () {
+await agent.get(packages[0])"
+https://github.com/ether/etherpad-lite,50fdadab7d3e640370a393a8cb8380e32fe51cc3,Richard Hansen,2021-03-17 18:40:42-04:00,ExportHandler: Pass the error unmodified,src\node\handler\ExportHandler.js,https://github.com/ether/etherpad-lite/commit/50fdadab7d3e640370a393a8cb8380e32fe51cc3,"await new Promise((resolve, reject) => {","await util.promisify(convertor.convertFile)(srcFile, destFile, type);"
+https://github.com/ether/etherpad-lite,b2c0837cf5f037ed2498808d9a2f0ed09072a912,Richard Hansen,2021-03-18 01:01:47-04:00,import/export: Promisify Abiword and LibreOffice conversion,src\node\handler\ImportHandler.js,https://github.com/ether/etherpad-lite/commit/b2c0837cf5f037ed2498808d9a2f0ed09072a912,"await new Promise((resolve, reject) => {","await converter.convertFile(srcFile, destFile, exportExtension);"
+https://github.com/ether/etherpad-lite,81e36cf3c77bffbf2f352d7fbf3d7da611a5fa11,Richard Hansen,2021-03-19 16:21:25-04:00,Ace2Inner: Promisify `init()`,src\static\js\ace.js,https://github.com/ether/etherpad-lite/commit/81e36cf3c77bffbf2f352d7fbf3d7da611a5fa11,"await new Promise((resolve, reject) => innerWindow.Ace2Inner.init(",await innerWindow.Ace2Inner.init(info);
 https://github.com/ether/etherpad-lite,056939cd22a17bc6a65612769828b644ad816e4c,Richard Hansen,2021-03-31 02:38:05-04:00,"tests: Refine `helper/multipleUsers.js`
 
   * Rename ""current""/""other"" to ""user0""/""user1"".
@@ -609,274 +148,53 @@ https://github.com/ether/etherpad-lite,056939cd22a17bc6a65612769828b644ad816e4c,
   * Use js-cookie to manipulate the token cookie.
   * Don't attempt to set the token cookie if the pad isn't loaded.
   * Use the token generated by the pad.
-  * Only clear the token cookie at path=/.",src\tests\frontend\helper\multipleUsers.js,https://github.com/ether/etherpad-lite/commit/056939cd22a17bc6a65612769828b644ad816e4c,"-    await new Promise((resolve) => this.otherUser.$frame.one('load', resolve));","+    await this.performAsOtherUser(this._createUser1Frame.bind(this));
-+  async _loadJQueryForUser1Frame() {
-+  async _createUser1Frame() {
-+    await new Promise((resolve) => this._user1.$frame.one('load', resolve));
-+    await this._loadJQueryForUser1Frame();"
-https://github.com/ether/etherpad-lite,dd9c08d821d0b2ec95d7ae8bdb75440deb0db128,Richard Hansen,2021-04-01 03:10:18-04:00,tests: Wait for commit rather than sleep,src\tests\frontend\specs\authorship_of_editions.js,https://github.com/ether/etherpad-lite/commit/dd9c08d821d0b2ec95d7ae8bdb75440deb0db128,"-    await new Promise((resolve) => setTimeout(resolve, 1000));","+    await helper.waitForPromise(() => (
-+    await helper.waitForPromise(() => (
-+    await helper.waitForPromise(() => ("
-https://github.com/ether/etherpad-lite,dd9c08d821d0b2ec95d7ae8bdb75440deb0db128,Richard Hansen,2021-04-01 03:10:18-04:00,tests: Wait for commit rather than sleep,src\tests\frontend\specs\multiple_authors_clear_authorship_colors.js,https://github.com/ether/etherpad-lite/commit/dd9c08d821d0b2ec95d7ae8bdb75440deb0db128,"-    await new Promise((resolve) => setTimeout(resolve, 1000));",+    await helper.waitForPromise(() => (
+  * Only clear the token cookie at path=/.",src\tests\frontend\helper\multipleUsers.js,https://github.com/ether/etherpad-lite/commit/056939cd22a17bc6a65612769828b644ad816e4c,"await new Promise((resolve) => this.otherUser.$frame.one('load', resolve));",await this._loadJQueryForUser1Frame();
 https://github.com/ether/etherpad-lite,bbf89dfcf98a57370ebfe972b67e773fe201bd93,Richard Hansen,2021-03-31 21:14:02-04:00,"tests: Refine frontend tests
 
   * Switch from `helper.newPad()` to `helper.aNewPad()`.
   * Promisify.
   * Delete redundant logic.
-  * Lint fixes.",src\tests\frontend\specs\chat_load_messages.js,https://github.com/ether/etherpad-lite/commit/bbf89dfcf98a57370ebfe972b67e773fe201bd93,"-    await new Promise((resolve) => helper.newPad(() => resolve(), padName));","+  it('creates a pad', async function () {
-+    padName = await helper.aNewPad();
-+    await helper.aNewPad({id: padName});"
+  * Lint fixes.",src\tests\frontend\specs\chat_load_messages.js,https://github.com/ether/etherpad-lite/commit/bbf89dfcf98a57370ebfe972b67e773fe201bd93,"await new Promise((resolve) => helper.newPad(() => resolve(), padName));",await helper.aNewPad({id: padName});
 https://github.com/ether/etherpad-lite,bbf89dfcf98a57370ebfe972b67e773fe201bd93,Richard Hansen,2021-03-31 21:14:02-04:00,"tests: Refine frontend tests
 
   * Switch from `helper.newPad()` to `helper.aNewPad()`.
   * Promisify.
   * Delete redundant logic.
-  * Lint fixes.",src\tests\frontend\specs\importexport.js,https://github.com/ether/etherpad-lite/commit/bbf89dfcf98a57370ebfe972b67e773fe201bd93,-    await new Promise(,+    await helper.aNewPad();
+  * Lint fixes.",src\tests\frontend\specs\importexport.js,https://github.com/ether/etherpad-lite/commit/bbf89dfcf98a57370ebfe972b67e773fe201bd93,await new Promise(,await helper.aNewPad();
 https://github.com/ether/etherpad-lite,bbf89dfcf98a57370ebfe972b67e773fe201bd93,Richard Hansen,2021-03-31 21:14:02-04:00,"tests: Refine frontend tests
 
   * Switch from `helper.newPad()` to `helper.aNewPad()`.
   * Promisify.
   * Delete redundant logic.
-  * Lint fixes.",src\tests\frontend\specs\scrollTo.js,https://github.com/ether/etherpad-lite/commit/bbf89dfcf98a57370ebfe972b67e773fe201bd93,"-      await new Promise((resolve, reject) => helper.newPad({
--      await new Promise((resolve, reject) => helper.newPad({","+      await helper.aNewPad({hash: 'L4'});
-+      await helper.aNewPad({hash: '#DEEZ123123NUTS'});"
+  * Lint fixes.",src\tests\frontend\specs\scrollTo.js,https://github.com/ether/etherpad-lite/commit/bbf89dfcf98a57370ebfe972b67e773fe201bd93,"await new Promise((resolve, reject) => helper.newPad({",await helper.aNewPad({hash: 'L4'});
 https://github.com/ether/etherpad-lite,bbf89dfcf98a57370ebfe972b67e773fe201bd93,Richard Hansen,2021-03-31 21:14:02-04:00,"tests: Refine frontend tests
 
   * Switch from `helper.newPad()` to `helper.aNewPad()`.
   * Promisify.
   * Delete redundant logic.
-  * Lint fixes.",src\tests\frontend\specs\urls_become_clickable.js,https://github.com/ether/etherpad-lite/commit/bbf89dfcf98a57370ebfe972b67e773fe201bd93,"-    await new Promise((resolve, reject) => helper.newPad((err) => {",+    await helper.aNewPad();
-https://github.com/ether/etherpad-lite,7a154b1e1dcc959cb4a0a176ab2cad852de717e0,Richard Hansen,2021-04-01 04:32:05-04:00,tests: Wait for commit instead of sleep in `timeslider_revisions.js`,src\tests\frontend\specs\timeslider_revisions.js,https://github.com/ether/etherpad-lite/commit/7a154b1e1dcc959cb4a0a176ab2cad852de717e0,"-      await new Promise((resolve) => setTimeout(resolve, timePerRev));
--      await new Promise((resolve) => setTimeout(resolve, timePerRev));","+    for (let i = 0; i < 99; i++) await helper.edit('a');
-+    for (let i = 0; i < 20; i++) await helper.edit('a');"
-https://github.com/ether/etherpad-lite,aaacbd3a7a234009431bb7dfe9394008251d47d0,Richard Hansen,2021-04-21 16:24:27-04:00,Minify: Refactor `requestURI()` for readability,src\node\utils\Minify.js,https://github.com/ether/etherpad-lite/commit/aaacbd3a7a234009431bb7dfe9394008251d47d0,"-const requestURI = async (url, method, headers) => await new Promise((resolve, reject) => {","+const requestURI = async (url, method, headers) => {
-+  await minify(mockRequest, mockResponse);
-+  return await p;"
-https://github.com/ether/etherpad-lite,8f236b86877efd5db3ca289619baaa194c95048b,Richard Hansen,2021-04-21 16:29:55-04:00,Minify: Avoid crash due to unhandled Promise rejection if stat fails,src\node\utils\Minify.js,https://github.com/ether/etherpad-lite/commit/8f236b86877efd5db3ca289619baaa194c95048b,"-  Promise.all(locations.map((loc) => requestURI(loc, method, headers))).then((responses) => {","+  Promise.all(locations.map(async (loc) => {
-+      return await requestURI(loc, method, headers);"
-https://github.com/ether/etherpad-lite,8baacd514e4c2f11e1858e4293ee4b0abf9b1b91,Richard Hansen,2021-05-03 00:43:23-04:00,remote_runner: Always call `browser.quit()`,src\tests\frontend\travis\remote_runner.js,https://github.com/ether/etherpad-lite/commit/8baacd514e4c2f11e1858e4293ee4b0abf9b1b91,"-    await new Promise((resolve) => setTimeout(resolve, 5000));","+    await browser.get('http://localhost:9001/tests/frontend/');
-+      const consoleText = await browser.eval(`(${remoteFn})($, ${JSON.stringify(logIndex)})`);
-+      await new Promise((resolve) => setTimeout(resolve, 5000));
-+    await browser.quit();"
+  * Lint fixes.",src\tests\frontend\specs\urls_become_clickable.js,https://github.com/ether/etherpad-lite/commit/bbf89dfcf98a57370ebfe972b67e773fe201bd93,"await new Promise((resolve, reject) => helper.newPad((err) => {",await helper.aNewPad();
+https://github.com/ether/etherpad-lite,aaacbd3a7a234009431bb7dfe9394008251d47d0,Richard Hansen,2021-04-21 16:24:27-04:00,Minify: Refactor `requestURI()` for readability,src\node\utils\Minify.js,https://github.com/ether/etherpad-lite/commit/aaacbd3a7a234009431bb7dfe9394008251d47d0,"const requestURI = async (url, method, headers) => await new Promise((resolve, reject) => {","const requestURI = async (url, method, headers) => {"
+https://github.com/ether/etherpad-lite,8f236b86877efd5db3ca289619baaa194c95048b,Richard Hansen,2021-04-21 16:29:55-04:00,Minify: Avoid crash due to unhandled Promise rejection if stat fails,src\node\utils\Minify.js,https://github.com/ether/etherpad-lite/commit/8f236b86877efd5db3ca289619baaa194c95048b,"Promise.all(locations.map((loc) => requestURI(loc, method, headers))).then((responses) => {",Promise.all(locations.map(async (loc) => {
+https://github.com/ether/etherpad-lite,8baacd514e4c2f11e1858e4293ee4b0abf9b1b91,Richard Hansen,2021-05-03 00:43:23-04:00,remote_runner: Always call `browser.quit()`,src\tests\frontend\travis\remote_runner.js,https://github.com/ether/etherpad-lite/commit/8baacd514e4c2f11e1858e4293ee4b0abf9b1b91,"await new Promise((resolve) => setTimeout(resolve, 5000));",await browser.quit();
 https://github.com/ether/etherpad-lite,d87b4e0c20ccd03771833c878345edc4b39139a1,Richard Hansen,2021-05-09 16:23:49-04:00,"tests: Use `async`/`await` instead of returning Promises
 
-This makes stack traces more useful.",src\node\hooks\express\tests.js,https://github.com/ether/etherpad-lite/commit/d87b4e0c20ccd03771833c878345edc4b39139a1,-  return Promise.all(promises).then(() => pluginSpecs);,"+      .map(async ([plugin, specDir]) => await readdir(specDir)
-+  return await Promise.all(promises).then(() => pluginSpecs);
-+exports.getCoreTests = async () => await readdir('src/tests/frontend/specs');"
-https://github.com/ether/etherpad-lite,f00f9aa14cb87758e57faa9b45f8d3cbe03033ca,Richard Hansen,2021-05-09 16:30:53-04:00,tests: Avoid `.then()` inside `async` functions,src\node\hooks\express\tests.js,https://github.com/ether/etherpad-lite/commit/f00f9aa14cb87758e57faa9b45f8d3cbe03033ca,"-          .then((specFiles) => specFiles.map((spec) => {
--  return await Promise.all(promises).then(() => pluginSpecs);","+  await Promise.all(plugins
-+      .map(async ([plugin, specDir]) => {
-+        const specFiles = await readdir(specDir);"
-https://github.com/ether/etherpad-lite,ff39eeafca14094c9bd26918818812953832feba,Richard Hansen,2021-07-22 13:33:48-04:00,tests: Factor out duplicate `getFrameJQuery()`,src\tests\frontend\helper\multipleUsers.js,https://github.com/ether/etherpad-lite/commit/ff39eeafca14094c9bd26918818812953832feba,"-    const p = new Promise((resolve, reject) => {","+    this._user1.padChrome$ = await helper.getFrameJQuery(this._user1.$frame, true);
-+        await helper.getFrameJQuery(this._user1.padChrome$('iframe[name=""ace_outer""]'), false);
-+        await helper.getFrameJQuery(this._user1.padOuter$('iframe[name=""ace_inner""]'), true);"
-https://github.com/ether/etherpad-lite,bc9cdd695794a4149df5102a1ef483f20c3ba9fb,Richard Hansen,2021-09-06 05:42:47-04:00,SocketIORouter: Add acknowledgement support,src\tests\backend\specs\socketio.js,https://github.com/ether/etherpad-lite/commit/bc9cdd695794a4149df5102a1ef483f20c3ba9fb,-      const received = new Promise((resolve) => receive = resolve);,"+    const tx = async (socket, message = {}) => await new Promise((resolve, reject) => {
-+    it('handleMessage with ack (success)', async function () {
-+      const got = await tx(socket, {component: this.test.fullTitle()});
-+    it('handleMessage with ack (error)', async function () {
-+      socket = await connect();
-+      await assert.rejects(tx(socket, {component: this.test.fullTitle()}), new InjectedError());"
-https://github.com/ether/etherpad-lite,e42e5457c12ec793f012ff64f1b7346cd5076084,Richard Hansen,2021-09-29 23:10:40-04:00,LibreOffice: Improve logging,src\node\utils\LibreOffice.js,https://github.com/ether/etherpad-lite/commit/e42e5457c12ec793f012ff64f1b7346cd5076084,"-  await new Promise((resolve, reject) => {",+    await p;
-https://github.com/ether/etherpad-lite,d8cbd134d336215a7962ba65932eaa7cc66973d7,Richard Hansen,2021-03-21 14:52:39-04:00,PadMessageHandler: Improve readability,src\node\handler\PadMessageHandler.js,https://github.com/ether/etherpad-lite/commit/d8cbd134d336215a7962ba65932eaa7cc66973d7,"-          ).then(
--      .then((revDate) => {
--  const p3 = getPadLines(padId, startNum - 1).then((_lines) => {","+  const [lines] = await Promise.all([
-+    ...compositesChangesetNeeded.map(async (item) => {
-+      const changeset = await composePadChangesets(padId, item.start, item.end);
-+    ...revTimesNeeded.map(async (revNum) => {
-+      const revDate = await pad.getRevisionDate(revNum);"
-https://github.com/ether/etherpad-lite,0992f195707b710906becf90003ce315448a8f34,Richard Hansen,2021-10-30 00:46:05-04:00,PadMessageHandler: Improve readability of historical author fetch,src\node\handler\PadMessageHandler.js,https://github.com/ether/etherpad-lite/commit/0992f195707b710906becf90003ce315448a8f34,-  await Promise.all(authors.map((authorId) => authorManager.getAuthor(authorId).then((author) => {,"+  await Promise.all(authors.map(async (authorId) => {
-+    const author = await authorManager.getAuthor(authorId);"
-https://github.com/ether/etherpad-lite,00e7b04518aba95aac918c0419c8fb31fd745b29,Richard Hansen,2021-10-30 01:16:17-04:00,PadMessageHandler: Improve readability of changeset loading,src\node\handler\PadMessageHandler.js,https://github.com/ether/etherpad-lite/commit/00e7b04518aba95aac918c0419c8fb31fd745b29,"-      promises.push(pad.getRevisionChangeset(revNum).then((result) => cs.changeset = result));
--      promises.push(pad.getRevisionAuthor(revNum).then((result) => cs.author = result));
--      promises.push(pad.getRevisionDate(revNum).then((result) => cs.timestamp = result));","+    await Promise.all(revisionsNeeded.map(async (revNum) => {
-+      [cs.changeset, cs.author, cs.timestamp] = await Promise.all(["
-https://github.com/ether/etherpad-lite,e28c9ffc9763e8715a318322959cf6f6e9cd01a5,Richard Hansen,2021-10-28 17:36:41-04:00,tests: Support injecting hook functions during pad load,src\tests\frontend\helper.js,https://github.com/ether/etherpad-lite/commit/e28c9ffc9763e8715a318322959cf6f6e9cd01a5,"-    await new Promise((resolve) => $iframe.one('load', resolve));",+    await Promise.all([
-https://github.com/ether/etherpad-lite,c8e0916e1ac997ff0268f98368e7fc87cf60b947,Richard Hansen,2021-10-28 17:44:10-04:00,tests: Spy on socket.io messages as early as possible,src\static\js\pad.js,https://github.com/ether/etherpad-lite/commit/c8e0916e1ac997ff0268f98368e7fc87cf60b947,-  await new Promise((resolve) => {,+  await Promise.all([
-https://github.com/ether/etherpad-lite,23037280a8de8cb22366d6f41d37442210bd8ace,Richard Hansen,2021-10-25 19:33:36-04:00,Pad: Simplify `getChatMessages()`,src\node\db\Pad.js,https://github.com/ether/etherpad-lite/commit/23037280a8de8cb22366d6f41d37442210bd8ace,-      neededEntries.map((entryObject) => this.getChatMessage(entryObject.entryNum).then((entry) => {,+  const entries = await Promise.all(
-https://github.com/ether/etherpad-lite,65bd5970530b38fc2bf17a7c3409a6aaf7188ed5,Richard Hansen,2021-10-30 22:23:13-04:00,tests: Move socket.io connection helpers to `common.js`,src\tests\backend\specs\socketio.js,https://github.com/ether/etherpad-lite/commit/65bd5970530b38fc2bf17a7c3409a6aaf7188ed5,"-  return new Promise((resolve, reject) => {","+      socket = await common.connect(res);
-+      const clientVars = await common.handshake(socket, 'pad');
-+      socket = await common.connect(null);
-+      const clientVars = await common.handshake(socket, 'pad');
-+      socket = await common.connect(res);
-+      const clientVars = await common.handshake(socket, 'pad');
-+      socket = await common.connect(res);
-+      const clientVars = await common.handshake(socket, 'pad');
-+        socket = await common.connect(res);
-+        let clientVars = await common.handshake(socket, 'pad');
-+        socket = await common.connect(res);
-+        clientVars = await common.handshake(socket, readOnlyId);
-+      socket = await common.connect(res);
-+      const clientVars = await common.handshake(socket, 'pad');
-+      socket = await common.connect(res);
-+      const clientVars = await common.handshake(socket, 'päd');
-+      socket = await common.connect(res);
-+      const message = await common.handshake(socket, 'pad');
-+      socket = await common.connect(res);
-+      const clientVars = await common.handshake(socket, 'pad');
-+      socket = await common.connect(res);
-+      const message = await common.handshake(socket, readOnlyId);
-+      socket = await common.connect(null);
-+      const message = await common.handshake(socket, 'pad');
-+      socket = await common.connect(res);
-+      const message = await common.handshake(socket, 'other-pad');
-+      socket = await common.connect(res);
-+      const clientVars = await common.handshake(socket, 'pad');
-+      socket = await common.connect(res);
-+      const clientVars = await common.handshake(socket, 'pad');
-+      socket = await common.connect(res);
-+      const clientVars = await common.handshake(socket, 'pad');
-+      socket = await common.connect(res);
-+      const message = await common.handshake(socket, 'pad');
-+      socket = await common.connect(res);
-+      const message = await common.handshake(socket, 'pad');
-+      socket = await common.connect(res);
-+      const message = await common.handshake(socket, 'pad');
-+      socket = await common.connect(res);
-+      const clientVars = await common.handshake(socket, 'pad');
-+      socket = await common.connect(res);
-+      const clientVars = await common.handshake(socket, 'pad');
-+      socket = await common.connect(res);
-+      const message = await common.handshake(socket, 'pad');
-+      socket = await common.connect(res);
-+      const message = await common.handshake(socket, 'pad');
-+      socket = await common.connect(res);
-+      const clientVars = await common.handshake(socket, 'pad');
-+      socket = await common.connect(res);
-+      const clientVars = await common.handshake(socket, 'pad');
-+      socket = await common.connect(res);
-+      const message = await common.handshake(socket, 'pad');
-+      socket = await common.connect(res);
-+      const message = await common.handshake(socket, 'pad');
-+      socket = await common.connect(res);
-+      const message = await common.handshake(socket, 'pad');
-+      socket = await common.connect();
-+      socket = await common.connect();
-+      socket = await common.connect();
-+      socket = await common.connect();
-+      socket = await common.connect();"
-https://github.com/ether/etherpad-lite,23a98e59463d9c26f78f82988d0e96708a3c0c6a,Richard Hansen,2021-10-30 22:28:12-04:00,tests: Refactor `waitForSocketEvent()` to improve readability,src\tests\backend\common.js,https://github.com/ether/etherpad-lite/commit/23a98e59463d9c26f78f82988d0e96708a3c0c6a,"-  return new Promise((resolve, reject) => {","+    return await Promise.race([timeoutP, errorEventP, eventP]);"
-https://github.com/ether/etherpad-lite,98f0e931feb9f5d9cfd8c51f9f3403e37a5e5dae,Richard Hansen,2021-11-15 03:11:54-05:00,MinifyWorker: Promisify `compressCSS`,src\node\utils\MinifyWorker.js,https://github.com/ether/etherpad-lite/commit/98f0e931feb9f5d9cfd8c51f9f3403e37a5e5dae,"-const compressCSS = (filename, ROOT_DIR) => new Promise((res, rej) => {","+const compressCSS = async (filename, ROOT_DIR) => {
-+    const output = await new CleanCSS({"
+This makes stack traces more useful.",src\node\hooks\express\tests.js,https://github.com/ether/etherpad-lite/commit/d87b4e0c20ccd03771833c878345edc4b39139a1,return Promise.all(promises).then(() => pluginSpecs);,exports.getCoreTests = async () => await readdir('src/tests/frontend/specs');
+https://github.com/ether/etherpad-lite,f00f9aa14cb87758e57faa9b45f8d3cbe03033ca,Richard Hansen,2021-05-09 16:30:53-04:00,tests: Avoid `.then()` inside `async` functions,src\node\hooks\express\tests.js,https://github.com/ether/etherpad-lite/commit/f00f9aa14cb87758e57faa9b45f8d3cbe03033ca,.then((specFiles) => specFiles.map((spec) => {,const specFiles = await readdir(specDir);
+https://github.com/ether/etherpad-lite,e42e5457c12ec793f012ff64f1b7346cd5076084,Richard Hansen,2021-09-29 23:10:40-04:00,LibreOffice: Improve logging,src\node\utils\LibreOffice.js,https://github.com/ether/etherpad-lite/commit/e42e5457c12ec793f012ff64f1b7346cd5076084,"await new Promise((resolve, reject) => {",await p;
+https://github.com/ether/etherpad-lite,d8cbd134d336215a7962ba65932eaa7cc66973d7,Richard Hansen,2021-03-21 14:52:39-04:00,PadMessageHandler: Improve readability,src\node\handler\PadMessageHandler.js,https://github.com/ether/etherpad-lite/commit/d8cbd134d336215a7962ba65932eaa7cc66973d7,).then(,...revTimesNeeded.map(async (revNum) => {
+https://github.com/ether/etherpad-lite,0992f195707b710906becf90003ce315448a8f34,Richard Hansen,2021-10-30 00:46:05-04:00,PadMessageHandler: Improve readability of historical author fetch,src\node\handler\PadMessageHandler.js,https://github.com/ether/etherpad-lite/commit/0992f195707b710906becf90003ce315448a8f34,await Promise.all(authors.map((authorId) => authorManager.getAuthor(authorId).then((author) => {,await Promise.all(authors.map(async (authorId) => {
+https://github.com/ether/etherpad-lite,e28c9ffc9763e8715a318322959cf6f6e9cd01a5,Richard Hansen,2021-10-28 17:36:41-04:00,tests: Support injecting hook functions during pad load,src\tests\frontend\helper.js,https://github.com/ether/etherpad-lite/commit/e28c9ffc9763e8715a318322959cf6f6e9cd01a5,"await new Promise((resolve) => $iframe.one('load', resolve));",await Promise.all([
+https://github.com/ether/etherpad-lite,c8e0916e1ac997ff0268f98368e7fc87cf60b947,Richard Hansen,2021-10-28 17:44:10-04:00,tests: Spy on socket.io messages as early as possible,src\static\js\pad.js,https://github.com/ether/etherpad-lite/commit/c8e0916e1ac997ff0268f98368e7fc87cf60b947,await new Promise((resolve) => {,await Promise.all([
+https://github.com/ether/etherpad-lite,98f0e931feb9f5d9cfd8c51f9f3403e37a5e5dae,Richard Hansen,2021-11-15 03:11:54-05:00,MinifyWorker: Promisify `compressCSS`,src\node\utils\MinifyWorker.js,https://github.com/ether/etherpad-lite/commit/98f0e931feb9f5d9cfd8c51f9f3403e37a5e5dae,"const compressCSS = (filename, ROOT_DIR) => new Promise((res, rej) => {","const compressCSS = async (filename, ROOT_DIR) => {"
 https://github.com/ether/etherpad-lite,5b37a5619781012decb3f5aae847de447aa5f08d,Richard Hansen,2021-11-12 21:26:55-05:00,"GroupManager: Use `.setSub()` and parallel queries to avoid races
 
-This also simplfies the code.",src\node\db\GroupManager.js,https://github.com/ether/etherpad-lite/commit/5b37a5619781012decb3f5aae847de447aa5f08d,-          .then((pad) => pad.remove()),"+  await Promise.all(Object.keys(group.pads).map(async (padId) => {
-+    const pad = await padManager.getPad(padId);
-+    await pad.remove();
-+  const {sessionIDs = {}} = await db.get(`group2sessions:${groupID}`) || {};
-+  await Promise.all(Object.keys(sessionIDs).map(async (sessionId) => {
-+    await sessionManager.deleteSession(sessionId);
-+  await Promise.all([
-+  await db.setSub('groups', [groupID], 1);"
+This also simplfies the code.",src\node\db\GroupManager.js,https://github.com/ether/etherpad-lite/commit/5b37a5619781012decb3f5aae847de447aa5f08d,.then((pad) => pad.remove()),await pad.remove();
 https://github.com/ether/etherpad-lite,0040f5984e4052e7b8cd2b503b9f14b72be1fa29,webzwo0i,2021-07-04 16:30:30+02:00,"db: await more database operations
 
-Co-authored-by: Richard Hansen <rhansen@rhansen.org>",src\node\db\Pad.js,https://github.com/ether/etherpad-lite/commit/0040f5984e4052e7b8cd2b503b9f14b72be1fa29,"-  await new Promise((resolve) => setTimeout(resolve, 10));","+    (async () => await db.set(`pad:${destinationID}`, await this._db.get(`pad:${this.id}`)))(),
-+  await padManager.getPad(destinationID, null);
-+Pad.prototype.copyAuthorInfoToDestinationPad = async function (destinationID) {
-+  await Promise.all(this.getAllAuthors().map(
-+  await this.copyAuthorInfoToDestinationPad(destinationID);"
-https://github.com/ether/etherpad-lite,757204083620b60d0f7c118609b517928b3cc405,Richard Hansen,2021-09-17 00:30:25-04:00,Pad: Simplify `Pad.copy()` logic,src\node\db\Pad.js,https://github.com/ether/etherpad-lite/commit/757204083620b60d0f7c118609b517928b3cc405,"-        .then((chat) => db.set(`pad:${destinationID}:chat:${i}`, chat));
--        .then((rev) => db.set(`pad:${destinationID}:revs:${i}`, rev));","+  const copyRecord = async (keySuffix) => {
-+    const val = await this._db.get(`pad:${this.id}${keySuffix}`);
-+    await db.set(`pad:${destinationID}${keySuffix}`, val);
-+  await Promise.all((function* () {"
-https://github.com/ether/etherpad-lite,bf35dcfc5096a77b19bc2b50261b34c98fce7011,Richard Hansen,2021-12-18 16:30:17-05:00,webaccess: Move `preAuthorize` to its own middleware,src\node\hooks\express\webaccess.js,https://github.com/ether/etherpad-lite/commit/bf35dcfc5096a77b19bc2b50261b34c98fce7011,"-  const aCallFirst = (hookName, context, pred = null) => new Promise((resolve, reject) => {","+    async (hookName, context, pred = null) => (await aCallFirst(hookName, context, pred))[0];
-+const preAuthorize = async (req, res, next) => {
-+    results = await aCallFirst('preAuthorize', {req, res, next: preAuthorizeNext},
-+      if (await aCallFirst0('preAuthzFailure', {req, res})) return;
-+const checkAccess = async (req, res, next) => {"
-https://github.com/ether/etherpad-lite,65bd5ffa6bd2b3cdbbf928d1699d6992851e85e9,Richard Hansen,2022-02-16 22:07:23-05:00,Pad: Rename `author` vars to `authorId` for consistency,src\node\db\Pad.js,https://github.com/ether/etherpad-lite/commit/65bd5ffa6bd2b3cdbbf928d1699d6992851e85e9,-      authors.map((author) => authorManager.getAuthorColorId(author).then((colorId) => {,"+Pad.prototype.appendRevision = async function (aChangeset, authorId) {
-+      const [changeset, authorId, timestamp] = await Promise.all(["
-https://github.com/ether/etherpad-lite,3b76b2dd67826caa5c0cf1f9fd6cac667a105647,Richard Hansen,2022-02-23 15:41:23-05:00,SocketIORouter: Improve error handling,src\node\handler\SocketIORouter.js,https://github.com/ether/etherpad-lite/commit/3b76b2dd67826caa5c0cf1f9fd6cac667a105647,"-      (async () => await components[message.component].handleMessage(socket, message))().then(","+    socket.on('message', (message, ack = () => {}) => (async () => {
-+      return await components[message.component].handleMessage(socket, message);"
-https://github.com/ether/etherpad-lite,addc0198107c1996a8da68baa3a270c5af123e49,Richard Hansen,2021-11-21 23:55:17-05:00,Pad: Use ES6 class syntax to improve readability,src\node\db\Pad.js,https://github.com/ether/etherpad-lite/commit/addc0198107c1996a8da68baa3a270c5af123e49,"-      neededChangesets.map((item) => this.getRevisionChangeset(item).then((changeset) => {
--      authorIds.map((authorId) => authorManager.getAuthorColorId(authorId).then((colorId) => {
--  p.push(readOnlyManager.getReadOnlyId(padID).then(async (readonlyID) => {","+  async appendRevision(aChangeset, authorId = '') {
-+    await Promise.all(p);
-+  async saveToDatabase() {
-+    await this.db.set(`pad:${this.id}`, dbObject);
-+  async getLastEdit() {
-+    return await this.db.getSub(`pad:${this.id}:revs:${revNum}`, ['meta', 'timestamp']);
-+  async getRevisionChangeset(revNum) {
-+    return await this.db.getSub(`pad:${this.id}:revs:${revNum}`, ['changeset']);
-+  async getRevisionAuthor(revNum) {
-+    return await this.db.getSub(`pad:${this.id}:revs:${revNum}`, ['meta', 'author']);
-+  async getRevisionDate(revNum) {
-+    return await this.db.getSub(`pad:${this.id}:revs:${revNum}`, ['meta', 'timestamp']);
-+  async getInternalRevisionAText(targetRev) {
-+    await Promise.all(
-+    let atext = await atextp;
-+  async getRevision(revNum) {
-+    return await this.db.get(`pad:${this.id}:revs:${revNum}`);
-+  async getAllAuthorColors() {
-+    await Promise.all(
-+  async spliceText(start, ndel, ins, authorId = '') {
-+    await this.appendRevision(changeset, authorId);
-+  async setText(newText, authorId = '') {
-+    await this.spliceText(0, this.text().length, newText, authorId);
-+  async appendText(newText, authorId = '') {
-+    await this.spliceText(this.text().length - 1, 0, newText, authorId);
-+  async appendChatMessage(msgOrText, authorId = null, time = null) {
-+    await Promise.all([
-+  async getChatMessage(entryNum) {
-+    const entry = await this.db.get(`pad:${this.id}:chat:${entryNum}`);
-+    message.displayName = await authorManager.getAuthorName(message.authorId);
-+  async getChatMessages(start, end) {
-+    const entries = await Promise.all(
-+  async init(text, authorId = '') {
-+    const value = await this.db.get(`pad:${this.id}`);
-+        await hooks.aCallAll('padDefaultContent', context);
-+      await this.appendRevision(firstChangeset, authorId);
-+    await hooks.aCallAll('padLoad', {pad: this});
-+  async copy(destinationID, force) {
-+    await this.saveToDatabase();
-+    const destGroupID = await this.checkIfGroupExistAndReturnIt(destinationID);
-+    await this.removePadIfForceIsTrueAndAlreadyExist(destinationID, force);
-+    const copyRecord = async (keySuffix) => {
-+      const val = await this.db.get(`pad:${this.id}${keySuffix}`);
-+      await db.set(`pad:${destinationID}${keySuffix}`, val);
-+    await Promise.all((function* () {
-+    const dstPad = await padManager.getPad(destinationID, null);
-+    await hooks.aCallAll('padCopy', {
-+  async checkIfGroupExistAndReturnIt(destinationID) {
-+      const groupExists = await groupManager.doesGroupExist(destGroupID);
-+  async removePadIfForceIsTrueAndAlreadyExist(destinationID, force) {
-+    const exists = await padManager.doesPadExist(destinationID);
-+      const pad = await padManager.getPad(destinationID);
-+      await pad.remove();
-+  async copyAuthorInfoToDestinationPad(destinationID) {
-+    await Promise.all(this.getAllAuthors().map(
-+  async copyPadWithoutHistory(destinationID, force, authorId = '') {
-+    const destGroupID = await this.checkIfGroupExistAndReturnIt(destinationID);
-+    await this.removePadIfForceIsTrueAndAlreadyExist(destinationID, force);
-+    await this.copyAuthorInfoToDestinationPad(destinationID);
-+      await db.setSub(`group:${destGroupID}`, ['pads', destinationID], 1);
-+    const dstPad = await padManager.getPad(destinationID, '\n', authorId);
-+    await hooks.aCallAll('padCopy', {
-+  async remove() {
-+    // delete all relations - the original code used async.parallel but
-+      const group = await db.get(`group:${groupID}`);
-+    p.push(readOnlyManager.getReadOnlyId(padID).then(async (readonlyID) => {
-+      await db.remove(`readonly2pad:${readonlyID}`);
-+    p.push(promises.timesLimit(this.chatHead + 1, 500, async (i) => {
-+      await this.db.remove(`pad:${this.id}:chat:${i}`, null);
-+    p.push(promises.timesLimit(this.head + 1, 500, async (i) => {
-+      await this.db.remove(`pad:${this.id}:revs:${i}`, null);
-+    await Promise.all(p);
-+  async setPublicStatus(publicStatus) {
-+    await this.saveToDatabase();
-+  async addSavedRevision(revNum, savedById, label) {
-+    await this.saveToDatabase();
-+  async check() {
-+    await pool.check();
-+        const [changeset, authorId, timestamp] = await Promise.all([
-+        assert.deepEqual(await this.getInternalRevisionAText(r), atext);
-+        const msg = await this.getChatMessage(c);
-+    await hooks.aCallAll('padCheck', {pad: this});"
-https://github.com/ether/etherpad-lite,7ee2141fe65187b6ee98e7ed2739b674dafc124a,Richard Hansen,2021-12-01 16:39:01-05:00,Pad: Simplify `getInternalRevisionAText`,src\node\db\Pad.js,https://github.com/ether/etherpad-lite/commit/7ee2141fe65187b6ee98e7ed2739b674dafc124a,-        neededChangesets.map((item) => this.getRevisionChangeset(item).then((changeset) => {,"+    const [keyAText, changesets] = await Promise.all(["
-https://github.com/ether/etherpad-lite,10206d9e25a57488890ee8b0f1a16f06cddf449a,Richard Hansen,2022-04-19 17:48:44-04:00,DB: Clean up database initialization,src\node\db\DB.js,https://github.com/ether/etherpad-lite/commit/10206d9e25a57488890ee8b0f1a16f06cddf449a,"-exports.init = async () => await new Promise((resolve, reject) => {","+exports.init = async () => {
-+  await exports.db.init();
-+    exports[fn] = async (...args) => await f.call(exports.db, ...args);
-+  if (exports.db != null) await exports.db.close();"
+Co-authored-by: Richard Hansen <rhansen@rhansen.org>",src\node\db\Pad.js,https://github.com/ether/etherpad-lite/commit/0040f5984e4052e7b8cd2b503b9f14b72be1fa29,"await new Promise((resolve) => setTimeout(resolve, 10));","await padManager.getPad(destinationID, null);"
+https://github.com/ether/etherpad-lite,addc0198107c1996a8da68baa3a270c5af123e49,Richard Hansen,2021-11-21 23:55:17-05:00,Pad: Use ES6 class syntax to improve readability,src\node\db\Pad.js,https://github.com/ether/etherpad-lite/commit/addc0198107c1996a8da68baa3a270c5af123e49,"neededChangesets.map((item) => this.getRevisionChangeset(item).then((changeset) => {
+p.push(readOnlyManager.getReadOnlyId(padID).then(async (readonlyID) => {","let atext = await atextp;
+await db.remove(`readonly2pad:${readonlyID}`);"
 https://github.com/ether/etherpad-lite,049231e4af44e39969e356e3fe577177fe646368,SamTV12345,2023-06-27 21:20:53+02:00,"Feature/axios (#5776)
 
 * Move from deprecated request package to axios.
@@ -893,32 +211,9 @@ https://github.com/ether/etherpad-lite,049231e4af44e39969e356e3fe577177fe646368,
 
 * Revert ""Bump bundled npm to also get rid of request in the bundled npm.""
 
-This reverts commit b60fa4f435c141bca332a5b344c36204eb0cc7b4.",src\node\utils\UpdateCheck.js,https://github.com/ether/etherpad-lite/commit/049231e4af44e39969e356e3fe577177fe646368,"-const loadEtherpadInformations = () => new Promise((resolve, reject) => {
--  loadEtherpadInformations().then((info) => {","+        .then(async resp => {
-+            infos = await resp.data;
-+              await Promise.reject(""Could not retrieve current version"")
-+            return await Promise.resolve(infos);
-+            return   await Promise.reject(err);
-+exports.needsUpdate = async (cb) => {
-+  await loadEtherpadInformations()"
-https://github.com/ether/etherpad-lite,049231e4af44e39969e356e3fe577177fe646368,SamTV12345,2023-06-27 21:20:53+02:00,"Feature/axios (#5776)
-
-* Move from deprecated request package to axios.
-
-* Fixed package.json
-
-* Another check.
-
-* Fixing npm - hopefully the last.
-
-* Remove double parsing of JSON.
-
-* Bump bundled npm to also get rid of request in the bundled npm.
-
-* Revert ""Bump bundled npm to also get rid of request in the bundled npm.""
-
-This reverts commit b60fa4f435c141bca332a5b344c36204eb0cc7b4.",src\static\js\pluginfw\installer.js,https://github.com/ether/etherpad-lite/commit/049231e4af44e39969e356e3fe577177fe646368,"-  return new Promise((resolve, reject) => {","+  return new Promise(async (resolve, reject) => {
-+      await axios.get('https://static.etherpad.org/plugins.json')"
+This reverts commit b60fa4f435c141bca332a5b344c36204eb0cc7b4.",src\node\utils\UpdateCheck.js,https://github.com/ether/etherpad-lite/commit/049231e4af44e39969e356e3fe577177fe646368,"const loadEtherpadInformations = () => new Promise((resolve, reject) => {
+loadEtherpadInformations().then((info) => {","infos = await resp.data;
+exports.needsUpdate = async (cb) => {"
 https://github.com/ether/etherpad-lite,4da66d19dc0625f088a72c3ae627e2cc17269859,dependabot[bot],2023-08-05 15:48:23+02:00,"build(deps): bump formidable from 2.1.2 to 3.5.0 in /src (#5796)
 
 * build(deps): bump formidable from 2.1.2 to 3.5.0 in /src
@@ -943,7 +238,7 @@ Signed-off-by: dependabot[bot] <support@github.com>
 
 Signed-off-by: dependabot[bot] <support@github.com>
 Co-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
-Co-authored-by: John McLear <john@mclear.co.uk>",src\node\handler\ImportHandler.js,https://github.com/ether/etherpad-lite/commit/4da66d19dc0625f088a72c3ae627e2cc17269859,"-  let srcFile = await new Promise((resolve, reject) => {","+    [fields, files] = await form.parse(req);"
+Co-authored-by: John McLear <john@mclear.co.uk>",src\node\handler\ImportHandler.js,https://github.com/ether/etherpad-lite/commit/4da66d19dc0625f088a72c3ae627e2cc17269859,"let srcFile = await new Promise((resolve, reject) => {","[fields, files] = await form.parse(req);"
 https://github.com/ether/etherpad-lite,4da66d19dc0625f088a72c3ae627e2cc17269859,dependabot[bot],2023-08-05 15:48:23+02:00,"build(deps): bump formidable from 2.1.2 to 3.5.0 in /src (#5796)
 
 * build(deps): bump formidable from 2.1.2 to 3.5.0 in /src
@@ -968,58 +263,8 @@ Signed-off-by: dependabot[bot] <support@github.com>
 
 Signed-off-by: dependabot[bot] <support@github.com>
 Co-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
-Co-authored-by: John McLear <john@mclear.co.uk>",src\node\hooks\express\apicalls.js,https://github.com/ether/etherpad-lite/commit/4da66d19dc0625f088a72c3ae627e2cc17269859,"-  const parseJserrorForm = async (req) => await new Promise((resolve, reject) => {","+  app.post('/ep/pad/connection-diagnostic-info', async (req, res) => {
-+    const [fields, files] = await (new Formidable({})).parse(req);
-+  const parseJserrorForm = async (req) => {
-+    const [fields, files] = await form.parse(req);"
-https://github.com/ether/etherpad-lite,a096f1ae33f4eb04a48916f83f82c81ff344c4eb,SamTV12345,2023-08-08 18:26:25+02:00,"Update jQuery to 3.7 and fix admintests (#5868)
-
-* jQuery: Migrate to `.on()`, `.off()`, `.trigger()`
-
-This avoids methods that are deprecated in newer versions of jQuery.
-
-* jQuery: avoid `.removeAttr`, prefer `.prop`
-
-* helper.edit: wait up to 10 seconds for ACCEPT_COMMIT
-
-* Chat: disabled attribute is boolean
-
-* Chat: avoid inline onclick handler to support jQuery 3.4+
-
-* jQuery: update to version 3.6.0
-
-* Update to 3.7
-
-* Removed deprecated event.
-
-* Revert change to focus on padeditor.ace
-
----------
-
-Co-authored-by: webzwo0i <webzwo0i@c3d2.de>",src\static\js\vendors\jquery.js,https://github.com/ether/etherpad-lite/commit/a096f1ae33f4eb04a48916f83f82c81ff344c4eb,"-					return promise.then( null, fn );
--			// Use .then() to unwrap secondary thenables (cf. gh-3000)
--				return master.then();
--	readyList.then( fn );","+			booleans = ""checked|selected|async|autofocus|autoplay|controls|defer|disabled|hidden|ismap|"" +
-+									// since it's otherwise lost when execution goes async
-+// captured before the async barrier to get the original error cause
-+				// are async. In other browsers, all those handlers are invoked synchronously.
-+			async: true,
-+				if ( s.async && s.timeout > 0 ) {
-+			async: false,
-+						options.async,"
-https://github.com/ether/etherpad-lite,f9a3a6aaaef19184ad244e85022d978d86abe2b6,Stefan,2023-09-25 11:05:33+00:00,"Improve update check (#5945)
-
-* Send etherpad version in update check request
-* Cache etherpad informations for one hour
-* Change format of User-Agent
-* Improve exception handling",src\node\utils\UpdateCheck.js,https://github.com/ether/etherpad-lite/commit/f9a3a6aaaef19184ad244e85022d978d86abe2b6,-        .then(async resp => {,"+  .then(async resp => {
-+    infos = await resp.data;
-+      await Promise.reject(""Could not retrieve current version"")
-+    return await Promise.resolve(infos);
-+  .catch(async err => {
-+    return await Promise.reject(err);"
-https://github.com/ether/etherpad-lite,d12119d3beb7635506b92ae00f85af54c1be2c0d,Stefan,2023-12-17 11:05:32+00:00,Handle exception during loading of plugins (#6074),src\static\js\pluginfw\installer.js,https://github.com/ether/etherpad-lite/commit/d12119d3beb7635506b92ae00f85af54c1be2c0d,-          .then(pluginsLoaded => {,"+      await axios.get('https://static.etherpad.org/plugins.json', {headers: headers})
-+        .catch(async err => {"
+Co-authored-by: John McLear <john@mclear.co.uk>",src\node\hooks\express\apicalls.js,https://github.com/ether/etherpad-lite/commit/4da66d19dc0625f088a72c3ae627e2cc17269859,"const parseJserrorForm = async (req) => await new Promise((resolve, reject) => {","const [fields, files] = await form.parse(req);"
+https://github.com/ether/etherpad-lite,d12119d3beb7635506b92ae00f85af54c1be2c0d,Stefan,2023-12-17 11:05:32+00:00,Handle exception during loading of plugins (#6074),src\static\js\pluginfw\installer.js,https://github.com/ether/etherpad-lite/commit/d12119d3beb7635506b92ae00f85af54c1be2c0d,.then(pluginsLoaded => {,"await axios.get('https://static.etherpad.org/plugins.json', {headers: headers})"
 https://github.com/ether/etherpad-lite,9c14a4f7dba1a7f0e7730a7e9fca18437630633d,Stefan,2024-01-14 11:54:57+01:00,"Live plugin manager (#6018)
 
 * Added plugin live view.
@@ -1051,25 +296,7 @@ https://github.com/ether/etherpad-lite,9c14a4f7dba1a7f0e7730a7e9fca18437630633d,
 ---------
 
 Co-authored-by: SamTV12345 <40429738+samtv12345@users.noreply.github.com>
-Co-authored-by: Hossein M <marzban98@gmail.com>",src\static\js\pluginfw\installer.js,https://github.com/ether/etherpad-lite/commit/9c14a4f7dba1a7f0e7730a7e9fca18437630633d,-        .then(pluginsLoaded => {,"+  await plugins.update();
-+  await persistInstalledPlugins();
-+const migratePluginsFromNodeModules = async () => {
-+  const {dependencies = {}} = JSON.parse(await runCmd(cmd, {stdio: [null, 'string']}));
-+  await Promise.all(Object.entries(dependencies).map(async ([pkg, info]) => {
-+      await exports.manager.install(pkg)
-+  await persistInstalledPlugins();
-+exports.checkForMigration = async () => {
-+    await fs.access(installedPluginsPath, fs.constants.F_OK)
-+    await migratePluginsFromNodeModules();
-+  const fileContent = await fs.readFile(installedPluginsPath);
-+      await exports.manager.install(plugin.name, plugin.version)
-+const persistInstalledPlugins = async () => {
-+  for (const pkg of Object.values(await plugins.getPackages())) {
-+  await fs.writeFile(installedPluginsPath, JSON.stringify(installedPlugins));
-+exports.uninstall = async (pluginName, cb = null) => {
-+  await exports.manager.uninstall(pluginName);
-+  await exports.manager.install(pluginName);
-+    await axios.get('https://static.etherpad.org/plugins.json', {headers: headers})"
+Co-authored-by: Hossein M <marzban98@gmail.com>",src\static\js\pluginfw\installer.js,https://github.com/ether/etherpad-lite/commit/9c14a4f7dba1a7f0e7730a7e9fca18437630633d,.then(pluginsLoaded => {,"await fs.writeFile(installedPluginsPath, JSON.stringify(installedPlugins));"
 https://github.com/ether/etherpad-lite,ead3c0ea381b8cb5b7ac39004a7f319200504a4d,SamTV12345,2024-02-05 21:13:02+01:00,"Added typescript to etherpad
 
 * Fixed determining file extension.
@@ -1148,10 +375,7 @@ https://github.com/ether/etherpad-lite,ead3c0ea381b8cb5b7ac39004a7f319200504a4d,
 
 * Added express types.
 
-* fixed.",src\node\utils\Abiword.ts,https://github.com/ether/etherpad-lite/commit/ead3c0ea381b8cb5b7ac39004a7f319200504a4d,"-    await new Promise((resolve, reject) => {","+  exports.convertFile = async (srcFile: string, destFile: string, type: string) => {
-+    await new Promise<void>((resolve, reject) => {
-+  const queue = async.queue((task: AsyncQueueTask, callback:Function) => {
-+  exports.convertFile = async (srcFile: string, destFile: string, type: string) => {"
+* fixed.",src\node\utils\Abiword.ts,https://github.com/ether/etherpad-lite/commit/ead3c0ea381b8cb5b7ac39004a7f319200504a4d,"await new Promise((resolve, reject) => {","await new Promise<void>((resolve, reject) => {"
 https://github.com/ether/etherpad-lite,ead3c0ea381b8cb5b7ac39004a7f319200504a4d,SamTV12345,2024-02-05 21:13:02+01:00,"Added typescript to etherpad
 
 * Fixed determining file extension.
@@ -1230,10 +454,7 @@ https://github.com/ether/etherpad-lite,ead3c0ea381b8cb5b7ac39004a7f319200504a4d,
 
 * Added express types.
 
-* fixed.",src\node\utils\UpdateCheck.ts,https://github.com/ether/etherpad-lite/commit/ead3c0ea381b8cb5b7ac39004a7f319200504a4d,"-  .then(async resp => {
--      .then((info) => {","+  .then(async (resp: any) => {
-+  .catch(async (err: Error) => {
-+exports.needsUpdate = async (cb: Function) => {"
+* fixed.",src\node\utils\UpdateCheck.ts,https://github.com/ether/etherpad-lite/commit/ead3c0ea381b8cb5b7ac39004a7f319200504a4d,.then((info) => {,exports.needsUpdate = async (cb: Function) => {
 https://github.com/ether/etherpad-lite,ead3c0ea381b8cb5b7ac39004a7f319200504a4d,SamTV12345,2024-02-05 21:13:02+01:00,"Added typescript to etherpad
 
 * Fixed determining file extension.
@@ -1312,199 +533,7 @@ https://github.com/ether/etherpad-lite,ead3c0ea381b8cb5b7ac39004a7f319200504a4d,
 
 * Added express types.
 
-* fixed.",src\node\utils\caching_middleware.ts,https://github.com/ether/etherpad-lite/commit/ead3c0ea381b8cb5b7ac39004a7f319200504a4d,"-                .then((content) => fsp.writeFile(`${CACHE_DIR}minified_${cacheKey}.gz`, content))","+  async _handle(req: any, res: any, next: any) {
-+        res.end = async (data: number, encoding: number) => {"
-https://github.com/ether/etherpad-lite,ead3c0ea381b8cb5b7ac39004a7f319200504a4d,SamTV12345,2024-02-05 21:13:02+01:00,"Added typescript to etherpad
-
-* Fixed determining file extension.
-
-* Added ts-node
-
-* Fixed backend tests.
-
-* Fixed frontend test runs.
-
-* Fixed tests.
-
-* Use script approach for starting etherpad.
-
-* Change directory to src.
-
-* Fixed env.
-
-* Change directory
-
-* Fixed build arg.
-
-* Fixed docker build.
-
-* Fixed.
-
-* Fixed cypress file path.
-
-* Fixed.
-
-* Use latest node container.
-
-* Fixed windows workflow.
-
-* Use tsx and optimized docker image.
-
-* Added workflow for type checks.
-
-* Fixed.
-
-* Added tsconfig.
-
-* Converted more files to typescript.
-
-* Removed commented keys.
-
-* Typed caching middleware.
-
-* Added script for checking the types.
-
-* Moved SecretRotator to typescript.
-
-* Fixed npm installation and moved to types folder.
-
-* Use better scripts for watching typescript changes.
-
-* Update windows.yml
-
-* Fixed order of npm installation.
-
-* Converted i18n.
-
-* Added more types.
-
-* Added more types.
-
-* Fixed import.
-
-* Fixed tests.
-
-* Fixed tests.
-
-* Fixed type checking test.
-
-* Fixed stats
-
-* Added express types.
-
-* fixed.",src\node\utils\promises.ts,https://github.com/ether/etherpad-lite/commit/ead3c0ea381b8cb5b7ac39004a7f319200504a4d,"-      (p) => new Promise((resolve, reject) => p.then((v) => predicate(v) && resolve(v), reject)));","+exports.timesLimit = async (total: number, concurrency: number, promiseCreator: Function) => {"
-https://github.com/ether/etherpad-lite,ead3c0ea381b8cb5b7ac39004a7f319200504a4d,SamTV12345,2024-02-05 21:13:02+01:00,"Added typescript to etherpad
-
-* Fixed determining file extension.
-
-* Added ts-node
-
-* Fixed backend tests.
-
-* Fixed frontend test runs.
-
-* Fixed tests.
-
-* Use script approach for starting etherpad.
-
-* Change directory to src.
-
-* Fixed env.
-
-* Change directory
-
-* Fixed build arg.
-
-* Fixed docker build.
-
-* Fixed.
-
-* Fixed cypress file path.
-
-* Fixed.
-
-* Use latest node container.
-
-* Fixed windows workflow.
-
-* Use tsx and optimized docker image.
-
-* Added workflow for type checks.
-
-* Fixed.
-
-* Added tsconfig.
-
-* Converted more files to typescript.
-
-* Removed commented keys.
-
-* Typed caching middleware.
-
-* Added script for checking the types.
-
-* Moved SecretRotator to typescript.
-
-* Fixed npm installation and moved to types folder.
-
-* Use better scripts for watching typescript changes.
-
-* Update windows.yml
-
-* Fixed order of npm installation.
-
-* Converted i18n.
-
-* Added more types.
-
-* Added more types.
-
-* Fixed import.
-
-* Fixed tests.
-
-* Fixed tests.
-
-* Fixed type checking test.
-
-* Fixed stats
-
-* Added express types.
-
-* fixed.",src\node\utils\run_cmd.ts,https://github.com/ether/etherpad-lite/commit/ead3c0ea381b8cb5b7ac39004a7f319200504a4d,"-  const p = new Promise((resolve, reject) => { px = {resolve, reject}; });",+        for await (const chunk of streams[fd]!) chunks.push(chunk);
-https://github.com/ether/etherpad-lite,4bd27a1c7984b7e9df5678d5aa6fb17bd4a7d2f2,SamTV12345,2024-02-22 11:36:43+01:00,Moved more classes to ts. (#6179),src\node\db\Pad.ts,https://github.com/ether/etherpad-lite/commit/4bd27a1c7984b7e9df5678d5aa6fb17bd4a7d2f2,"-        authorIds.map((authorId) => authorManager.getAuthorColorId(authorId).then((colorId) => {
--    p.push(readOnlyManager.getReadOnlyId(padID).then(async (readonlyID) => {","+  async appendRevision(aChangeset:AChangeSet, authorId = '') {
-+  async getRevisionChangeset(revNum: number) {
-+  async getRevisionAuthor(revNum: number) {
-+  async getRevisionDate(revNum: number) {
-+  async _getKeyRevisionAText(revNum: number) {
-+  async getInternalRevisionAText(targetRev: number) {
-+  async getRevision(revNum: number) {
-+  async spliceText(start:number, ndel:number, ins: string, authorId: string = '') {
-+  async setText(newText: string, authorId = '') {
-+  async appendText(newText:string, authorId = '') {
-+  async appendChatMessage(msgOrText: string|typeof ChatMessage, authorId = null, time = null) {
-+  async getChatMessage(entryNum: number) {
-+  async getChatMessages(start: string, end: number) {
-+  async init(text:string, authorId = '') {
-+  async copy(destinationID: string, force: boolean) {
-+    const copyRecord = async (keySuffix: string) => {
-+  async checkIfGroupExistAndReturnIt(destinationID: string) {
-+  async removePadIfForceIsTrueAndAlreadyExist(destinationID: string, force: boolean|string) {
-+  async copyAuthorInfoToDestinationPad(destinationID: string) {
-+  async copyPadWithoutHistory(destinationID: string, force: string|boolean, authorId = '') {
-+    p.push(readOnlyManager.getReadOnlyId(padID).then(async (readonlyID: string) => {
-+    p.push(promises.timesLimit(this.chatHead + 1, 500, async (i: string) => {
-+    p.push(promises.timesLimit(this.head + 1, 500, async (i: string) => {
-+  async setPublicStatus(publicStatus: boolean) {
-+  async addSavedRevision(revNum: string, savedById: string, label: string) {
-+        .map(async (r: number) => {
-+        .map(async (c: number) => {"
-https://github.com/ether/etherpad-lite,4bd27a1c7984b7e9df5678d5aa6fb17bd4a7d2f2,SamTV12345,2024-02-22 11:36:43+01:00,Moved more classes to ts. (#6179),src\node\utils\ExportHtml.ts,https://github.com/ether/etherpad-lite/commit/4bd27a1c7984b7e9df5678d5aa6fb17bd4a7d2f2,"-    hooks.aCallAll('exportHtmlAdditionalTags', pad).then((newProps) => {
--    hooks.aCallAll('exportHtmlAdditionalTagsWithData', pad).then((newProps) => {","+const getPadHTML = async (pad: PadType, revNum: string) => {
-+const getHTMLFromAtext = async (pad:PadType, atext: AText, authorColors?: string[]) => {
-+exports.getPadHTMLDocument = async (padId: string, revNum: string, readOnlyId: number) => {
-+  const stylesForExport: string[] = await hooks.aCallAll('stylesForExport', padId);"
+* fixed.",src\node\utils\caching_middleware.ts,https://github.com/ether/etherpad-lite/commit/ead3c0ea381b8cb5b7ac39004a7f319200504a4d,".then((content) => fsp.writeFile(`${CACHE_DIR}minified_${cacheKey}.gz`, content))","res.end = async (data: number, encoding: number) => {"
 https://github.com/ether/etherpad-lite,546ede284c62a882cb90f388403efb209d93efaf,SamTV12345,2024-02-22 18:31:17+01:00,"Converted tests to typescript. (#6181)
 
 * Converted tests to typescript.
@@ -1519,14 +548,7 @@ https://github.com/ether/etherpad-lite,546ede284c62a882cb90f388403efb209d93efaf,
 
 * Fixed cypress install.
 
-* Fixed cypress install.",src\tests\backend\common.ts,https://github.com/ether/etherpad-lite/commit/546ede284c62a882cb90f388403efb209d93efaf,"-    const timeoutP = new Promise((resolve, reject) => {
--    const eventP = new Promise((resolve) => {
--exports.sendMessage = async (socket, message) => await new Promise((resolve, reject) => {","+exports.waitForSocketEvent = async (socket: any, event:string) => {
-+exports.connect = async (res:any = null) => {
-+exports.handshake = async (socket: any, padId:string, token = padutils.generateAuthorToken()) => {
-+exports.sendMessage = async (socket: any, message:any) => await new Promise<void>((resolve, reject) => {
-+exports.sendUserChanges = async (socket:any, data:any) => await exports.sendMessage(socket, {
-+exports.waitForAcceptCommit = async (socket:any, wantRev: number) => {"
+* Fixed cypress install.",src\tests\backend\common.ts,https://github.com/ether/etherpad-lite/commit/546ede284c62a882cb90f388403efb209d93efaf,"exports.sendMessage = async (socket, message) => await new Promise((resolve, reject) => {","exports.sendMessage = async (socket: any, message:any) => await new Promise<void>((resolve, reject) => {"
 https://github.com/ether/etherpad-lite,546ede284c62a882cb90f388403efb209d93efaf,SamTV12345,2024-02-22 18:31:17+01:00,"Converted tests to typescript. (#6181)
 
 * Converted tests to typescript.
@@ -1541,13 +563,7 @@ https://github.com/ether/etherpad-lite,546ede284c62a882cb90f388403efb209d93efaf,
 
 * Fixed cypress install.
 
-* Fixed cypress install.",src\tests\backend\specs\Pad.ts,https://github.com/ether/etherpad-lite/commit/546ede284c62a882cb90f388403efb209d93efaf,"-      const p = new Promise((resolve) => {
--      const p = new Promise((resolve, reject) => {","+        plugins.hooks.padDefaultContent.push({hook_fn: async (hookName:string, ctx:any) => {
-+        plugins.hooks.padDefaultContent.push({hook_fn: async (hookName:string, {pad}:{
-+            {hook_fn: async (hookName:string, {authorId}:{
-+            {hook_fn: async (hookName: string, {authorId}:{
-+      plugins.hooks.padDefaultContent.push({hook_fn: async (hookName:string, ctx:any) => {
-+      plugins.hooks.padDefaultContent.push({hook_fn: async (hookName:string, ctx:any) => {"
+* Fixed cypress install.",src\tests\backend\specs\Pad.ts,https://github.com/ether/etherpad-lite/commit/546ede284c62a882cb90f388403efb209d93efaf,"const p = new Promise((resolve, reject) => {","plugins.hooks.padDefaultContent.push({hook_fn: async (hookName:string, ctx:any) => {"
 https://github.com/ether/etherpad-lite,546ede284c62a882cb90f388403efb209d93efaf,SamTV12345,2024-02-22 18:31:17+01:00,"Converted tests to typescript. (#6181)
 
 * Converted tests to typescript.
@@ -1562,114 +578,8 @@ https://github.com/ether/etherpad-lite,546ede284c62a882cb90f388403efb209d93efaf,
 
 * Fixed cypress install.
 
-* Fixed cypress install.",src\tests\backend\specs\Stream.ts,https://github.com/ether/etherpad-lite/commit/546ede284c62a882cb90f388403efb209d93efaf,-    const seenErrPromise = new Promise((resolve) => {,"+const assertUnhandledRejection = async (action: any, want: any) => {
-+  await strict.rejects(Promise.reject(asyncErr), want);
-+      strict.equal(await nextp, 0);
-+      await strict.rejects(iter.next().value, err);
-+      strict.equal(await iter.next().value, 0);
-+      strict.equal(await nextp, 0);
-+      await strict.rejects(iter.next().value, err);
-+      strict.equal(await iter.next().value, 0);"
-https://github.com/ether/etherpad-lite,546ede284c62a882cb90f388403efb209d93efaf,SamTV12345,2024-02-22 18:31:17+01:00,"Converted tests to typescript. (#6181)
-
-* Converted tests to typescript.
-
-* Run all tests.
-
-* Fixed tests.
-
-* Removed cypress from every installation.
-
-* Use cache for libreoffice.
-
-* Fixed cypress install.
-
-* Fixed cypress install.",src\tests\backend\specs\chat.ts,https://github.com/ether/etherpad-lite/commit/546ede284c62a882cb90f388403efb209d93efaf,"-  await new Promise((resolve, reject) => {
--      const listen = async (type) => await new Promise((resolve) => {","+const checkHook = async (hookName: string, checkFn?:CheckFN) => {
-+  await new Promise<void>((resolve, reject) => {
-+      hook_fn: async (hookName: string, context:any) => {
-+      const listen = async (type: string) => await new Promise<any>((resolve) => {"
-https://github.com/ether/etherpad-lite,546ede284c62a882cb90f388403efb209d93efaf,SamTV12345,2024-02-22 18:31:17+01:00,"Converted tests to typescript. (#6181)
-
-* Converted tests to typescript.
-
-* Run all tests.
-
-* Fixed tests.
-
-* Removed cypress from every installation.
-
-* Use cache for libreoffice.
-
-* Fixed cypress install.
-
-* Fixed cypress install.",src\tests\backend\specs\hooks.ts,https://github.com/ether/etherpad-lite/commit/546ede284c62a882cb90f388403efb209d93efaf,"-              const seenErrPromise = new Promise((resolve) => {
--          fn: (hn, ctx, cb) => new Promise((resolve) => process.nextTick(resolve, 'val')),
--          fn: (hn, ctx) => new Promise((resolve) => process.nextTick(resolve, 'val')),
--          fn: (hn, ctx, cb) => { cb(new Promise((resolve) => process.nextTick(resolve, 'val'))); },
--          fn: (hn, ctx, cb) => new Promise((resolve, reject) => {
--          fn: (hn, ctx) => new Promise((resolve, reject) => {
--          fn: (cb, err, val) => new Promise((resolve) => process.nextTick(resolve, val)),
--          fn: (cb, err, val) => cb(new Promise((resolve) => process.nextTick(resolve, val))),
--          fn: (cb, err, val) => new Promise((resolve, reject) => process.nextTick(reject, err)),
--          fn: (cb, err, val) => cb(new Promise((resolve, reject) => process.nextTick(reject, err))),
--              const seenErrPromise = new Promise((resolve) => {
--          return await new Promise((resolve) => {","+        hook.hook_fn = async (hn:string) => { assert.equal(hn, hookName); };
-+        hook.hook_fn = async (hn: string, ctx: any) => { assert.deepEqual(ctx, {}); };
-+        hook.hook_fn = async (hn: string, ctx: any) => { assert.deepEqual(ctx, {}); };
-+        hook.hook_fn = async (hn: string, ctx: any) => { assert.equal(ctx, wantContext); };
-+        await hooks.aCallAll(hookName, {}, (err:any) => {
-+        await hooks.aCallAll(hookName, {}, (err:any) => {
-+        await hooks.aCallAll(hookName, {}, (err:any, results:any) => {
-+        hook.hook_fn = async (hn:string) => { assert.equal(hn, hookName); };
-+        hook.hook_fn = async (hn: string, ctx: any) => { assert.deepEqual(ctx, {}); };
-+        hook.hook_fn = async (hn: string, ctx: any) => { assert.deepEqual(ctx, {}); };
-+        hook.hook_fn = async (hn: string, ctx: any) => { assert.equal(ctx, wantContext); };
-+          return await new Promise<void>((resolve) => {
-+      await hooks.aCallFirst(hookName, null, null, (val:string) => { ++got; return false; });"
-https://github.com/ether/etherpad-lite,546ede284c62a882cb90f388403efb209d93efaf,SamTV12345,2024-02-22 18:31:17+01:00,"Converted tests to typescript. (#6181)
-
-* Converted tests to typescript.
-
-* Run all tests.
-
-* Fixed tests.
-
-* Removed cypress from every installation.
-
-* Use cache for libreoffice.
-
-* Fixed cypress install.
-
-* Fixed cypress install.",src\tests\backend\specs\regression-db.ts,https://github.com/ether/etherpad-lite/commit/546ede284c62a882cb90f388403efb209d93efaf,"-      await new Promise((resolve) => { setTimeout(() => resolve(), 500); });","+    db.set = async (...args:any) => {
-+      await new Promise<void>((resolve) => { setTimeout(() => resolve(), 500); });"
-https://github.com/ether/etherpad-lite,546ede284c62a882cb90f388403efb209d93efaf,SamTV12345,2024-02-22 18:31:17+01:00,"Converted tests to typescript. (#6181)
-
-* Converted tests to typescript.
-
-* Run all tests.
-
-* Fixed tests.
-
-* Removed cypress from every installation.
-
-* Use cache for libreoffice.
-
-* Fixed cypress install.
-
-* Fixed cypress install.",src\tests\backend\specs\socketio.ts,https://github.com/ether/etherpad-lite/commit/546ede284c62a882cb90f388403efb209d93efaf,"-      const disconnected = new Promise((resolve) => resolveDisconnected = resolve);
--    const tx = async (socket, message = {}) => await new Promise((resolve, reject) => {","+    const tx = async (socket:any, message = {}) => await new Promise((resolve, reject) => {
-+      const got = await tx(socket, {component: this.test!.fullTitle()});
-+      await assert.rejects(tx(socket, {component: this.test!.fullTitle()}), new InjectedError());"
-https://github.com/ether/etherpad-lite,295a2a758bd2381ae830ba6956d4d5c2b7cc2b61,SamTV12345,2024-02-23 19:48:55+01:00,Added backend in typescript. (#6185),src\node\hooks\express\webaccess.ts,https://github.com/ether/etherpad-lite/commit/295a2a758bd2381ae830ba6956d4d5c2b7cc2b61,"-const aCallFirst = (hookName, context, pred = null) => new Promise((resolve, reject) => {","+    async (hookName: string, context:any, pred = null) => (await aCallFirst(hookName, context, pred))[0];
-+const checkAccess = async (req:any, res:any, next: Function) => {
-+    const grant = async (level: string|false) => {"
-https://github.com/ether/etherpad-lite,f9e3416d7843fec5ab810a424b656ab4e18ae9a5,SamTV12345,2024-03-13 20:31:29+01:00,Ported bin folder to typescript.,bin\migrateDirtyDBtoRealDB.ts,https://github.com/ether/etherpad-lite/commit/f9e3416d7843fec5ab810a424b656ab4e18ae9a5,"-  const length = await new Promise((resolve) => { dirty.once('load', resolve); });","+  const dirty = await  new ueberDB.Database('dirty',`${__dirname}/../var/dirty.db`);
-+    await dirty.init();
-+  const keys = await dirty.findKeys('*', '')
-+    let value = await dirty.get(key);
-+  await db.close(null);
-+  await dirty.close(null);"
+* Fixed cypress install.",src\tests\backend\specs\regression-db.ts,https://github.com/ether/etherpad-lite/commit/546ede284c62a882cb90f388403efb209d93efaf,"await new Promise((resolve) => { setTimeout(() => resolve(), 500); });","await new Promise<void>((resolve) => { setTimeout(() => resolve(), 500); });"
+https://github.com/ether/etherpad-lite,f9e3416d7843fec5ab810a424b656ab4e18ae9a5,SamTV12345,2024-03-13 20:31:29+01:00,Ported bin folder to typescript.,bin\migrateDirtyDBtoRealDB.ts,https://github.com/ether/etherpad-lite/commit/f9e3416d7843fec5ab810a424b656ab4e18ae9a5,"const length = await new Promise((resolve) => { dirty.once('load', resolve); });","const dirty = await  new ueberDB.Database('dirty',`${__dirname}/../var/dirty.db`);"
 https://github.com/ether/etherpad-lite,fe106f0afcac62c91c0e716d3fc520e8bcd282f4,Stefan Müller,2024-03-14 16:06:32+01:00,"Improve plugins docker build and fixed plugin loading when dependencies are specified (#6164)
 
 * Install pnpm only local - not global
@@ -1710,115 +620,12 @@ https://github.com/ether/etherpad-lite,fe106f0afcac62c91c0e716d3fc520e8bcd282f4,
 
 ---------
 
-Co-authored-by: SamTV12345 <40429738+samtv12345@users.noreply.github.com>",src\static\js\pluginfw\installer.ts,https://github.com/ether/etherpad-lite/commit/fe106f0afcac62c91c0e716d3fc520e8bcd282f4,"-  return new Promise(async (resolve, reject) => {
--        .then((pluginsLoaded) => {
--exports.search = (searchTerm, maxCacheAge) => exports.getAvailablePlugins(maxCacheAge).then(","+          await linkInstaller.installFromPath(`${findEtherpadRoot()}/node_modules/${pkg}`);
-+          await linkInstaller.installPlugin(pkg);
-+export const checkForMigration = async () => {
-+  await linkInstaller.init()
-+  fs.stat(pluginInstallPath).then(async (err) => {
-+    const files = await fs.readdir(pluginInstallPath);
-+        await fs.access(path.join(node_modules, moduleName), fs.constants.F_OK);
-+        await fs.symlink(path.join(pluginInstallPath,file), path.join(node_modules,moduleName), 'dir')
-+      await linkInstaller.installPlugin(plugin.name, plugin.version);
-+  for (const pkg of Object.values(await plugins.getPackages()) as PackageData[]) {
-+export const uninstall = async (pluginName: string, cb:Function|null = null) => {
-+  await linkInstaller.uninstallPlugin(pluginName);
-+export const install = async (pluginName: string, cb:Function|null = null) => {
-+  await linkInstaller.installPlugin(pluginName);
-+  return new Promise<MapArrayType<PackageInfo>>(async (resolve, reject) => {"
-https://github.com/ether/etherpad-lite,0b80e256b4a22eb7b3a88d5b445246203dc7e785,SamTV12345,2024-04-16 19:11:05+02:00,Added proxy support for axios. (#6334),src\node\utils\UpdateCheck.ts,https://github.com/ether/etherpad-lite/commit/0b80e256b4a22eb7b3a88d5b445246203dc7e785,-      .then((info:Infos) => {,+    const info = await loadEtherpadInformations()
-https://github.com/ether/etherpad-lite,634ffab3ba09ab323e7f8a264ed360d22683a4ad,SamTV12345,2024-07-10 20:06:24+02:00,Bumped JQuery to 3.7.1 (#6506),src\static\js\vendors\jquery.js,https://github.com/ether/etherpad-lite/commit/634ffab3ba09ab323e7f8a264ed360d22683a4ad,"-						return promise.then( null, fn );
--				// Use .then() to unwrap secondary thenables (cf. gh-3000)
--					return primary.then();
--			.then( fn )","+      booleans = ""checked|selected|async|autofocus|autoplay|controls|defer|disabled|hidden|ismap|"" +
-+                  // since it's otherwise lost when execution goes async
-+        // are async. In other browsers, all those handlers are invoked synchronously.
-+      async: true,
-+        if ( s.async && s.timeout > 0 ) {
-+      async: false,
-+            options.async,"
-https://github.com/ether/etherpad-lite,d6d636955c0b9e114081bf2941ee6ccdedbc1b61,SamTV12345,2024-07-18 08:51:30+02:00,"Feat/bundle js (#6511)
-
-* Added minify
-
-* Added POC for browser
-
-* Moved first js files to ts
-
-* Fixed caret positioning
-
-* Added support for plugins
-
-* Fixed get undefined.
-
-* Removed require of socketio, l10n, html10n and error reporter
-
-* Added minify
-
-* Added POC for browser
-
-* Moved first js files to ts
-
-* Fixed caret positioning
-
-* Added support for plugins
-
-* Fixed get undefined.
-
-* Removed require of socketio, l10n, html10n and error reporter
-
-* Fixed popup not showing
-
-* Fixed timeslider
-
-* Reworked paths
-
-* Fixed loading
-
-* Don't generate sources map in production mode
-
-* Non working hmr
-
-* Added live reloading.
-
-* Fixed timeslider when hot reloading
-
-* Removed eval
-
-* Fixed.
-
-* Fixed env
-
-* Fixed frontend tests.
-
-* Added minifying via lightningcss
-
-* Added minify via esbuild
-
-* Fixed diagnostic url
-
-* Removed lightningcss
-
-* Fixed types
-
-* Fixed alias
-
-* Fixed loadtest
-
-* Fixed
-
-* Fixed loading ep_font_color3
-
-* Restructure windows build
-
-* Fixed windows build
-
-* Fixed pnpm lock
-
----------
-
-Co-authored-by: SamTv12345 <samtv12345@samtv12345.com>",src\static\js\ace.js,https://github.com/ether/etherpad-lite/commit/d6d636955c0b9e114081bf2941ee6ccdedbc1b61,"-    await new Promise((resolve, reject) => innerWindow.plugins.ensure(","+    /*await new Promise((resolve, reject) => innerWindow.plugins.ensure("
+Co-authored-by: SamTV12345 <40429738+samtv12345@users.noreply.github.com>",src\static\js\pluginfw\installer.ts,https://github.com/ether/etherpad-lite/commit/fe106f0afcac62c91c0e716d3fc520e8bcd282f4,"return new Promise(async (resolve, reject) => {
+.then((pluginsLoaded) => {
+exports.search = (searchTerm, maxCacheAge) => exports.getAvailablePlugins(maxCacheAge).then(","await linkInstaller.installPlugin(plugin.name, plugin.version);
+for (const pkg of Object.values(await plugins.getPackages()) as PackageData[]) {
+export const uninstall = async (pluginName: string, cb:Function|null = null) => {"
+https://github.com/ether/etherpad-lite,0b80e256b4a22eb7b3a88d5b445246203dc7e785,SamTV12345,2024-04-16 19:11:05+02:00,Added proxy support for axios. (#6334),src\node\utils\UpdateCheck.ts,https://github.com/ether/etherpad-lite/commit/0b80e256b4a22eb7b3a88d5b445246203dc7e785,.then((info:Infos) => {,const info = await loadEtherpadInformations()
 https://github.com/ether/etherpad-lite,c7a2dea4d1fbe8f18cdf0123db97fdb56dc1a549,SamTV12345,2024-08-16 22:55:42+02:00,"Feat/frontend vitest (#6469)
 
 * Added vitest tests.
@@ -1833,20 +640,5 @@ https://github.com/ether/etherpad-lite,c7a2dea4d1fbe8f18cdf0123db97fdb56dc1a549,
 
 * Also run withoutPlugins
 
-* Fixed pnpm lock",src\node\utils\Minify.ts,https://github.com/ether/etherpad-lite/commit/c7a2dea4d1fbe8f18cdf0123db97fdb56dc1a549,"-    return await new Promise((resolve) => {
--    return await new Promise((resolve) => {","+const requestURI = async (url: string | URL, method: any, headers: { [x: string]: any; }) => {
-+  await _minify(mockRequest, mockResponse);
-+const _minify = async (req:any, res:any) => {
-+    const content = await getFileCompressed(filename, contentType as string);
-+const statFile = async (filename: string, dirStatLimit: number):Promise<(any | boolean)[]> => {
-+const getFileCompressed = async (filename: any, contentType: string) => {
-+  let content: Buffer|string = await getFile(filename);
-+    return await new Promise(async (resolve) => {
-+          compressResult = await compressJS(content);
-+    return await new Promise(async (resolve) => {
-+          content = await compressCSS(path.resolve(ROOT_DIR, filename));
-+const getFile = async (filename: any) => {
-+export const shutdown = async (hookName: string, context:any) => {"
-https://github.com/ether/etherpad-lite,d62d5a0460de6fa3dda555257166acd197b675a7,SamTV12345,2025-04-08 18:40:00+02:00,Added authentication to axios.defaults.proxy,src\static\js\pluginfw\installer.ts,https://github.com/ether/etherpad-lite/commit/d62d5a0460de6fa3dda555257166acd197b675a7,-        .then((pluginsLoaded:AxiosResponse<MapArrayType<PackageInfo>>) => {,+        .catch(async (err) => {
-https://github.com/ether/etherpad-lite,7fde6ee9bd510e630fe1704ac528978b7825b2e0,SamTV12345,2025-04-08 18:54:46+02:00,fix: simplified code in wrapped promise,src\static\js\pluginfw\installer.ts,https://github.com/ether/etherpad-lite/commit/7fde6ee9bd510e630fe1704ac528978b7825b2e0,-        .then((pluginsLoaded: AxiosResponse<MapArrayType<PackageInfo>>) => {,"+export const getAvailablePlugins = async (maxCacheAge: number | false) => {
-+  const pluginsLoaded: AxiosResponse<MapArrayType<PackageInfo>> = await axios.get(`${settings.updateServer}/plugins.json`, {headers})"
+* Fixed pnpm lock",src\node\utils\Minify.ts,https://github.com/ether/etherpad-lite/commit/c7a2dea4d1fbe8f18cdf0123db97fdb56dc1a549,return await new Promise((resolve) => {,let content: Buffer|string = await getFile(filename);
+https://github.com/ether/etherpad-lite,d62d5a0460de6fa3dda555257166acd197b675a7,SamTV12345,2025-04-08 18:40:00+02:00,Added authentication to axios.defaults.proxy,src\static\js\pluginfw\installer.ts,https://github.com/ether/etherpad-lite/commit/d62d5a0460de6fa3dda555257166acd197b675a7,.then((pluginsLoaded:AxiosResponse<MapArrayType<PackageInfo>>) => {,.catch(async (err) => {

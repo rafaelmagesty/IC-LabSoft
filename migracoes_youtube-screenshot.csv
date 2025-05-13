@@ -24,34 +24,6 @@ Also add a dedicated settings to enable or disable the shortcut.
 
 * Allow click on label to set option
 
-Just add missing id in input elements to do so.",background.js,https://github.com/gurumukhi/youtube-screenshot/commit/7590fc28a616e49817a904afcde3b76308389204,"-      .then((data) => {
--          .then(() => {","+async function copyToClipboard(data) {
-+  let buffer = await data.arrayBuffer();
-+  await browser.clipboard.setImageData(buffer, ""png"");"
-https://github.com/gurumukhi/youtube-screenshot,7590fc28a616e49817a904afcde3b76308389204,Jonathan GUILLOT,2023-06-30 16:59:25+02:00,"Hot reload configuration (#48)
-
-* Group configurations variables in a dedicated obect
-
-* Add an async loadConfiguration() function
-
-* Re-organize a bit background script
-
-- Use async / await
-- Add a common sendNotification() function
-- Use only one parameter version of browser.runtime.onMessage.addListener()
-
-* Add hot configuration reload mechanism
-
-Send message from options to content script to reload configuration once
-preferences saved. It avoids to reload the page to apply the new settings.
-
-* Handle hardcoded shift+a shortcut
-
-Also add a dedicated settings to enable or disable the shortcut.
-
-* Put debug mode as last option
-
-* Allow click on label to set option
-
-Just add missing id in input elements to do so.",content_script.js,https://github.com/gurumukhi/youtube-screenshot/commit/7590fc28a616e49817a904afcde3b76308389204,-storageItem.then((result) => {,"+async function loadConfiguration() {
-+  const result = await browser.storage.local.get();"
+Just add missing id in input elements to do so.",background.js,https://github.com/gurumukhi/youtube-screenshot/commit/7590fc28a616e49817a904afcde3b76308389204,".then((data) => {
+.then(() => {","async function copyToClipboard(data) {
+async function copyToClipboard(data) {"
