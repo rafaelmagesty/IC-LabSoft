@@ -1,15 +1,4 @@
 repo,commit_hash,author,date,message,file_path,commit_url,removed_lines,added_lines
-https://github.com/dexie/Dexie.js,ec25bcba1fdfc4accc0adc91545c7c501a1f082f,David Fahlander,2015-11-10 16:48:30+01:00,"Build system with rollup to having source in es6 style modules and compile to umd for es5 in dist.
-
-To build: npm run build
-
-Still need to parse/replace comments regarding alpha stage. Need to script that.",src\Dexie.js,https://github.com/dexie/Dexie.js/commit/ec25bcba1fdfc4accc0adc91545c7c501a1f082f,"trans.tables[self.name].add(obj).then(resolve, reject);","// clone obj before this async call. If caller modifies obj the line after put(), the IDB spec requires that it should not affect operation."
-https://github.com/dexie/Dexie.js,f891815d9613b538ced0aebe463c52d0c1746b05,David Fahlander,2016-02-16 00:37:06+01:00,"Let applyStructure be used outside of Dexie
-
-applyStructure() is a function used internally by Dexie.mapToClass() and
-Dexie.defineClass() and can be a handy way to define a javascript
-interface in plain javascript. Could be handy to use outside of Dexie.
-Specifically in my own project. So I put it on Dexie as a static method.",src\Dexie.js,https://github.com/dexie/Dexie.js/commit/f891815d9613b538ced0aebe463c52d0c1746b05,"trans.tables[self.name].add(obj).then(resolve, reject);","// clone obj before this async call. If caller modifies obj the line after put(), the IDB spec requires that it should not affect operation."
 https://github.com/dexie/Dexie.js,effd7f4f23f70679febab995b126a556882362fc,David Fahlander,2016-03-03 00:22:53+01:00,"Preparing for ES6-ify plugins - ES6-ified the unit tests.
 
 * Rewrote build- and watch scripts to be more generic for use from plugins.
@@ -38,16 +27,8 @@ watch(options.dirs, throttle(50, async function (calls) {
 let anythingRebuilt = await rebuildFiles(options, {
 export async function gzip(source, destination) {
 export async function gzip(source, destination) {"
-https://github.com/dexie/Dexie.js,d8d0e36662aa095642b73713274c502a3428afb9,David Fahlander,2016-03-15 01:13:18+01:00,Refactored out code to separate modules.,src\Dexie.js,https://github.com/dexie/Dexie.js/commit/d8d0e36662aa095642b73713274c502a3428afb9,}).then(function (count) {,"// clone obj before this async call. If caller modifies obj the line after put(), the IDB spec requires that it should not affect operation."
-https://github.com/dexie/Dexie.js,b5b2c0d70b10b51cf6682cdca970af0aba034164,David Fahlander,2016-10-25 23:44:11+02:00,"Middle of debugging
-Dexie.js line 1240.
-
-Test:
-
-http://localhost:8080/addons/Dexie.Syncable/test/test-syncable-dexie-tests.html?testNumber=15",src\Dexie.js,https://github.com/dexie/Dexie.js/commit/b5b2c0d70b10b51cf6682cdca970af0aba034164,"self.add(obj).then(resolve, reject);","// clone obj before this async call. If caller modifies obj the line after put(), the IDB spec requires that it should not affect operation."
 https://github.com/dexie/Dexie.js,68b6ee3dc3bab5cb6d376c094074e9db53ddc842,David Fahlander,2016-10-28 00:49:07+02:00,"Works on Chrome 55 beta now!
 Must remove debugger, console.log and make sure eslint works though. Also need to cleanup the code.",test\tests-asyncawait.js,https://github.com/dexie/Dexie.js/commit/68b6ee3dc3bab5cb6d376c094074e9db53ddc842,return NativePromise.resolve().then(()=> {,"await Promise.all([subFunc(11), subFunc(12), subFunc(13)]);"
-https://github.com/dexie/Dexie.js,53b6e41af41114254545462620cfefb439e9effd,David Fahlander,2016-11-01 11:17:26+01:00,"All tests pass with syncable addon, all browsers.",src\Promise.js,https://github.com/dexie/Dexie.js/commit/53b6e41af41114254545462620cfefb439e9effd,// the caller of new Promise() can be certain that the promise wont be triggered the lines after constructing the promise.,//   native async / await.
 https://github.com/dexie/Dexie.js,5bf23af41c25a31599a0016309b118c9b062e7cf,Christopher Hunt,2016-11-29 01:06:10-05:00,"Upgrade QUnit (#384)
 
 * Update QUnit. Fixes #381.
@@ -61,10 +42,4 @@ Also added the options that were previously in qunit to
 QUnit.config.urlConfig. This should address the comments in #381.",test\dexie-unittest-utils.js,https://github.com/dexie/Dexie.js/commit/5bf23af41c25a31599a0016309b118c9b062e7cf,"asyncTest(name, num, ()=>Promise.resolve().then(asyncFunction)
 .then(start));","let done = assert.async();
 let done = assert.async();"
-https://github.com/dexie/Dexie.js,311492f73852a517d7c522b1c394a070591d3b1f,dfahlander,2023-10-05 11:23:20+02:00,"Improvements of dexie-cloud-addon:
-* Don't throw if license is invalid.
-* Let expired/invalid user login and pull data (but not sync changes)
-* Allow change user without logging out first
-* db.cloud.logout() - logs out current user.
-* Request confirmation in case there are unsynced changes on logout",addons\dexie-cloud\src\authentication\setCurrentUser.ts,https://github.com/dexie/Dexie.js/commit/311492f73852a517d7c522b1c394a070591d3b1f,await new Promise((resolve) => {,await user.save();
 https://github.com/dexie/Dexie.js,92542c7e420a126e1a244d2c59482b1fe814dee4,David Fahlander,2024-10-16 14:06:48+02:00,Bugfix: some YJS updates were never sent to server,addons\dexie-cloud\src\yjs\createYClientUpdateObservable.ts,https://github.com/dexie/Dexie.js/commit/92542c7e420a126e1a244d2c59482b1fe814dee4,.then((syncer) => syncer?.unsentFrom || 1);,liveQuery(async () => {

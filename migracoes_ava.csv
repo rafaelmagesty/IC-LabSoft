@@ -71,7 +71,7 @@ await promise;"
 https://github.com/avajs/ava,3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,2019-04-20 17:19:31+02:00,"Require Node.js 8.9.4
 
 * Remove support for `--debug` and `--debug-brk` CLI flags
-* Refactor to utilize object rest/spread and async/await",lib\worker\subprocess.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,return ipc.flush().then(() => process.exit()); // eslint-disable-line unicorn/no-process-exit,await ipc.flush();
+* Refactor to utilize object rest/spread and async/await",lib\worker\subprocess.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,return ipc.flush().then(() => process.exit());,await ipc.flush();
 https://github.com/avajs/ava,83b43a58593ea3a4e1fd271099184963ccdb7d4c,Mark Wubben,2020-01-02 16:14:52+01:00,"Allow CLI to select a subset of test files
 
 Rather than providing paths to specific test files, allow
@@ -110,7 +110,7 @@ Refactor and deploy some tricks so that ava/plugin is usable in a CJS environmen
 * Error serialization and code excerpts now support ESM
 * Title prefixes in the reporters now correctly skip all test file extensions, not just `js`
 
-* CI: Increase delay on timeout test, mostly for Windows",lib\eslint-plugin-helper-worker.js,https://github.com/avajs/ava/commit/c57067bfb69a9b685ea2b33624dee204ad369164,"configCache.set(projectDir, loadConfig({resolveFrom: projectDir}).then(conf => { // eslint-disable-line promise/prefer-await-to-then","const providers = await collectProviders({conf, projectDir});"
+* CI: Increase delay on timeout test, mostly for Windows",lib\eslint-plugin-helper-worker.js,https://github.com/avajs/ava/commit/c57067bfb69a9b685ea2b33624dee204ad369164,"configCache.set(projectDir, loadConfig({resolveFrom: projectDir}).then(conf => {","const providers = await collectProviders({conf, projectDir});"
 https://github.com/avajs/ava,da3d2bcffbad0fe51c83220bb1e587b7b80d1707,Mark Wubben,2023-01-15 21:33:33+01:00,"Update dependencies and such
 
 * Upgrade XO and reformat
@@ -149,14 +149,3 @@ https://github.com/avajs/ava,da3d2bcffbad0fe51c83220bb1e587b7b80d1707,Mark Wubbe
 * Select Node.js version from Volta pin in most CI jobs
 
 * Only pin npm when testing for lockfile churn; ensure npm@8 for Node.js 14",lib\worker\base.js,https://github.com/avajs/ava/commit/da3d2bcffbad0fe51c83220bb1e587b7b80d1707,channel.options.then(run).catch(onError);,options = await channel.options;
-https://github.com/avajs/ava,b15df539396a2b7ecfa1c13e8e67d29a66a601bc,Mark Wubben,2024-08-20 15:40:08+02:00,"Update dependencies & other general maintenance
-
-* Upgrade XO
-* Update TypeScript-related dependencies — Don't upgrade @sindresorhus/tsconfig to v6 since it requires TS 5.5 and we test with 5.2.
-* Update dev dependencies
-* Update dependencies
-* Rebuild lockfile
-* Upgrade CodeCov action
-* Update reporter log instructions and remove deprecation warnings
-* Make Node.js 22.6 the recommended development version
-* Remove Node.js 21 from the engines list: It's no longer maintained by Node.js itself, see also <https://github.com/avajs/ava/blob/main/docs/support-statement.md>.",lib\eslint-plugin-helper-worker.js,https://github.com/avajs/ava/commit/b15df539396a2b7ecfa1c13e8e67d29a66a601bc,"configCache.set(projectDir, loadConfig({resolveFrom: projectDir}).then(async ({config: conf}) => {",const {config: conf} = await loadConfig({resolveFrom: projectDir});

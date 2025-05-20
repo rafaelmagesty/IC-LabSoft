@@ -14,3 +14,4 @@ two.ready().then(itself => { t.same(itself, two) })
 twoDotOne.ready().then(itself => { t.same(itself, twoDotOne) })","test('ready return the server with Promise', async t => {
 await fastify.ready()
 await fastify.ready()"
+https://github.com/fastify/fastify,df9ea6f4622c3e41457bf9ce3e0fc9965f4ce627,Jean,2025-05-15 10:56:52+02:00,test: mv skip-reply-send from tap (#6094),test\skip-reply-send.test.js,https://github.com/fastify/fastify/commit/df9ea6f4622c3e41457bf9ce3e0fc9965f4ce627,"]).then((err, res) => {","test('Calling reply.send() after hijacking logs a warning', async (t) => {"

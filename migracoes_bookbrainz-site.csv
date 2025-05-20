@@ -16,7 +16,6 @@ https://github.com/metabrainz/bookbrainz-site,2dd3a0ff0794b69f49006fc7160e37f2e2
 revisionParentsPromise.then(","] = await Promise.all([
 const updatedEntity = await model.forge({bbid: currentEntity.bbid})"
 https://github.com/metabrainz/bookbrainz-site,042405eb2a4a694b0d318b077968e4bbe869495d,Shivam Tripathi,2018-11-11 02:01:22+05:30,feat(warnIfExistsGCIMerge): Send basic entity data for matching alias entities,src\server\helpers\search.js,https://github.com/metabrainz/bookbrainz-site/commit/042405eb2a4a694b0d318b077968e4bbe869495d,return new Promise((resolve) => {,resolve(await orm.func.alias.getBBIDsWithMatchingAlias(
-https://github.com/metabrainz/bookbrainz-site,a42f729c7547955795b0050c501791363542b385,Monkey Do,2018-11-12 16:22:34+01:00,feat(warnIfExists): Add try-catch around await function,src\server\helpers\search.js,https://github.com/metabrainz/bookbrainz-site/commit/a42f729c7547955795b0050c501791363542b385,const bbids = await new Promise((resolve) => {,const result = await orm.func.alias.getBBIDsWithMatchingAlias(
 https://github.com/metabrainz/bookbrainz-site,7302921e0f41fdfdf011eecd908c539253a52ab8,Monkey Do,2018-11-29 11:08:38+01:00,"refactor(docker): Sensible defaults using docker services names, fallback to localhost",src\server\helpers\search.js,https://github.com/metabrainz/bookbrainz-site/commit/7302921e0f41fdfdf011eecd908c539253a52ab8,"defer.promise = new Promise((resolve, reject) => {",const mainIndexExists = await _client.indices.exists({index: _index});
 https://github.com/metabrainz/bookbrainz-site,09242d8519ec9f45b7194129af65783be838dc1e,Monkey Do,2019-05-02 19:49:00+02:00,"feature: Fetch and display parent's name for deleted entities
 
@@ -35,7 +34,6 @@ Before author browse endpoint tests",test\test-helpers\create-entities.js,https:
 https://github.com/metabrainz/bookbrainz-site,03f3a456a4875a5dfe76465b840ef6afa0b1154b,Monkey Do,2019-09-16 14:51:15+02:00,"Continued implementation
 
 Deleted some previous work",src\server\routes\merge.js,https://github.com/metabrainz/bookbrainz-site/commit/03f3a456a4875a5dfe76465b840ef6afa0b1154b,.then(diffEntities);,"await loadEntityRelationships(entityJSON, orm, transacting);"
-https://github.com/metabrainz/bookbrainz-site,0d2d6337a962a8c4469afd3705bd933f9f29bb90,Monkey Do,2019-10-08 12:27:16+02:00,feat(merging): Reworked entity merging mechanism,src\server\routes\merge.js,https://github.com/metabrainz/bookbrainz-site/commit/0d2d6337a962a8c4469afd3705bd933f9f29bb90,.then(async (entity) => {,"await loadEntityRelationships(entityJSON, orm, transacting);"
 https://github.com/metabrainz/bookbrainz-site,6acf3329a574a88a59b81937a1344483faa63023,Monkey Do,2019-10-31 11:28:34+01:00,"refactor(merge-tool): Transform revision route logic to async/await
 
 & Use  ORM option to keep multiple EntityRevisions with the same ID",src\server\routes\revision.js,https://github.com/metabrainz/bookbrainz-site/commit/6acf3329a574a88a59b81937a1344483faa63023,}).then(diffRevisionsWithParents);,const authorDiffs = await _createRevision(AuthorRevision);
@@ -105,29 +103,6 @@ Also adds totalCount to API search endpoint",src\common\helpers\search.js,https:
 .then((results) => _fetchEntityModelsForESResults(orm, results))","const searchResponse = await _client.search(dslQuery);
 const results = await _fetchEntityModelsForESResults(orm, searchResponse.body.hits);"
 https://github.com/metabrainz/bookbrainz-site,dfe86b24e93f968632fed8f6513119508bdbc4df,Rohan Sasne,2023-02-27 14:10:28+05:30,refactor(BB-673): Code rewritten using async/await syntax.,src\server\helpers\middleware.ts,https://github.com/metabrainz/bookbrainz-site/commit/dfe86b24e93f968632fed8f6513119508bdbc4df,.then((results) => {,const results = await model.fetchAll({withRelated: [...relations]});
-https://github.com/metabrainz/bookbrainz-site,7e302f7c4729e4a5727911babe041a854f678aeb,Rohan Sasne,2023-03-08 17:17:56+05:30,"BB-675: Rewrite merge routes using async/await syntax (#934)
-
-* refactor: Modified the asynchronous code written using promises to async/await syntax
-
-* Indentation Improved
-
-* Indentation Improved
-
-* Indentation Improved
-
-* Indentation Improved
-
-* Indentation Improved
-
-* Indentation Improved
-
-* Indentation Improved
-
-* Indentation Improved
-
----------
-
-Co-authored-by: rohan <rohan@Ubuntu.myguest.virtualbox.org>",src\server\routes\merge.ts,https://github.com/metabrainz/bookbrainz-site/commit/7e302f7c4729e4a5727911babe041a854f678aeb,.then(async (entity) => {,"await loadEntityRelationships(entityJSON, orm, transacting);"
 https://github.com/metabrainz/bookbrainz-site,832e7f7bc0c214bf7bfc6a5787c35a7847ec6f17,Rohan Sasne,2023-03-09 17:12:14+05:30,BB-674: Rewrite revision file using async/await syntax,src\server\routes\revision.js,https://github.com/metabrainz/bookbrainz-site/commit/832e7f7bc0c214bf7bfc6a5787c35a7847ec6f17,".then(
 .then((entityRevisions) => diffRevisionsWithParents(req.app.locals.orm, entityRevisions, entityType))","const parent = await revision.parent();
 const entityRevisions = await EntityRevisionModel.forge()"
@@ -140,6 +115,3 @@ With the change from the previous commit (accepting an ORM model rather than JSO
 Taking this opportunity to rewrite some code from promises to async/await syntax.",src\server\routes\register.js,https://github.com/metabrainz/bookbrainz-site/commit/4767a89032e5935ad9303b91ede687ebc6cdba67,".then(
 .then((editor) => {","const editor = await new Editor({
 await search.indexEntity(editor);"
-https://github.com/metabrainz/bookbrainz-site,534611e29172e157565733bf77582b41010ecfba,Monkey Do,2024-05-27 14:13:03+02:00,"Fix bulk operation typescript
-
-Adding a type to the Elasticsearch client has revealed an issue with our handling of error during bulk indexing, we were using the wrong",src\common\helpers\search.ts,https://github.com/metabrainz/bookbrainz-site/commit/534611e29172e157565733bf77582b41010ecfba,"await new Promise(resolve => setTimeout(resolve, _retryDelay + jitter));",// eslint-disable-next-line no-await-in-loop

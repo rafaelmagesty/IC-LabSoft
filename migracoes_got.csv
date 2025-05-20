@@ -12,6 +12,4 @@ const aborted = new Promise((resolve, reject) => {","server.all('/abort', async 
 await t.throwsAsync(gotPromise);"
 https://github.com/sindresorhus/got,b9a855d3728d9219ddbc5d25b90d21147b982119,Sindre Sorhus,2020-07-08 02:34:48+08:00,"Upgrade dependencies (#1345)
 
-Co-authored-by: Szymon Marczak <36894700+szmarczak@users.noreply.github.com>",source\core\index.ts,https://github.com/sindresorhus/got/commit/b9a855d3728d9219ddbc5d25b90d21147b982119,result.then((request: unknown): void => {,// it rejects before it's `await`ed in `_makeRequest`.
-https://github.com/sindresorhus/got,3f707e693db1e8566a1fd932f3820c16ca2cd347,Sindre Sorhus,2020-11-20 22:01:07+07:00,Upgrade dev dependencies (#1534),test\http.ts,https://github.com/sindresorhus/got/commit/3f707e693db1e8566a1fd932f3820c16ca2cd347,await new Promise(resolve => {,await new Promise<void>(resolve => {
-https://github.com/sindresorhus/got,3f707e693db1e8566a1fd932f3820c16ca2cd347,Sindre Sorhus,2020-11-20 22:01:07+07:00,Upgrade dev dependencies (#1534),test\https.ts,https://github.com/sindresorhus/got/commit/3f707e693db1e8566a1fd932f3820c16ca2cd347,await new Promise(resolve => {,await new Promise<void>(resolve => {
+Co-authored-by: Szymon Marczak <36894700+szmarczak@users.noreply.github.com>",source\core\index.ts,https://github.com/sindresorhus/got/commit/b9a855d3728d9219ddbc5d25b90d21147b982119,result.then((request: unknown): void => {,(async () => {
