@@ -1,6 +1,8 @@
 import re
 import csv
 from pydriller import Repository
+from typing import Tuple
+
 
 # Regexs principais
 promise_re     = re.compile(r'\bnew\s+Promise\s*\(|\.then\s*\(')
@@ -17,7 +19,7 @@ def strip_inline_comments(line: str) -> str:
     line = re.sub(r'/\*.*?\*/', '', line)
     return line
 
-def is_comment_line(line: str, in_block: bool) -> (bool,bool):
+def is_comment_line(line: str, in_block: bool) -> Tuple[bool, bool]:
     """Retorna (é_comentário, novo_estado_em_block_comment)."""
     if in_block:
         # estamos dentro de /* … */
@@ -81,9 +83,8 @@ def detect_migrations_by_lineno(removed, added, window=5):
 
     return migrations
 
-# --- Exemplo de uso na sua pipeline ---
 CSV_HEADERS = [
-    "repo","commit_hash","author","date","message",
+    "commit_hash","author","message",
     "file_path","commit_url","removed_lines","added_lines"
 ]
 
@@ -113,10 +114,8 @@ for repo in repos:
 
                     old_lines, new_lines = zip(*migs)
                     writer.writerow({
-                        "repo": repo,
                         "commit_hash": commit.hash,
                         "author": commit.author.name,
-                        "date": commit.author_date,
                         "message": commit.msg.strip(),
                         "file_path": mod.new_path or mod.old_path,
                         "commit_url": f"{repo}/commit/{commit.hash}",

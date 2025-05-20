@@ -1,5 +1,5 @@
-repo,commit_hash,author,date,message,file_path,commit_url,removed_lines,added_lines
-https://github.com/mochajs/mocha,6ceca82fdfd51341796caa523d696fa7621639cc,Christopher Hiller,2020-10-05 13:22:04-07:00,"make guarantees about orphaned processes
+commit_hash,author,message,file_path,commit_url,removed_lines,added_lines
+6ceca82fdfd51341796caa523d696fa7621639cc,Christopher Hiller,"make guarantees about orphaned processes
 
 - updates workerpool to v6.0.2, which guarantees child processes exit before `Pool#terminate()` resolves
 - cleanup `test/integration/options/parallel.spec.js`",test\integration\options\parallel.spec.js,https://github.com/mochajs/mocha/commit/6ceca82fdfd51341796caa523d696fa7621639cc,"]).then(function(expected) {

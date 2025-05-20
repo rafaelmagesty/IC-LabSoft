@@ -1,5 +1,5 @@
-repo,commit_hash,author,date,message,file_path,commit_url,removed_lines,added_lines
-https://github.com/ether/etherpad-lite,346111250e87fa82b3f8e955a6fb24cd219870d0,Richard Hansen,2020-09-16 16:59:00-04:00,"utils: Fix promise creation accounting bug in promises.timesLimit
+commit_hash,author,message,file_path,commit_url,removed_lines,added_lines
+346111250e87fa82b3f8e955a6fb24cd219870d0,Richard Hansen,"utils: Fix promise creation accounting bug in promises.timesLimit
 
 Before this change, `promises.timesLimit()` created `concurrency - 1`
 too many promises. The only users of this function use a concurrency
@@ -14,7 +14,7 @@ Also:
   * Reject concurrency of 0 (unless total is 0).
   * Document the function.
   * Add tests.",src\node\utils\promises.js,https://github.com/ether/etherpad-lite/commit/346111250e87fa82b3f8e955a6fb24cd219870d0,.then(_internalRun),await Promise.all(promises);
-https://github.com/ether/etherpad-lite,a000a93dc644aa32f5ad9a0385837981f57edc44,Richard Hansen,2020-09-21 00:42:29-04:00,"Refactor startup/shutdown for tests
+a000a93dc644aa32f5ad9a0385837981f57edc44,Richard Hansen,"Refactor startup/shutdown for tests
 
   * `src/node/server.js` can now be run as a script (for normal
     operation) or imported as a module (for tests).
@@ -34,20 +34,20 @@ https://github.com/ether/etherpad-lite,a000a93dc644aa32f5ad9a0385837981f57edc44,
     port via `server.address().port` when `settings.port` is 0.",src\node\server.js,https://github.com/ether/etherpad-lite/commit/a000a93dc644aa32f5ad9a0385837981f57edc44,".then(plugins.update)
 .then(function() {","await hooks.aCallAll('loadSettings', {settings});
 await hooks.aCallAll('loadSettings', {settings});"
-https://github.com/ether/etherpad-lite,6a8563eeab0b2f9f31ca24b2e6739bc46239703d,Richard Hansen,2020-11-10 01:20:05-05:00,"import/export: Simplify exportEtherpadAdditionalContent processing
+6a8563eeab0b2f9f31ca24b2e6739bc46239703d,Richard Hansen,"import/export: Simplify exportEtherpadAdditionalContent processing
 
 Also:
   * Improve parallelization
   * Refine the documentation",src\node\utils\ExportEtherpad.js,https://github.com/ether/etherpad-lite/commit/6a8563eeab0b2f9f31ca24b2e6739bc46239703d,hooks.aCallAll('exportEtherpadAdditionalContent').then((prefixes) => {,await Promise.all(prefixes.map(async (prefix) => {
-https://github.com/ether/etherpad-lite,8a918fbc46f28fec9510a2953f2fdc5a08008427,Richard Hansen,2020-11-13 13:59:20-05:00,plugins: `async`ify more functions,src\static\js\pluginfw\installer.js,https://github.com/ether/etherpad-lite/commit/8a918fbc46f28fec9510a2953f2fdc5a08008427,".then(plugins.update)
+8a918fbc46f28fec9510a2953f2fdc5a08008427,Richard Hansen,plugins: `async`ify more functions,src\static\js\pluginfw\installer.js,https://github.com/ether/etherpad-lite/commit/8a918fbc46f28fec9510a2953f2fdc5a08008427,".then(plugins.update)
 .then(function() { cb(null) })","await hooks.aCallAll('pluginInstall', {pluginName});
 await plugins.update();"
-https://github.com/ether/etherpad-lite,8a918fbc46f28fec9510a2953f2fdc5a08008427,Richard Hansen,2020-11-13 13:59:20-05:00,plugins: `async`ify more functions,src\static\js\pluginfw\plugins.js,https://github.com/ether/etherpad-lite/commit/8a918fbc46f28fec9510a2953f2fdc5a08008427,return Promise.all(p).then(function() {,await callInit();
-https://github.com/ether/etherpad-lite,b8d07a42eb211b4bfad6f578c6aa6c8bc51573e9,Richard Hansen,2020-11-23 13:21:51-05:00,lint: Run `eslint --fix` on `bin/` and `tests/`,tests\backend\specs\caching_middleware.js,https://github.com/ether/etherpad-lite/commit/b8d07a42eb211b4bfad6f578c6aa6c8bc51573e9,".then((res) => {
+8a918fbc46f28fec9510a2953f2fdc5a08008427,Richard Hansen,plugins: `async`ify more functions,src\static\js\pluginfw\plugins.js,https://github.com/ether/etherpad-lite/commit/8a918fbc46f28fec9510a2953f2fdc5a08008427,return Promise.all(p).then(function() {,await callInit();
+b8d07a42eb211b4bfad6f578c6aa6c8bc51573e9,Richard Hansen,lint: Run `eslint --fix` on `bin/` and `tests/`,tests\backend\specs\caching_middleware.js,https://github.com/ether/etherpad-lite/commit/b8d07a42eb211b4bfad6f578c6aa6c8bc51573e9,".then((res) => {
 .then((res) => {","before(async function () {
 it('gets packages uncompressed without Accept-Encoding gzip', async function () {"
-https://github.com/ether/etherpad-lite,8e5fd19db2dbbfacf61b2cc223614a0517d4a15b,Richard Hansen,2020-11-23 13:24:19-05:00,lint: Run `eslint --fix` on `src/`,src\node\db\GroupManager.js,https://github.com/ether/etherpad-lite/commit/8e5fd19db2dbbfacf61b2cc223614a0517d4a15b,return padManager.getPad(padID).then(pad => pad.remove());,const group2sessions = await db.get(`group2sessions:${groupID}`);
-https://github.com/ether/etherpad-lite,2fdc73735599b5c8f68bf5555be9f6c71c7454de,John McLear,2021-01-18 08:53:15+00:00,"bugfix, lint and refactor all bin scripts (#4617)
+8e5fd19db2dbbfacf61b2cc223614a0517d4a15b,Richard Hansen,lint: Run `eslint --fix` on `src/`,src\node\db\GroupManager.js,https://github.com/ether/etherpad-lite/commit/8e5fd19db2dbbfacf61b2cc223614a0517d4a15b,return padManager.getPad(padID).then(pad => pad.remove());,const group2sessions = await db.get(`group2sessions:${groupID}`);
+2fdc73735599b5c8f68bf5555be9f6c71c7454de,John McLear,"bugfix, lint and refactor all bin scripts (#4617)
 
 * bugfix, lint and refactor all bin scripts
 
@@ -98,18 +98,18 @@ Co-authored-by: Richard Hansen <rhansen@rhansen.org>",bin\deleteAllGroupSessions
 .then((res) => {","const apiVersionResponse = await api.get('/api/');
 const groupsResponse = await api.get(`/api/${apiVersion}/listAllGroups?apikey=${apikey}`);
 const sessionsResponse = await api.get(sessionURI);"
-https://github.com/ether/etherpad-lite,708206449a888ed46a0acdf52de68d996778696d,Richard Hansen,2021-01-31 19:11:48-05:00,"hooks: Factor out callback attachment
+708206449a888ed46a0acdf52de68d996778696d,Richard Hansen,"hooks: Factor out callback attachment
 
 The separate function will be reused in a future commit.",src\static\js\pluginfw\hooks.js,https://github.com/ether/etherpad-lite/commit/708206449a888ed46a0acdf52de68d996778696d,".then((result) => (result === undefined) ? [] : result)))
 .then(flatten1);
 if (cb != null) resultsPromise = resultsPromise.then((val) => cb(null, val), cb);","exports.aCallAll = async (hookName, context, cb = null) => {
 if (cb != null) return await attachCallback(exports.aCallAll(hookName, context), cb);
 const results = await Promise.all(hooks.map((hook) => callHookFnAsync(hook, context)"
-https://github.com/ether/etherpad-lite,5cc191f185d0b48e513a5b088aea08353507a783,Richard Hansen,2021-02-11 15:16:45-05:00,Minify: Replace `async.forEach()` with `Promise.all()`,src\node\utils\Minify.js,https://github.com/ether/etherpad-lite/commit/5cc191f185d0b48e513a5b088aea08353507a783,"requestURI(resourceURI, 'GET', {}).then(([status, headers, body]) => {","const [status, , body] = await requestURI(resourceURI, 'GET', {});"
-https://github.com/ether/etherpad-lite,dd7ea1a8f9ee91e16db13379f0b0124e061fea6e,Richard Hansen,2021-02-11 16:54:25-05:00,Minify: Asyncify `statFile()`,src\node\utils\Minify.js,https://github.com/ether/etherpad-lite/commit/dd7ea1a8f9ee91e16db13379f0b0124e061fea6e,lastModifiedDateOfEverything().then(,"return [await lastModifiedDateOfEverything(), true];"
-https://github.com/ether/etherpad-lite,f9ec49d7ac06d8896b12d6cf5b3b0b0594b9f225,Richard Hansen,2021-02-13 01:43:08-05:00,tests: Improve `/admin/settings` restart test,src\tests\frontend\specs\adminsettings.js,https://github.com/ether/etherpad-lite/commit/f9ec49d7ac06d8896b12d6cf5b3b0b0594b9f225,"return new Promise((resolve) => setTimeout(resolve, ms));",const getUptime = async () => {
-https://github.com/ether/etherpad-lite,9cd67cd99079b2fe1f3a9d9a1a625a2f2eabee07,Richard Hansen,2021-02-27 00:22:46-05:00,PadMessageHandler: Delete unnecessary use of `Promise.then()`,src\node\handler\PadMessageHandler.js,https://github.com/ether/etherpad-lite/commit/9cd67cd99079b2fe1f3a9d9a1a625a2f2eabee07,return authorManager.getAuthor(s.author).then((author) => {,const author = await authorManager.getAuthor(s.author);
-https://github.com/ether/etherpad-lite,3a34db84e693a1b3e053855bfd2b24a9975a0555,Richard Hansen,2021-02-27 02:22:57-05:00,"tests: Refine CachingMiddleware tests
+5cc191f185d0b48e513a5b088aea08353507a783,Richard Hansen,Minify: Replace `async.forEach()` with `Promise.all()`,src\node\utils\Minify.js,https://github.com/ether/etherpad-lite/commit/5cc191f185d0b48e513a5b088aea08353507a783,"requestURI(resourceURI, 'GET', {}).then(([status, headers, body]) => {","const [status, , body] = await requestURI(resourceURI, 'GET', {});"
+dd7ea1a8f9ee91e16db13379f0b0124e061fea6e,Richard Hansen,Minify: Asyncify `statFile()`,src\node\utils\Minify.js,https://github.com/ether/etherpad-lite/commit/dd7ea1a8f9ee91e16db13379f0b0124e061fea6e,lastModifiedDateOfEverything().then(,"return [await lastModifiedDateOfEverything(), true];"
+f9ec49d7ac06d8896b12d6cf5b3b0b0594b9f225,Richard Hansen,tests: Improve `/admin/settings` restart test,src\tests\frontend\specs\adminsettings.js,https://github.com/ether/etherpad-lite/commit/f9ec49d7ac06d8896b12d6cf5b3b0b0594b9f225,"return new Promise((resolve) => setTimeout(resolve, ms));",const getUptime = async () => {
+9cd67cd99079b2fe1f3a9d9a1a625a2f2eabee07,Richard Hansen,PadMessageHandler: Delete unnecessary use of `Promise.then()`,src\node\handler\PadMessageHandler.js,https://github.com/ether/etherpad-lite/commit/9cd67cd99079b2fe1f3a9d9a1a625a2f2eabee07,return authorManager.getAuthor(s.author).then((author) => {,const author = await authorManager.getAuthor(s.author);
+3a34db84e693a1b3e053855bfd2b24a9975a0555,Richard Hansen,"tests: Refine CachingMiddleware tests
 
   * Lint functions
   * Fix assignment of `settings.minify`
@@ -125,18 +125,18 @@ https://github.com/ether/etherpad-lite,3a34db84e693a1b3e053855bfd2b24a9975a0555,
 it('does not cache content-encoding headers', async function () {
 it('does not cache content-encoding headers', async function () {
 await agent.get(packages[0])"
-https://github.com/ether/etherpad-lite,8f236b86877efd5db3ca289619baaa194c95048b,Richard Hansen,2021-04-21 16:29:55-04:00,Minify: Avoid crash due to unhandled Promise rejection if stat fails,src\node\utils\Minify.js,https://github.com/ether/etherpad-lite/commit/8f236b86877efd5db3ca289619baaa194c95048b,"Promise.all(locations.map((loc) => requestURI(loc, method, headers))).then((responses) => {",Promise.all(locations.map(async (loc) => {
-https://github.com/ether/etherpad-lite,d87b4e0c20ccd03771833c878345edc4b39139a1,Richard Hansen,2021-05-09 16:23:49-04:00,"tests: Use `async`/`await` instead of returning Promises
+8f236b86877efd5db3ca289619baaa194c95048b,Richard Hansen,Minify: Avoid crash due to unhandled Promise rejection if stat fails,src\node\utils\Minify.js,https://github.com/ether/etherpad-lite/commit/8f236b86877efd5db3ca289619baaa194c95048b,"Promise.all(locations.map((loc) => requestURI(loc, method, headers))).then((responses) => {",Promise.all(locations.map(async (loc) => {
+d87b4e0c20ccd03771833c878345edc4b39139a1,Richard Hansen,"tests: Use `async`/`await` instead of returning Promises
 
 This makes stack traces more useful.",src\node\hooks\express\tests.js,https://github.com/ether/etherpad-lite/commit/d87b4e0c20ccd03771833c878345edc4b39139a1,return Promise.all(promises).then(() => pluginSpecs);,exports.getCoreTests = async () => await readdir('src/tests/frontend/specs');
-https://github.com/ether/etherpad-lite,f00f9aa14cb87758e57faa9b45f8d3cbe03033ca,Richard Hansen,2021-05-09 16:30:53-04:00,tests: Avoid `.then()` inside `async` functions,src\node\hooks\express\tests.js,https://github.com/ether/etherpad-lite/commit/f00f9aa14cb87758e57faa9b45f8d3cbe03033ca,.then((specFiles) => specFiles.map((spec) => {,const specFiles = await readdir(specDir);
-https://github.com/ether/etherpad-lite,d8cbd134d336215a7962ba65932eaa7cc66973d7,Richard Hansen,2021-03-21 14:52:39-04:00,PadMessageHandler: Improve readability,src\node\handler\PadMessageHandler.js,https://github.com/ether/etherpad-lite/commit/d8cbd134d336215a7962ba65932eaa7cc66973d7,).then(,...revTimesNeeded.map(async (revNum) => {
-https://github.com/ether/etherpad-lite,98f0e931feb9f5d9cfd8c51f9f3403e37a5e5dae,Richard Hansen,2021-11-15 03:11:54-05:00,MinifyWorker: Promisify `compressCSS`,src\node\utils\MinifyWorker.js,https://github.com/ether/etherpad-lite/commit/98f0e931feb9f5d9cfd8c51f9f3403e37a5e5dae,"const compressCSS = (filename, ROOT_DIR) => new Promise((res, rej) => {","const compressCSS = async (filename, ROOT_DIR) => {"
-https://github.com/ether/etherpad-lite,5b37a5619781012decb3f5aae847de447aa5f08d,Richard Hansen,2021-11-12 21:26:55-05:00,"GroupManager: Use `.setSub()` and parallel queries to avoid races
+f00f9aa14cb87758e57faa9b45f8d3cbe03033ca,Richard Hansen,tests: Avoid `.then()` inside `async` functions,src\node\hooks\express\tests.js,https://github.com/ether/etherpad-lite/commit/f00f9aa14cb87758e57faa9b45f8d3cbe03033ca,.then((specFiles) => specFiles.map((spec) => {,const specFiles = await readdir(specDir);
+d8cbd134d336215a7962ba65932eaa7cc66973d7,Richard Hansen,PadMessageHandler: Improve readability,src\node\handler\PadMessageHandler.js,https://github.com/ether/etherpad-lite/commit/d8cbd134d336215a7962ba65932eaa7cc66973d7,).then(,...revTimesNeeded.map(async (revNum) => {
+98f0e931feb9f5d9cfd8c51f9f3403e37a5e5dae,Richard Hansen,MinifyWorker: Promisify `compressCSS`,src\node\utils\MinifyWorker.js,https://github.com/ether/etherpad-lite/commit/98f0e931feb9f5d9cfd8c51f9f3403e37a5e5dae,"const compressCSS = (filename, ROOT_DIR) => new Promise((res, rej) => {","const compressCSS = async (filename, ROOT_DIR) => {"
+5b37a5619781012decb3f5aae847de447aa5f08d,Richard Hansen,"GroupManager: Use `.setSub()` and parallel queries to avoid races
 
 This also simplfies the code.",src\node\db\GroupManager.js,https://github.com/ether/etherpad-lite/commit/5b37a5619781012decb3f5aae847de447aa5f08d,.then((pad) => pad.remove()),await pad.remove();
-https://github.com/ether/etherpad-lite,addc0198107c1996a8da68baa3a270c5af123e49,Richard Hansen,2021-11-21 23:55:17-05:00,Pad: Use ES6 class syntax to improve readability,src\node\db\Pad.js,https://github.com/ether/etherpad-lite/commit/addc0198107c1996a8da68baa3a270c5af123e49,neededChangesets.map((item) => this.getRevisionChangeset(item).then((changeset) => {,let atext = await atextp;
-https://github.com/ether/etherpad-lite,049231e4af44e39969e356e3fe577177fe646368,SamTV12345,2023-06-27 21:20:53+02:00,"Feature/axios (#5776)
+addc0198107c1996a8da68baa3a270c5af123e49,Richard Hansen,Pad: Use ES6 class syntax to improve readability,src\node\db\Pad.js,https://github.com/ether/etherpad-lite/commit/addc0198107c1996a8da68baa3a270c5af123e49,neededChangesets.map((item) => this.getRevisionChangeset(item).then((changeset) => {,let atext = await atextp;
+049231e4af44e39969e356e3fe577177fe646368,SamTV12345,"Feature/axios (#5776)
 
 * Move from deprecated request package to axios.
 
@@ -155,8 +155,8 @@ https://github.com/ether/etherpad-lite,049231e4af44e39969e356e3fe577177fe646368,
 This reverts commit b60fa4f435c141bca332a5b344c36204eb0cc7b4.",src\node\utils\UpdateCheck.js,https://github.com/ether/etherpad-lite/commit/049231e4af44e39969e356e3fe577177fe646368,"const loadEtherpadInformations = () => new Promise((resolve, reject) => {
 loadEtherpadInformations().then((info) => {","infos = await resp.data;
 exports.needsUpdate = async (cb) => {"
-https://github.com/ether/etherpad-lite,d12119d3beb7635506b92ae00f85af54c1be2c0d,Stefan,2023-12-17 11:05:32+00:00,Handle exception during loading of plugins (#6074),src\static\js\pluginfw\installer.js,https://github.com/ether/etherpad-lite/commit/d12119d3beb7635506b92ae00f85af54c1be2c0d,.then(pluginsLoaded => {,await axios.get('https:
-https://github.com/ether/etherpad-lite,9c14a4f7dba1a7f0e7730a7e9fca18437630633d,Stefan,2024-01-14 11:54:57+01:00,"Live plugin manager (#6018)
+d12119d3beb7635506b92ae00f85af54c1be2c0d,Stefan,Handle exception during loading of plugins (#6074),src\static\js\pluginfw\installer.js,https://github.com/ether/etherpad-lite/commit/d12119d3beb7635506b92ae00f85af54c1be2c0d,.then(pluginsLoaded => {,await axios.get('https:
+9c14a4f7dba1a7f0e7730a7e9fca18437630633d,Stefan,"Live plugin manager (#6018)
 
 * Added plugin live view.
 
@@ -188,7 +188,7 @@ https://github.com/ether/etherpad-lite,9c14a4f7dba1a7f0e7730a7e9fca18437630633d,
 
 Co-authored-by: SamTV12345 <40429738+samtv12345@users.noreply.github.com>
 Co-authored-by: Hossein M <marzban98@gmail.com>",src\static\js\pluginfw\installer.js,https://github.com/ether/etherpad-lite/commit/9c14a4f7dba1a7f0e7730a7e9fca18437630633d,.then(pluginsLoaded => {,"await fs.writeFile(installedPluginsPath, JSON.stringify(installedPlugins));"
-https://github.com/ether/etherpad-lite,ead3c0ea381b8cb5b7ac39004a7f319200504a4d,SamTV12345,2024-02-05 21:13:02+01:00,"Added typescript to etherpad
+ead3c0ea381b8cb5b7ac39004a7f319200504a4d,SamTV12345,"Added typescript to etherpad
 
 * Fixed determining file extension.
 
@@ -267,7 +267,7 @@ https://github.com/ether/etherpad-lite,ead3c0ea381b8cb5b7ac39004a7f319200504a4d,
 * Added express types.
 
 * fixed.",src\node\utils\UpdateCheck.ts,https://github.com/ether/etherpad-lite/commit/ead3c0ea381b8cb5b7ac39004a7f319200504a4d,.then((info) => {,exports.needsUpdate = async (cb: Function) => {
-https://github.com/ether/etherpad-lite,ead3c0ea381b8cb5b7ac39004a7f319200504a4d,SamTV12345,2024-02-05 21:13:02+01:00,"Added typescript to etherpad
+ead3c0ea381b8cb5b7ac39004a7f319200504a4d,SamTV12345,"Added typescript to etherpad
 
 * Fixed determining file extension.
 
@@ -346,7 +346,7 @@ https://github.com/ether/etherpad-lite,ead3c0ea381b8cb5b7ac39004a7f319200504a4d,
 * Added express types.
 
 * fixed.",src\node\utils\caching_middleware.ts,https://github.com/ether/etherpad-lite/commit/ead3c0ea381b8cb5b7ac39004a7f319200504a4d,".then((content) => fsp.writeFile(`${CACHE_DIR}minified_${cacheKey}.gz`, content))","res.end = async (data: number, encoding: number) => {"
-https://github.com/ether/etherpad-lite,546ede284c62a882cb90f388403efb209d93efaf,SamTV12345,2024-02-22 18:31:17+01:00,"Converted tests to typescript. (#6181)
+546ede284c62a882cb90f388403efb209d93efaf,SamTV12345,"Converted tests to typescript. (#6181)
 
 * Converted tests to typescript.
 
@@ -361,7 +361,7 @@ https://github.com/ether/etherpad-lite,546ede284c62a882cb90f388403efb209d93efaf,
 * Fixed cypress install.
 
 * Fixed cypress install.",src\tests\backend\specs\Pad.ts,https://github.com/ether/etherpad-lite/commit/546ede284c62a882cb90f388403efb209d93efaf,"const p = new Promise((resolve, reject) => {","plugins.hooks.padDefaultContent.push({hook_fn: async (hookName:string, ctx:any) => {"
-https://github.com/ether/etherpad-lite,fe106f0afcac62c91c0e716d3fc520e8bcd282f4,Stefan Müller,2024-03-14 16:06:32+01:00,"Improve plugins docker build and fixed plugin loading when dependencies are specified (#6164)
+fe106f0afcac62c91c0e716d3fc520e8bcd282f4,Stefan Müller,"Improve plugins docker build and fixed plugin loading when dependencies are specified (#6164)
 
 * Install pnpm only local - not global
 
@@ -404,5 +404,5 @@ https://github.com/ether/etherpad-lite,fe106f0afcac62c91c0e716d3fc520e8bcd282f4,
 Co-authored-by: SamTV12345 <40429738+samtv12345@users.noreply.github.com>",src\static\js\pluginfw\installer.ts,https://github.com/ether/etherpad-lite/commit/fe106f0afcac62c91c0e716d3fc520e8bcd282f4,".then((pluginsLoaded) => {
 exports.search = (searchTerm, maxCacheAge) => exports.getAvailablePlugins(maxCacheAge).then(","for (const pkg of Object.values(await plugins.getPackages()) as PackageData[]) {
 export const uninstall = async (pluginName: string, cb:Function|null = null) => {"
-https://github.com/ether/etherpad-lite,0b80e256b4a22eb7b3a88d5b445246203dc7e785,SamTV12345,2024-04-16 19:11:05+02:00,Added proxy support for axios. (#6334),src\node\utils\UpdateCheck.ts,https://github.com/ether/etherpad-lite/commit/0b80e256b4a22eb7b3a88d5b445246203dc7e785,.then((info:Infos) => {,const info = await loadEtherpadInformations()
-https://github.com/ether/etherpad-lite,d62d5a0460de6fa3dda555257166acd197b675a7,SamTV12345,2025-04-08 18:40:00+02:00,Added authentication to axios.defaults.proxy,src\static\js\pluginfw\installer.ts,https://github.com/ether/etherpad-lite/commit/d62d5a0460de6fa3dda555257166acd197b675a7,.then((pluginsLoaded:AxiosResponse<MapArrayType<PackageInfo>>) => {,.catch(async (err) => {
+0b80e256b4a22eb7b3a88d5b445246203dc7e785,SamTV12345,Added proxy support for axios. (#6334),src\node\utils\UpdateCheck.ts,https://github.com/ether/etherpad-lite/commit/0b80e256b4a22eb7b3a88d5b445246203dc7e785,.then((info:Infos) => {,const info = await loadEtherpadInformations()
+d62d5a0460de6fa3dda555257166acd197b675a7,SamTV12345,Added authentication to axios.defaults.proxy,src\static\js\pluginfw\installer.ts,https://github.com/ether/etherpad-lite/commit/d62d5a0460de6fa3dda555257166acd197b675a7,.then((pluginsLoaded:AxiosResponse<MapArrayType<PackageInfo>>) => {,.catch(async (err) => {

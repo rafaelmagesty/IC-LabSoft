@@ -1,49 +1,49 @@
-repo,commit_hash,author,date,message,file_path,commit_url,removed_lines,added_lines
-https://github.com/metabrainz/bookbrainz-site,954dc18e67a4c12d4feec03e6d03d54cdc247f3e,Seán de Búrca,2016-12-20 23:57:19-07:00,"Convert auth helper to async/await, remove co dependency",src\server\helpers\auth.js,https://github.com/metabrainz/bookbrainz-site/commit/954dc18e67a4c12d4feec03e6d03d54cdc247f3e,".then((linkedUser) => done(null, linkedUser.toJSON()));
+commit_hash,author,message,file_path,commit_url,removed_lines,added_lines
+954dc18e67a4c12d4feec03e6d03d54cdc247f3e,Seán de Búrca,"Convert auth helper to async/await, remove co dependency",src\server\helpers\auth.js,https://github.com/metabrainz/bookbrainz-site/commit/954dc18e67a4c12d4feec03e6d03d54cdc247f3e,".then((linkedUser) => done(null, linkedUser.toJSON()));
 .then((fetchedUser) =>","const fetchedUser = await _getAccountByMBUserId(profile);
 await _updateCachedMBName(fetchedUser, profile);"
-https://github.com/metabrainz/bookbrainz-site,7ae31abe46a856b777e65d9e852c654e833efc64,Seán de Búrca,2016-12-25 22:55:13-05:00,Convert search to async/await and fix indexing,src\server\helpers\search.js,https://github.com/metabrainz/bookbrainz-site/commit/7ae31abe46a856b777e65d9e852c654e833efc64,".then((collection) => collection.toJSON())
+7ae31abe46a856b777e65d9e852c654e833efc64,Seán de Búrca,Convert search to async/await and fix indexing,src\server\helpers\search.js,https://github.com/metabrainz/bookbrainz-site/commit/7ae31abe46a856b777e65d9e852c654e833efc64,".then((collection) => collection.toJSON())
 .then(() =>
 .then(search.refreshIndex);","await search.indexEntity(entity);
 const areaCollection = await Area.forge()
 await search.indexArea(area);"
-https://github.com/metabrainz/bookbrainz-site,65c2061ed58a1a9371b4534f40e9e9322f2f5c5d,Ben Ockmore,2018-08-24 01:11:45+01:00,refactor: switch to new entity processing functions in bookbrainz-data v1.1.1,src\server\routes\entity\entity.js,https://github.com/metabrainz/bookbrainz-site/commit/65c2061ed58a1a9371b4534f40e9e9322f2f5c5d,".then((collection) => Promise.map(
+65c2061ed58a1a9371b4534f40e9e9322f2f5c5d,Ben Ockmore,refactor: switch to new entity processing functions in bookbrainz-data v1.1.1,src\server\routes\entity\entity.js,https://github.com/metabrainz/bookbrainz-site/commit/65c2061ed58a1a9371b4534f40e9e9322f2f5c5d,".then((collection) => Promise.map(
 .then((collection) => collection.attach(idsToAttach, {transacting}));
 const newAliasesPromise = newAliasSetPromise.then(","const oldAliasSet = await (
 async function getNextIdentifierSet(orm, transacting, currentEntity, body) {
 const oldDisambiguation = await ("
-https://github.com/metabrainz/bookbrainz-site,2dd3a0ff0794b69f49006fc7160e37f2e2e4821d,Ben Ockmore,2018-08-24 21:06:10+01:00,refactor: use ES6 async/await to simplify entity creation and editing,src\server\routes\entity\entity.js,https://github.com/metabrainz/bookbrainz-site/commit/2dd3a0ff0794b69f49006fc7160e37f2e2e4821d,".then(
+2dd3a0ff0794b69f49006fc7160e37f2e2e4821d,Ben Ockmore,refactor: use ES6 async/await to simplify entity creation and editing,src\server\routes\entity\entity.js,https://github.com/metabrainz/bookbrainz-site/commit/2dd3a0ff0794b69f49006fc7160e37f2e2e4821d,".then(
 revisionParentsPromise.then(","] = await Promise.all([
 const updatedEntity = await model.forge({bbid: currentEntity.bbid})"
-https://github.com/metabrainz/bookbrainz-site,042405eb2a4a694b0d318b077968e4bbe869495d,Shivam Tripathi,2018-11-11 02:01:22+05:30,feat(warnIfExistsGCIMerge): Send basic entity data for matching alias entities,src\server\helpers\search.js,https://github.com/metabrainz/bookbrainz-site/commit/042405eb2a4a694b0d318b077968e4bbe869495d,return new Promise((resolve) => {,resolve(await orm.func.alias.getBBIDsWithMatchingAlias(
-https://github.com/metabrainz/bookbrainz-site,7302921e0f41fdfdf011eecd908c539253a52ab8,Monkey Do,2018-11-29 11:08:38+01:00,"refactor(docker): Sensible defaults using docker services names, fallback to localhost",src\server\helpers\search.js,https://github.com/metabrainz/bookbrainz-site/commit/7302921e0f41fdfdf011eecd908c539253a52ab8,"defer.promise = new Promise((resolve, reject) => {",const mainIndexExists = await _client.indices.exists({index: _index});
-https://github.com/metabrainz/bookbrainz-site,09242d8519ec9f45b7194129af65783be838dc1e,Monkey Do,2019-05-02 19:49:00+02:00,"feature: Fetch and display parent's name for deleted entities
+042405eb2a4a694b0d318b077968e4bbe869495d,Shivam Tripathi,feat(warnIfExistsGCIMerge): Send basic entity data for matching alias entities,src\server\helpers\search.js,https://github.com/metabrainz/bookbrainz-site/commit/042405eb2a4a694b0d318b077968e4bbe869495d,return new Promise((resolve) => {,resolve(await orm.func.alias.getBBIDsWithMatchingAlias(
+7302921e0f41fdfdf011eecd908c539253a52ab8,Monkey Do,"refactor(docker): Sensible defaults using docker services names, fallback to localhost",src\server\helpers\search.js,https://github.com/metabrainz/bookbrainz-site/commit/7302921e0f41fdfdf011eecd908c539253a52ab8,"defer.promise = new Promise((resolve, reject) => {",const mainIndexExists = await _client.indices.exists({index: _index});
+09242d8519ec9f45b7194129af65783be838dc1e,Monkey Do,"feature: Fetch and display parent's name for deleted entities
 
 In the entity display page. Uses new getEntityParentAlias ORM function.",src\server\helpers\middleware.js,https://github.com/metabrainz/bookbrainz-site/commit/09242d8519ec9f45b7194129af65783be838dc1e,.then((entity) => {,const parentAlias = await orm.func.entity.getEntityParentAlias(
-https://github.com/metabrainz/bookbrainz-site,be49d61637ad0c820120057e863b40d49eeae2d8,Divyanshu Raj,2020-02-13 12:48:30+05:30,fixed margin issue of brand logo in mobile view,src\server\routes\editor.js,https://github.com/metabrainz/bookbrainz-site/commit/be49d61637ad0c820120057e863b40d49eeae2d8,".then((editor) => getEditorTitleJSON(editor.toJSON(), TitleUnlock))",const revisions = await new Revision()
-https://github.com/metabrainz/bookbrainz-site,52a6762284e4ac495555a302db353ee95f51c9b1,Anirudh Jain,2020-04-14 21:29:37+05:30,convert all promises to async await calls,src\server\routes\entity\entity.js,https://github.com/metabrainz/bookbrainz-site/commit/52a6762284e4ac495555a302db353ee95f51c9b1,".then((revision) =>
+be49d61637ad0c820120057e863b40d49eeae2d8,Divyanshu Raj,fixed margin issue of brand logo in mobile view,src\server\routes\editor.js,https://github.com/metabrainz/bookbrainz-site/commit/be49d61637ad0c820120057e863b40d49eeae2d8,".then((editor) => getEditorTitleJSON(editor.toJSON(), TitleUnlock))",const revisions = await new Revision()
+52a6762284e4ac495555a302db353ee95f51c9b1,Anirudh Jain,convert all promises to async await calls,src\server\routes\entity\entity.js,https://github.com/metabrainz/bookbrainz-site/commit/52a6762284e4ac495555a302db353ee95f51c9b1,".then((revision) =>
 revisionParentsPromise.then(
 .then((revision) => _createNote(
 .then((entityRevision) => new HeaderModel({","const revisionParentsPromise = await RevisionPromiseRevision.related('parents').fetch({require: false, transacting});
 const parents = await revisionParentsPromise;
 const newRevisionPromiseRevision = await newRevisionPromise;
 id: await newRevisionPromiseRevision.get('id')"
-https://github.com/metabrainz/bookbrainz-site,c7c4947d73b7069890cf65deb8b8d84d593b79b4,Monkey Do,2019-08-14 18:04:41+02:00,"test: Add relationships to author browse tests
+c7c4947d73b7069890cf65deb8b8d84d593b79b4,Monkey Do,"test: Add relationships to author browse tests
 
 Before author browse endpoint tests",test\test-helpers\create-entities.js,https://github.com/metabrainz/bookbrainz-site/commit/c7c4947d73b7069890cf65deb8b8d84d593b79b4,.then(,const existingRelationshipSet = await RelationshipSet
-https://github.com/metabrainz/bookbrainz-site,03f3a456a4875a5dfe76465b840ef6afa0b1154b,Monkey Do,2019-09-16 14:51:15+02:00,"Continued implementation
+03f3a456a4875a5dfe76465b840ef6afa0b1154b,Monkey Do,"Continued implementation
 
 Deleted some previous work",src\server\routes\merge.js,https://github.com/metabrainz/bookbrainz-site/commit/03f3a456a4875a5dfe76465b840ef6afa0b1154b,.then(diffEntities);,"await loadEntityRelationships(entityJSON, orm, transacting);"
-https://github.com/metabrainz/bookbrainz-site,6acf3329a574a88a59b81937a1344483faa63023,Monkey Do,2019-10-31 11:28:34+01:00,"refactor(merge-tool): Transform revision route logic to async/await
+6acf3329a574a88a59b81937a1344483faa63023,Monkey Do,"refactor(merge-tool): Transform revision route logic to async/await
 
 & Use  ORM option to keep multiple EntityRevisions with the same ID",src\server\routes\revision.js,https://github.com/metabrainz/bookbrainz-site/commit/6acf3329a574a88a59b81937a1344483faa63023,}).then(diffRevisionsWithParents);,const authorDiffs = await _createRevision(AuthorRevision);
-https://github.com/metabrainz/bookbrainz-site,e6c447bfd5c3acab9790060fef4fb73670d4241f,PrabalSingh,2020-06-27 00:26:33+05:30,chore: use checkboxes to select collection,src\client\components\pages\parts\add-to-collection-modal.js,https://github.com/metabrainz/bookbrainz-site/commit/e6c447bfd5c3acab9790060fef4fb73670d4241f,.then((res) => {,const req = await request.get(`/editor/${this.props.userId}/collections/collections?type=${this.props.entityType}&size=10000`);
-https://github.com/metabrainz/bookbrainz-site,1ad048043eafa8c86bb48a444a21f82af1c5d636,PrabalSingh,2020-08-13 13:28:41+05:30,make some tests work,src\server\helpers\handler.js,https://github.com/metabrainz/bookbrainz-site/commit/1ad048043eafa8c86bb48a444a21f82af1c5d636,.then((result) => {,await processingCallback(result);
-https://github.com/metabrainz/bookbrainz-site,95ec830909ca3ee632d76f0a670caf104f90d644,PrabalSingh,2020-08-13 16:12:47+05:30,modify handler.sendPromiseResult,src\server\helpers\handler.js,https://github.com/metabrainz/bookbrainz-site/commit/95ec830909ca3ee632d76f0a670caf104f90d644,.then((result) => {,await processingCallback(result);
-https://github.com/metabrainz/bookbrainz-site,bd77e6dffa1a4b2e64e7efa7d4c4b3d1314ea839,Monkey Do,2020-09-01 17:10:28+02:00,test: Prevent conflict in test fixtures ids,test\test-helpers\create-entities.js,https://github.com/metabrainz/bookbrainz-site/commit/bd77e6dffa1a4b2e64e7efa7d4c4b3d1314ea839,".then((model) => model.aliases().attach([alias]));
+e6c447bfd5c3acab9790060fef4fb73670d4241f,PrabalSingh,chore: use checkboxes to select collection,src\client\components\pages\parts\add-to-collection-modal.js,https://github.com/metabrainz/bookbrainz-site/commit/e6c447bfd5c3acab9790060fef4fb73670d4241f,.then((res) => {,const req = await request.get(`/editor/${this.props.userId}/collections/collections?type=${this.props.entityType}&size=10000`);
+1ad048043eafa8c86bb48a444a21f82af1c5d636,PrabalSingh,make some tests work,src\server\helpers\handler.js,https://github.com/metabrainz/bookbrainz-site/commit/1ad048043eafa8c86bb48a444a21f82af1c5d636,.then((result) => {,await processingCallback(result);
+95ec830909ca3ee632d76f0a670caf104f90d644,PrabalSingh,modify handler.sendPromiseResult,src\server\helpers\handler.js,https://github.com/metabrainz/bookbrainz-site/commit/95ec830909ca3ee632d76f0a670caf104f90d644,.then((result) => {,await processingCallback(result);
+bd77e6dffa1a4b2e64e7efa7d4c4b3d1314ea839,Monkey Do,test: Prevent conflict in test fixtures ids,test\test-helpers\create-entities.js,https://github.com/metabrainz/bookbrainz-site/commit/bd77e6dffa1a4b2e64e7efa7d4c4b3d1314ea839,".then((model) => model.aliases().attach([alias]));
 .then((model) => model.identifiers().attach([identifier]));","await identifierSet.identifiers().attach([identifier.id]);
 const relationshipType = await new RelationshipType(relationshipTypeData)"
-https://github.com/metabrainz/bookbrainz-site,de81ef4982bc02a236dd6b4db6b52c56dd2e450e,Ben Ockmore,2020-10-04 01:21:38+01:00,"refactor(profile): make promise-returning functions async
+de81ef4982bc02a236dd6b4db6b52c56dd2e450e,Ben Ockmore,"refactor(profile): make promise-returning functions async
 
 This allows promise chains to be cleaned up and rewritten using await
 expressions, which makes dependencies and error handling clearer.",src\server\routes\editor.js,https://github.com/metabrainz/bookbrainz-site/commit/de81ef4982bc02a236dd6b4db6b52c56dd2e450e,"editorTitleJSON = new Promise(resolve => resolve(editorJSON));
@@ -53,7 +53,7 @@ updatePromise = new Promise(resolve => resolve(false));","const titleUnlockModel
 await unlockToUnrank.set('profileRank', null).save();
 const unlockToRank = await new AchievementUnlock({
 const unlockToRank = await new AchievementUnlock({"
-https://github.com/metabrainz/bookbrainz-site,6fc795cc023b5a7367fca4dfd6d160acfa2befdc,Ben Ockmore,2020-10-06 00:56:32+01:00,"refactor(profile): rewrite route functions using async/await
+6fc795cc023b5a7367fca4dfd6d160acfa2befdc,Ben Ockmore,"refactor(profile): rewrite route functions using async/await
 
 This gets rid of hard-to-follow promise chains, and makes dependencies
 and error handling clearer.",src\server\routes\editor.js,https://github.com/metabrainz/bookbrainz-site/commit/6fc795cc023b5a7367fca4dfd6d160acfa2befdc,".then(achievementColToEditorGetJSON);
@@ -61,12 +61,12 @@ and error handling clearer.",src\server\routes\editor.js,https://github.com/meta
 .then((achievements) => setAchievementUnlockedField(","await getEditorActivity(editorJSON.id, editorJSON.createdAt, Revision)
 const [unlocks, editorJSON, achievementTypes] = await Promise.all([
 const [unlocks, editorJSON, achievementTypes] = await Promise.all(["
-https://github.com/metabrainz/bookbrainz-site,21b621cd80e7b72dd5ad0d322c4c37e83f63f47b,Ben Ockmore,2020-10-06 01:41:52+01:00,refactor(profile): add async wrapper in routes using sendPromiseResult,src\server\routes\editor.js,https://github.com/metabrainz/bookbrainz-site/commit/21b621cd80e7b72dd5ad0d322c4c37e83f63f47b,".then(
+21b621cd80e7b72dd5ad0d322c4c37e83f63f47b,Ben Ockmore,refactor(profile): add async wrapper in routes using sendPromiseResult,src\server\routes\editor.js,https://github.com/metabrainz/bookbrainz-site/commit/21b621cd80e7b72dd5ad0d322c4c37e83f63f47b,".then(
 .then((editordata) => {
 editorJSON = new Promise((resolve, reject) => reject(new Error('Not authenticated')));","const modifiedEditor = await editor
 const rankJSON = await Promise.all([
 const rankJSON = await Promise.all(["
-https://github.com/metabrainz/bookbrainz-site,f63ab9fd5caa20043bd2844d10cf90304be6ef44,Monkey Do,2020-11-13 20:21:43+01:00,"feat(areas): Display area type and parents in search options
+f63ab9fd5caa20043bd2844d10cf90304be6ef44,Monkey Do,"feat(areas): Display area type and parents in search options
 
 Rewriting _fetchEntityModelsForESResults with async/await while I'm here.",src\common\helpers\search.js,https://github.com/metabrainz/bookbrainz-site/commit/f63ab9fd5caa20043bd2844d10cf90304be6ef44,".then((area) => {
 .then((editor) => {
@@ -75,13 +75,13 @@ Rewriting _fetchEntityModelsForESResults with async/await while I'm here.",src\c
 const editor = await Editor.forge({id: entityStub.bbid})
 const collection = await UserCollection.forge({id: entityStub.bbid})
 const entity = await model.forge({bbid: entityStub.bbid})"
-https://github.com/metabrainz/bookbrainz-site,f9fd16bffa97e39e50717a62dca0641a23ca8b26,Akash Gupta,2021-03-31 22:12:48+05:30,"refactor(achievement): converted some promise to async-await
+f9fd16bffa97e39e50717a62dca0641a23ca8b26,Akash Gupta,"refactor(achievement): converted some promise to async-await
 
 Signed-off-by: Akash Gupta <akashgp9@gmail.com>",src\server\helpers\achievement.js,https://github.com/metabrainz/bookbrainz-site/commit/f9fd16bffa97e39e50717a62dca0641a23ca8b26,.then((award) => {,"const unlock = await new UnlockType(awardAttribs).save(null, {method: 'insert'});"
-https://github.com/metabrainz/bookbrainz-site,36a7da1f7d035f79968b1d56dae4d0af833c1831,Akash Gupta,2021-03-31 22:15:07+05:30,"refactor(achievement): converted promise to async-await
+36a7da1f7d035f79968b1d56dae4d0af833c1831,Akash Gupta,"refactor(achievement): converted promise to async-await
 
 Signed-off-by: Akash Gupta <akashgp9@gmail.com>",src\server\helpers\achievement.js,https://github.com/metabrainz/bookbrainz-site/commit/36a7da1f7d035f79968b1d56dae4d0af833c1831,.then((out) => out.length);,"async function processRevisionist(orm, editorId) {"
-https://github.com/metabrainz/bookbrainz-site,4c65696d39fdfdf7b80863abc535743ed03b47e5,Akash Gupta,2021-03-31 22:16:30+05:30,"refactor(achievement): converted All promise to async-await
+4c65696d39fdfdf7b80863abc535743ed03b47e5,Akash Gupta,"refactor(achievement): converted All promise to async-await
 
 Signed-off-by: Akash Gupta <akashgp9@gmail.com>",src\server\helpers\achievement.js,https://github.com/metabrainz/bookbrainz-site/commit/4c65696d39fdfdf7b80863abc535743ed03b47e5,".then((out) => out.rowCount);
 .then((edition) => edition.related('data').fetch())
@@ -90,25 +90,25 @@ new Promise((resolve, reject) => reject(new Error('no date attribute')));
 const releaseEvents = await releaseEventSet.related('releaseEvents').fetch();
 async function processTimeTraveller(orm, editorId, revisionId) {
 async function processExplorer(orm, editorId) {"
-https://github.com/metabrainz/bookbrainz-site,505d71054958a422f1d5f1d65ba40b9ae85744e1,Monkey Do,2022-01-24 11:58:55+01:00,"fix(search page): Allow empty search queries
+505d71054958a422f1d5f1d65ba40b9ae85744e1,Monkey Do,"fix(search page): Allow empty search queries
 
 Fixes a 500 error when visiting the search page with no query
 Also rewrites the /search route to use async/await",src\server\routes\search.js,https://github.com/metabrainz/bookbrainz-site/commit/505d71054958a422f1d5f1d65ba40b9ae85744e1,".then((entities) => ({
 .then((searchResults) => {","const entities = await search.searchByName(orm, query, _snakeCase(type), size + 1, from);
 const entities = await search.searchByName(orm, query, _snakeCase(type), size + 1, from);"
-https://github.com/metabrainz/bookbrainz-site,703269dca1267e6150c61291f58a454736b00a98,Monkey Do,2022-06-28 19:28:38+02:00,"feat(search): return total number of search results
+703269dca1267e6150c61291f58a454736b00a98,Monkey Do,"feat(search): return total number of search results
 
 This is required for the CritiqueBrainz-BookBrainz integration project.
 Also adds totalCount to API search endpoint",src\common\helpers\search.js,https://github.com/metabrainz/bookbrainz-site/commit/703269dca1267e6150c61291f58a454736b00a98,".then((searchResponse) => searchResponse.body?.hits)
 .then((results) => _fetchEntityModelsForESResults(orm, results))","const searchResponse = await _client.search(dslQuery);
 const results = await _fetchEntityModelsForESResults(orm, searchResponse.body.hits);"
-https://github.com/metabrainz/bookbrainz-site,dfe86b24e93f968632fed8f6513119508bdbc4df,Rohan Sasne,2023-02-27 14:10:28+05:30,refactor(BB-673): Code rewritten using async/await syntax.,src\server\helpers\middleware.ts,https://github.com/metabrainz/bookbrainz-site/commit/dfe86b24e93f968632fed8f6513119508bdbc4df,.then((results) => {,const results = await model.fetchAll({withRelated: [...relations]});
-https://github.com/metabrainz/bookbrainz-site,832e7f7bc0c214bf7bfc6a5787c35a7847ec6f17,Rohan Sasne,2023-03-09 17:12:14+05:30,BB-674: Rewrite revision file using async/await syntax,src\server\routes\revision.js,https://github.com/metabrainz/bookbrainz-site/commit/832e7f7bc0c214bf7bfc6a5787c35a7847ec6f17,".then(
+dfe86b24e93f968632fed8f6513119508bdbc4df,Rohan Sasne,refactor(BB-673): Code rewritten using async/await syntax.,src\server\helpers\middleware.ts,https://github.com/metabrainz/bookbrainz-site/commit/dfe86b24e93f968632fed8f6513119508bdbc4df,.then((results) => {,const results = await model.fetchAll({withRelated: [...relations]});
+832e7f7bc0c214bf7bfc6a5787c35a7847ec6f17,Rohan Sasne,BB-674: Rewrite revision file using async/await syntax,src\server\routes\revision.js,https://github.com/metabrainz/bookbrainz-site/commit/832e7f7bc0c214bf7bfc6a5787c35a7847ec6f17,".then(
 .then((entityRevisions) => diffRevisionsWithParents(req.app.locals.orm, entityRevisions, entityType))","const parent = await revision.parent();
 const entityRevisions = await EntityRevisionModel.forge()"
-https://github.com/metabrainz/bookbrainz-site,a3276edab1668d59a71db1785207fce4d76bd81b,meziyum,2023-03-10 20:42:51+05:30,Initial Refactoring,src\server\routes\statistics.js,https://github.com/metabrainz/bookbrainz-site/commit/a3276edab1668d59a71db1785207fce4d76bd81b,.count().then((Count) =>,const allEntities = await Promise.all(queryPromises1);
-https://github.com/metabrainz/bookbrainz-site,e56d8a83243805c1f0288075ea8221b14561dd9b,the-good-boy,2023-08-24 22:54:44+05:30,feat: add reindex search engine as a privilege,src\server\routes\search.js,https://github.com/metabrainz/bookbrainz-site/commit/e56d8a83243805c1f0288075ea8221b14561dd9b,const indexPromise = new Promise((resolve) => {,"router.get('/reindex', auth.isAuthenticated, auth.isAuthorized(REINDEX_SEARCH_SERVER), async (req, res) => {"
-https://github.com/metabrainz/bookbrainz-site,4767a89032e5935ad9303b91ede687ebc6cdba67,Monkey Do,2024-02-09 13:32:46+01:00,"chore(search): Send entity models for indexing
+a3276edab1668d59a71db1785207fce4d76bd81b,meziyum,Initial Refactoring,src\server\routes\statistics.js,https://github.com/metabrainz/bookbrainz-site/commit/a3276edab1668d59a71db1785207fce4d76bd81b,.count().then((Count) =>,const allEntities = await Promise.all(queryPromises1);
+e56d8a83243805c1f0288075ea8221b14561dd9b,the-good-boy,feat: add reindex search engine as a privilege,src\server\routes\search.js,https://github.com/metabrainz/bookbrainz-site/commit/e56d8a83243805c1f0288075ea8221b14561dd9b,const indexPromise = new Promise((resolve) => {,"router.get('/reindex', auth.isAuthenticated, auth.isAuthorized(REINDEX_SEARCH_SERVER), async (req, res) => {"
+4767a89032e5935ad9303b91ede687ebc6cdba67,Monkey Do,"chore(search): Send entity models for indexing
 
 With the change from the previous commit (accepting an ORM model rather than JSON for search indexing), we need to rewrite accordingly the parts of the code that use the search indexing.
 

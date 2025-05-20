@@ -1,15 +1,15 @@
-repo,commit_hash,author,date,message,file_path,commit_url,removed_lines,added_lines
-https://github.com/sindresorhus/got,f7500d474e4f54003682c998d81a3aa9ce61612c,Vsevolod Strukchinsky,2015-10-16 17:27:05+05:00,"Rewrite tests with async/await :sparkling_heart:
+commit_hash,author,message,file_path,commit_url,removed_lines,added_lines
+f7500d474e4f54003682c998d81a3aa9ce61612c,Vsevolod Strukchinsky,"Rewrite tests with async/await :sparkling_heart:
 
 Closes #115",test\helpers.js,https://github.com/sindresorhus/got/commit/f7500d474e4f54003682c998d81a3aa9ce61612c,got.get(s.url).then(res => {,"await got.get('.com', {retries: 0});"
-https://github.com/sindresorhus/got,2b1453734a0b51e5b5663b29c258a831dfe926f8,Sindre Sorhus,2018-05-01 14:45:08+07:00,"Require Node.js 8
+2b1453734a0b51e5b5663b29c258a831dfe926f8,Sindre Sorhus,"Require Node.js 8
 
 #418",test\helpers\server.js,https://github.com/sindresorhus/got/commit/2b1453734a0b51e5b5663b29c258a831dfe926f8,"return getPort().then(port => {
 return getPort().then(port => {","const port = await getPort();
 exports.createSSLServer = async options => {"
-https://github.com/sindresorhus/got,8cc6e03de0b4a9a26457d040cc758f6efa9b77d8,Szymon Marczak,2019-04-02 10:43:31+02:00,Use preconfigured Got instance in tests (#765),test\cancel.ts,https://github.com/sindresorhus/got/commit/8cc6e03de0b4a9a26457d040cc758f6efa9b77d8,"ee.aborted = new Promise((resolve, reject) => {
+8cc6e03de0b4a9a26457d040cc758f6efa9b77d8,Szymon Marczak,Use preconfigured Got instance in tests (#765),test\cancel.ts,https://github.com/sindresorhus/got/commit/8cc6e03de0b4a9a26457d040cc758f6efa9b77d8,"ee.aborted = new Promise((resolve, reject) => {
 const aborted = new Promise((resolve, reject) => {","server.all('/abort', async (request, response) => {
 await t.throwsAsync(gotPromise);"
-https://github.com/sindresorhus/got,b9a855d3728d9219ddbc5d25b90d21147b982119,Sindre Sorhus,2020-07-08 02:34:48+08:00,"Upgrade dependencies (#1345)
+b9a855d3728d9219ddbc5d25b90d21147b982119,Sindre Sorhus,"Upgrade dependencies (#1345)
 
 Co-authored-by: Szymon Marczak <36894700+szmarczak@users.noreply.github.com>",source\core\index.ts,https://github.com/sindresorhus/got/commit/b9a855d3728d9219ddbc5d25b90d21147b982119,result.then((request: unknown): void => {,(async () => {

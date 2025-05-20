@@ -1,24 +1,24 @@
-repo,commit_hash,author,date,message,file_path,commit_url,removed_lines,added_lines
-https://github.com/avajs/ava,1c3c86c06c03ac86ee38679d25c72c954d75eb6f,Daniel Cousineau,2016-05-12 05:32:45-04:00,"Limited Process Pools (#791)
+commit_hash,author,message,file_path,commit_url,removed_lines,added_lines
+1c3c86c06c03ac86ee38679d25c72c954d75eb6f,Daniel Cousineau,"Limited Process Pools (#791)
 
 New experimental `--concurrency` option. Note that `.only` behavior won't work reliably across test files when concurrency is limited.",test\api.js,https://github.com/avajs/ava/commit/1c3c86c06c03ac86ee38679d25c72c954d75eb6f,.then(function () {,"['async-await', 'async function'].join(separator),"
-https://github.com/avajs/ava,8530fcdf304eed0e23b7915633f3a15fd1a4e65a,Sindre Sorhus,2016-11-22 15:33:40+07:00,"Drop support for Node.js 0.10 and 0.12
+8530fcdf304eed0e23b7915633f3a15fd1a4e65a,Sindre Sorhus,"Drop support for Node.js 0.10 and 0.12
 
 Not complete, but a good start. I didn't want to cause conflicts with the open active PRs or work on the new test failure output.",test\runner.js,https://github.com/avajs/ava/commit/8530fcdf304eed0e23b7915633f3a15fd1a4e65a,runner.run({}).then(function () {,"test('options.bail will bail out (async)', t => {"
-https://github.com/avajs/ava,8530fcdf304eed0e23b7915633f3a15fd1a4e65a,Sindre Sorhus,2016-11-22 15:33:40+07:00,"Drop support for Node.js 0.10 and 0.12
+8530fcdf304eed0e23b7915633f3a15fd1a4e65a,Sindre Sorhus,"Drop support for Node.js 0.10 and 0.12
 
 Not complete, but a good start. I didn't want to cause conflicts with the open active PRs or work on the new test failure output.",test\test.js,https://github.com/avajs/ava/commit/8530fcdf304eed0e23b7915633f3a15fd1a4e65a,"}).run().then(function (result) {
 }).run().then(function (result) {","test('planned async assertion', t => {
 test('async assertion with `.end()`', t => {"
-https://github.com/avajs/ava,61cdd0941517a08b6aa526f623ba8ce6957e7783,Sindre Sorhus,2017-01-07 17:41:09+07:00,More ES2015ification,test\api.js,https://github.com/avajs/ava/commit/61cdd0941517a08b6aa526f623ba8ce6957e7783,.then(function (result) {,"test(prefix + 'async/await support', t => {"
-https://github.com/avajs/ava,705b787e3e09f4e2af0ed381ee1a1e30e1c73575,Mark Wubben,2018-02-05 16:21:22+00:00,Remove 'with pool' prefix from API tests,test\api.js,https://github.com/avajs/ava/commit/705b787e3e09f4e2af0ed381ee1a1e30e1c73575,".then(result => {
+61cdd0941517a08b6aa526f623ba8ce6957e7783,Sindre Sorhus,More ES2015ification,test\api.js,https://github.com/avajs/ava/commit/61cdd0941517a08b6aa526f623ba8ce6957e7783,.then(function (result) {,"test(prefix + 'async/await support', t => {"
+705b787e3e09f4e2af0ed381ee1a1e30e1c73575,Mark Wubben,Remove 'with pool' prefix from API tests,test\api.js,https://github.com/avajs/ava/commit/705b787e3e09f4e2af0ed381ee1a1e30e1c73575,".then(result => {
 .then(result => {","return api.run([path.join(__dirname, 'fixture/async-await.js')])
 path.join(__dirname, 'fixture/async-await.js'),"
-https://github.com/avajs/ava,3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,2019-04-20 17:19:31+02:00,"Require Node.js 8.9.4
+3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,"Require Node.js 8.9.4
 
 * Remove support for `--debug` and `--debug-brk` CLI flags
 * Refactor to utilize object rest/spread and async/await",bench\run.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,return runTests(args).then(result => {,const result = await runTests(args);
-https://github.com/avajs/ava,3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,2019-04-20 17:19:31+02:00,"Require Node.js 8.9.4
+3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,"Require Node.js 8.9.4
 
 * Remove support for `--debug` and `--debug-brk` CLI flags
 * Refactor to utilize object rest/spread and async/await",lib\api.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,".then(files => {
@@ -28,11 +28,11 @@ https://github.com/avajs/ava,3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubbe
 const helpers = await new AvaFiles({cwd: this.options.resolveTestsFrom, extensions: this._allExtensions}).findTestHelpers();
 const helpers = await new AvaFiles({cwd: this.options.resolveTestsFrom, extensions: this._allExtensions}).findTestHelpers();
 await Bluebird.map(files, async file => {"
-https://github.com/avajs/ava,3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,2019-04-20 17:19:31+02:00,"Require Node.js 8.9.4
+3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,"Require Node.js 8.9.4
 
 * Remove support for `--debug` and `--debug-brk` CLI flags
 * Refactor to utilize object rest/spread and async/await",lib\cli.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,api.run(files).then(runStatus => {,const runStatus = await api.run(files);
-https://github.com/avajs/ava,3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,2019-04-20 17:19:31+02:00,"Require Node.js 8.9.4
+3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,"Require Node.js 8.9.4
 
 * Remove support for `--debug` and `--debug-brk` CLI flags
 * Refactor to utilize object rest/spread and async/await",lib\runner.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,"return this.runSingle(runnable).then(result => {
@@ -58,21 +58,21 @@ const ok = await concurrentPromise;
 await this.emit('finish');
 await this.emit('error', error);
 await this.emit('error', error);"
-https://github.com/avajs/ava,3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,2019-04-20 17:19:31+02:00,"Require Node.js 8.9.4
+3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,"Require Node.js 8.9.4
 
 * Remove support for `--debug` and `--debug-brk` CLI flags
 * Refactor to utilize object rest/spread and async/await",lib\watcher.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,this.watcher.busy.then(() => {,await this.watcher.busy;
-https://github.com/avajs/ava,3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,2019-04-20 17:19:31+02:00,"Require Node.js 8.9.4
+3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,"Require Node.js 8.9.4
 
 * Remove support for `--debug` and `--debug-brk` CLI flags
 * Refactor to utilize object rest/spread and async/await",lib\worker\ipc.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,"const promise = pendingPings.then(() => {
 }).then(() => {","await promise;
 await promise;"
-https://github.com/avajs/ava,3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,2019-04-20 17:19:31+02:00,"Require Node.js 8.9.4
+3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,"Require Node.js 8.9.4
 
 * Remove support for `--debug` and `--debug-brk` CLI flags
 * Refactor to utilize object rest/spread and async/await",lib\worker\subprocess.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,return ipc.flush().then(() => process.exit());,await ipc.flush();
-https://github.com/avajs/ava,83b43a58593ea3a4e1fd271099184963ccdb7d4c,Mark Wubben,2020-01-02 16:14:52+01:00,"Allow CLI to select a subset of test files
+83b43a58593ea3a4e1fd271099184963ccdb7d4c,Mark Wubben,"Allow CLI to select a subset of test files
 
 Rather than providing paths to specific test files, allow
 micromatch-compatible patterns to be provided on the CLI. These then
@@ -84,13 +84,13 @@ select all desired test files: you can no longer run a different file.
 Fixes #2281.",test\watcher.js,https://github.com/avajs/ava/commit/83b43a58593ea3a4e1fd271099184963ccdb7d4c,"return delay().then(() => {
 }).then(() => {","await delay();
 await delay();"
-https://github.com/avajs/ava,5a335729eab820a7ea1a17ab1c9425efd58803c8,Mark Wubben,2020-01-18 16:48:00+01:00,"Fix fail-fast interrupt test
+5a335729eab820a7ea1a17ab1c9425efd58803c8,Mark Wubben,"Fix fail-fast interrupt test
 
 Listen for the peer-failure notification before resuming tests. Then
 verify the test execution was interrupted.
 
 That's still not enough on Windows, where the passes-slow test results aren't always received. So only test for that when they are.",test\fixture\fail-fast\multiple-files\passes-slow.js,https://github.com/avajs/ava/commit/5a335729eab820a7ea1a17ab1c9425efd58803c8,"return new Promise(resolve => setTimeout(resolve, 60000));","await pEvent(process, 'message', message => {"
-https://github.com/avajs/ava,c57067bfb69a9b685ea2b33624dee204ad369164,Mark Wubben,2021-06-06 15:39:52+02:00,"Switch to ESM for internals
+c57067bfb69a9b685ea2b33624dee204ad369164,Mark Wubben,"Switch to ESM for internals
 
 * Extract glob helpers that are needed in a CJS environment
 
@@ -111,7 +111,7 @@ Refactor and deploy some tricks so that ava/plugin is usable in a CJS environmen
 * Title prefixes in the reporters now correctly skip all test file extensions, not just `js`
 
 * CI: Increase delay on timeout test, mostly for Windows",lib\eslint-plugin-helper-worker.js,https://github.com/avajs/ava/commit/c57067bfb69a9b685ea2b33624dee204ad369164,"configCache.set(projectDir, loadConfig({resolveFrom: projectDir}).then(conf => {","const providers = await collectProviders({conf, projectDir});"
-https://github.com/avajs/ava,da3d2bcffbad0fe51c83220bb1e587b7b80d1707,Mark Wubben,2023-01-15 21:33:33+01:00,"Update dependencies and such
+da3d2bcffbad0fe51c83220bb1e587b7b80d1707,Mark Wubben,"Update dependencies and such
 
 * Upgrade XO and reformat
 
@@ -130,7 +130,7 @@ https://github.com/avajs/ava,da3d2bcffbad0fe51c83220bb1e587b7b80d1707,Mark Wubbe
 * Select Node.js version from Volta pin in most CI jobs
 
 * Only pin npm when testing for lockfile churn; ensure npm@8 for Node.js 14",lib\plugin-support\shared-worker-loader.js,https://github.com/avajs/ava/commit/da3d2bcffbad0fe51c83220bb1e587b7b80d1707,loadFactory(workerData.filename).then(factory => {,const factory = await loadFactory(workerData.filename);
-https://github.com/avajs/ava,da3d2bcffbad0fe51c83220bb1e587b7b80d1707,Mark Wubben,2023-01-15 21:33:33+01:00,"Update dependencies and such
+da3d2bcffbad0fe51c83220bb1e587b7b80d1707,Mark Wubben,"Update dependencies and such
 
 * Upgrade XO and reformat
 

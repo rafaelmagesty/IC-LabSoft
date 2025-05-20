@@ -1,5 +1,5 @@
-repo,commit_hash,author,date,message,file_path,commit_url,removed_lines,added_lines
-https://github.com/gurumukhi/youtube-screenshot,7590fc28a616e49817a904afcde3b76308389204,Jonathan GUILLOT,2023-06-30 16:59:25+02:00,"Hot reload configuration (#48)
+commit_hash,author,message,file_path,commit_url,removed_lines,added_lines
+7590fc28a616e49817a904afcde3b76308389204,Jonathan GUILLOT,"Hot reload configuration (#48)
 
 * Group configurations variables in a dedicated obect
 

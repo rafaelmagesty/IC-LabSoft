@@ -1,5 +1,5 @@
-repo,commit_hash,author,date,message,file_path,commit_url,removed_lines,added_lines
-https://github.com/dexie/Dexie.js,effd7f4f23f70679febab995b126a556882362fc,David Fahlander,2016-03-03 00:22:53+01:00,"Preparing for ES6-ify plugins - ES6-ified the unit tests.
+commit_hash,author,message,file_path,commit_url,removed_lines,added_lines
+effd7f4f23f70679febab995b126a556882362fc,David Fahlander,"Preparing for ES6-ify plugins - ES6-ified the unit tests.
 
 * Rewrote build- and watch scripts to be more generic for use from plugins.
 * Using babel-node to execute npm run build.",build\build-utils.js,https://github.com/dexie/Dexie.js/commit/effd7f4f23f70679febab995b126a556882362fc,"return new Promise((resolve, reject) => {
@@ -27,9 +27,9 @@ watch(options.dirs, throttle(50, async function (calls) {
 let anythingRebuilt = await rebuildFiles(options, {
 export async function gzip(source, destination) {
 export async function gzip(source, destination) {"
-https://github.com/dexie/Dexie.js,68b6ee3dc3bab5cb6d376c094074e9db53ddc842,David Fahlander,2016-10-28 00:49:07+02:00,"Works on Chrome 55 beta now!
+68b6ee3dc3bab5cb6d376c094074e9db53ddc842,David Fahlander,"Works on Chrome 55 beta now!
 Must remove debugger, console.log and make sure eslint works though. Also need to cleanup the code.",test\tests-asyncawait.js,https://github.com/dexie/Dexie.js/commit/68b6ee3dc3bab5cb6d376c094074e9db53ddc842,return NativePromise.resolve().then(()=> {,"await Promise.all([subFunc(11), subFunc(12), subFunc(13)]);"
-https://github.com/dexie/Dexie.js,5bf23af41c25a31599a0016309b118c9b062e7cf,Christopher Hunt,2016-11-29 01:06:10-05:00,"Upgrade QUnit (#384)
+5bf23af41c25a31599a0016309b118c9b062e7cf,Christopher Hunt,"Upgrade QUnit (#384)
 
 * Update QUnit. Fixes #381.
 
@@ -42,4 +42,4 @@ Also added the options that were previously in qunit to
 QUnit.config.urlConfig. This should address the comments in #381.",test\dexie-unittest-utils.js,https://github.com/dexie/Dexie.js/commit/5bf23af41c25a31599a0016309b118c9b062e7cf,"asyncTest(name, num, ()=>Promise.resolve().then(asyncFunction)
 .then(start));","let done = assert.async();
 let done = assert.async();"
-https://github.com/dexie/Dexie.js,92542c7e420a126e1a244d2c59482b1fe814dee4,David Fahlander,2024-10-16 14:06:48+02:00,Bugfix: some YJS updates were never sent to server,addons\dexie-cloud\src\yjs\createYClientUpdateObservable.ts,https://github.com/dexie/Dexie.js/commit/92542c7e420a126e1a244d2c59482b1fe814dee4,.then((syncer) => syncer?.unsentFrom || 1);,liveQuery(async () => {
+92542c7e420a126e1a244d2c59482b1fe814dee4,David Fahlander,Bugfix: some YJS updates were never sent to server,addons\dexie-cloud\src\yjs\createYClientUpdateObservable.ts,https://github.com/dexie/Dexie.js/commit/92542c7e420a126e1a244d2c59482b1fe814dee4,.then((syncer) => syncer?.unsentFrom || 1);,liveQuery(async () => {

@@ -1,17 +1,17 @@
-repo,commit_hash,author,date,message,file_path,commit_url,removed_lines,added_lines
-https://github.com/fastify/fastify,b94441ff71e10252b6b3806c8cd4730821dfe737,Matteo Collina,2022-10-21 11:30:25+01:00,Node.js V19 support (#4366),test\close-pipelining.test.js,https://github.com/fastify/fastify/commit/b94441ff71e10252b6b3806c8cd4730821dfe737,).then(data => {,await instance.close()
-https://github.com/fastify/fastify,04cc8c1f8a9b561cf14c7f569461bc649c16c1a1,Simone Sanfratello,2023-10-12 14:25:57+02:00,fix: citgm (#5075),test\custom-http-server.test.js,https://github.com/fastify/fastify/commit/04cc8c1f8a9b561cf14c7f569461bc649c16c1a1,t.teardown(() => new Promise(resolve => server.close(resolve))),const app = await Fastify({
-https://github.com/fastify/fastify,5927ca7957658c108d9fe4fdb06caef2aa0ddb90,Giovanni Laganà,2024-10-27 19:15:56+01:00,"test: migrated custom-http-server from tap to node:test (#5773)
+commit_hash,author,message,file_path,commit_url,removed_lines,added_lines
+b94441ff71e10252b6b3806c8cd4730821dfe737,Matteo Collina,Node.js V19 support (#4366),test\close-pipelining.test.js,https://github.com/fastify/fastify/commit/b94441ff71e10252b6b3806c8cd4730821dfe737,).then(data => {,await instance.close()
+04cc8c1f8a9b561cf14c7f569461bc649c16c1a1,Simone Sanfratello,fix: citgm (#5075),test\custom-http-server.test.js,https://github.com/fastify/fastify/commit/04cc8c1f8a9b561cf14c7f569461bc649c16c1a1,t.teardown(() => new Promise(resolve => server.close(resolve))),const app = await Fastify({
+5927ca7957658c108d9fe4fdb06caef2aa0ddb90,Giovanni Laganà,"test: migrated custom-http-server from tap to node:test (#5773)
 
 * chore: migrated custom-http-server from tap to node:test
 
 * fix: removed leftover",test\custom-http-server.test.js,https://github.com/fastify/fastify/commit/5927ca7957658c108d9fe4fdb06caef2aa0ddb90,t.teardown(() => new Promise(resolve => server.close(resolve))),await t.assert.doesNotReject(async () => { await app.listen({ port: 0 }) })
-https://github.com/fastify/fastify,794d7d19dfa0dbba4ec7284682050be93b2fcfc2,Coluzzi Andrea,2025-01-21 21:23:16+01:00,test: migrate from tap to node test for close & custom-parser-async (#5915),test\close.test.js,https://github.com/fastify/fastify/commit/794d7d19dfa0dbba4ec7284682050be93b2fcfc2,"instance.request({ path: '/', method: 'GET' }).then(data => {
+794d7d19dfa0dbba4ec7284682050be93b2fcfc2,Coluzzi Andrea,test: migrate from tap to node test for close & custom-parser-async (#5915),test\close.test.js,https://github.com/fastify/fastify/commit/794d7d19dfa0dbba4ec7284682050be93b2fcfc2,"instance.request({ path: '/', method: 'GET' }).then(data => {
 instance.request({ path: '/', method: 'GET' }).then(data => {","fastify.listen({ port: 0 }, async err => {
 fastify.listen({ port: 0 }, async err => {"
-https://github.com/fastify/fastify,d4d3db2657235cf32cf827d87e3ef361ee7fdc13,Icaro Vieira,2025-05-05 19:19:34-03:00,chore: remove tap from hooks-on ready file (#6080),test\hooks.on-ready.test.js,https://github.com/fastify/fastify/commit/d4d3db2657235cf32cf827d87e3ef361ee7fdc13,"one.ready().then(itself => { t.same(itself, one) })
+d4d3db2657235cf32cf827d87e3ef361ee7fdc13,Icaro Vieira,chore: remove tap from hooks-on ready file (#6080),test\hooks.on-ready.test.js,https://github.com/fastify/fastify/commit/d4d3db2657235cf32cf827d87e3ef361ee7fdc13,"one.ready().then(itself => { t.same(itself, one) })
 two.ready().then(itself => { t.same(itself, two) })
 twoDotOne.ready().then(itself => { t.same(itself, twoDotOne) })","test('ready return the server with Promise', async t => {
 await fastify.ready()
 await fastify.ready()"
-https://github.com/fastify/fastify,df9ea6f4622c3e41457bf9ce3e0fc9965f4ce627,Jean,2025-05-15 10:56:52+02:00,test: mv skip-reply-send from tap (#6094),test\skip-reply-send.test.js,https://github.com/fastify/fastify/commit/df9ea6f4622c3e41457bf9ce3e0fc9965f4ce627,"]).then((err, res) => {","test('Calling reply.send() after hijacking logs a warning', async (t) => {"
+df9ea6f4622c3e41457bf9ce3e0fc9965f4ce627,Jean,test: mv skip-reply-send from tap (#6094),test\skip-reply-send.test.js,https://github.com/fastify/fastify/commit/df9ea6f4622c3e41457bf9ce3e0fc9965f4ce627,"]).then((err, res) => {","test('Calling reply.send() after hijacking logs a warning', async (t) => {"
