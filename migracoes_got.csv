@@ -1,15 +1,400 @@
-commit_hash,author,message,file_path,commit_url,removed_lines,added_lines
+commit_hash,author,message,file_path,commit_url,removed_chunk,added_chunk
 f7500d474e4f54003682c998d81a3aa9ce61612c,Vsevolod Strukchinsky,"Rewrite tests with async/await :sparkling_heart:
 
-Closes #115",test\helpers.js,https://github.com/sindresorhus/got/commit/f7500d474e4f54003682c998d81a3aa9ce61612c,got.get(s.url).then(res => {,"await got.get('.com', {retries: 0});"
+Closes #115",test/helpers.js,https://github.com/sindresorhus/got/commit/f7500d474e4f54003682c998d81a3aa9ce61612c,"test('helpers - callback mode', t => {
+
+	got.get(s.url, (err, data) => {
+
+		t.ifError(err);
+
+		t.is(data, 'ok');
+
+		t.end();
+
+	});
+
+test('helpers - promise mode', t => {
+
+	t.plan(3);
+
+	got.get(s.url).then(res => {
+
+		t.is(res.body, 'ok');
+
+	});
+
+
+
+	got.get(`${s.url}/404`).catch(err => {
+
+	});
+
+	got.get('.com', {retries: 0}).catch(err => {
+
+	});
+","test('helpers - callback mode', async t => {
+
+	t.is((await got.get(s.url)).body, 'ok');
+
+test('helpers - promise mode', async t => {
+
+	t.is((await got.get(s.url)).body, 'ok');
+
+	try {
+
+		await got.get(`${s.url}/404`);
+
+		t.fail('Exception is not thrown');
+
+	} catch (err) {
+
+	}
+
+	try {
+
+		await got.get('.com', {retries: 0});
+
+		t.fail('Exception is not thrown');
+
+	} catch (err) {
+
+	}
+"
 2b1453734a0b51e5b5663b29c258a831dfe926f8,Sindre Sorhus,"Require Node.js 8
 
-#418",test\helpers\server.js,https://github.com/sindresorhus/got/commit/2b1453734a0b51e5b5663b29c258a831dfe926f8,"return getPort().then(port => {
-return getPort().then(port => {","const port = await getPort();
-exports.createSSLServer = async options => {"
-8cc6e03de0b4a9a26457d040cc758f6efa9b77d8,Szymon Marczak,Use preconfigured Got instance in tests (#765),test\cancel.ts,https://github.com/sindresorhus/got/commit/8cc6e03de0b4a9a26457d040cc758f6efa9b77d8,"ee.aborted = new Promise((resolve, reject) => {
-const aborted = new Promise((resolve, reject) => {","server.all('/abort', async (request, response) => {
-await t.throwsAsync(gotPromise);"
+#418",index.js,https://github.com/sindresorhus/got/commit/2b1453734a0b51e5b5663b29c258a831dfe926f8,"		return pify(body.getLength.bind(body))();
+
+		return pify(fs.stat)(body.path).then(stat => stat.size);
+","		return util.promisify(body.getLength.bind(body))();
+
+		const {size} = await util.promisify(fs.stat)(body.path);
+
+		return size;
+"
+2b1453734a0b51e5b5663b29c258a831dfe926f8,Sindre Sorhus,"Require Node.js 8
+
+#418",index.js,https://github.com/sindresorhus/got/commit/2b1453734a0b51e5b5663b29c258a831dfe926f8,"	setImmediate(() => {
+
+		Promise.resolve(getBodySize(opts))
+
+			.then(size => {
+
+				uploadBodySize = size;
+
+
+
+				if (
+
+					is.undefined(opts.headers['content-length']) &&
+
+					is.undefined(opts.headers['transfer-encoding']) &&
+
+					isFormData(opts.body)
+
+				) {
+
+					opts.headers['content-length'] = size;
+
+				}
+
+				get(opts);
+
+			})
+
+			.catch(err => {
+
+				ee.emit('error', err);
+
+			});
+","	setImmediate(async () => {
+
+		try {
+
+			uploadBodySize = await getBodySize(opts);
+
+
+
+			if (
+
+				is.undefined(opts.headers['content-length']) &&
+
+				is.undefined(opts.headers['transfer-encoding']) &&
+
+				isFormData(opts.body)
+
+			) {
+
+				opts.headers['content-length'] = uploadBodySize;
+
+			}
+
+			get(opts);
+
+		} catch (err) {
+
+			ee.emit('error', err);
+
+		}
+"
+2b1453734a0b51e5b5663b29c258a831dfe926f8,Sindre Sorhus,"Require Node.js 8
+
+#418",index.js,https://github.com/sindresorhus/got/commit/2b1453734a0b51e5b5663b29c258a831dfe926f8,"		ee.on('response', res => {
+
+			stream
+
+				.catch(err => reject(new got.ReadError(err, opts)))
+
+				.then(data => {
+
+					const statusCode = res.statusCode;
+
+					const limitStatusCode = opts.followRedirect ? 299 : 399;
+
+					res.body = data;
+
+					if (opts.json && res.body) {
+
+						try {
+
+							res.body = JSON.parse(res.body);
+
+						} catch (err) {
+
+							if (statusCode >= 200 && statusCode < 300) {
+
+								throw new got.ParseError(err, statusCode, opts, data);
+
+							}
+
+						}
+
+					}
+
+					if (opts.throwHttpErrors && statusCode !== 304 && (statusCode < 200 || statusCode > limitStatusCode)) {
+
+						throw new got.HTTPError(statusCode, res.statusMessage, res.headers, opts);
+
+					resolve(res);
+
+				})
+
+				.catch(err => {
+
+					Object.defineProperty(err, 'response', {value: res});
+
+					reject(err);
+
+				});
+","		ee.on('response', async res => {
+
+			let data;
+
+			try {
+
+				data = await stream;
+
+			} catch (err) {
+
+				reject(new got.ReadError(err, opts));
+
+				return;
+
+			}
+
+			const {statusCode} = res;
+
+			const limitStatusCode = opts.followRedirect ? 299 : 399;
+
+			res.body = data;
+
+			if (opts.json && res.body) {
+
+				try {
+
+					res.body = JSON.parse(res.body);
+
+				} catch (err) {
+
+					if (statusCode >= 200 && statusCode < 300) {
+
+						const parseError = new got.ParseError(err, statusCode, opts, data);
+
+						Object.defineProperty(parseError, 'response', {value: res});
+
+						reject(parseError);
+
+				}
+
+			}
+
+			if (opts.throwHttpErrors && statusCode !== 304 && (statusCode < 200 || statusCode > limitStatusCode)) {
+
+				const err = new got.HTTPError(statusCode, res.statusMessage, res.headers, opts);
+
+				Object.defineProperty(err, 'response', {value: res});
+
+				reject(err);
+
+			}
+
+
+
+			resolve(res);
+"
+2b1453734a0b51e5b5663b29c258a831dfe926f8,Sindre Sorhus,"Require Node.js 8
+
+#418",test/cancel.js,https://github.com/sindresorhus/got/commit/2b1453734a0b51e5b5663b29c258a831dfe926f8,"import stream from 'stream';
+
+const Readable = stream.Readable;
+
+
+
+		s.on('/abort', (req, res) => {
+
+			getStream(req).then(() => {
+
+				res.end();
+
+			});
+","import {Readable} from 'stream';
+
+		s.on('/abort', async (req, res) => {
+
+			await getStream(req);
+
+			res.end();
+"
+2b1453734a0b51e5b5663b29c258a831dfe926f8,Sindre Sorhus,"Require Node.js 8
+
+#418",test/helpers/server.js,https://github.com/sindresorhus/got/commit/2b1453734a0b51e5b5663b29c258a831dfe926f8,"const pify = require('pify');
+
+const host = exports.host;
+
+exports.createServer = function () {
+
+	return getPort().then(port => {
+
+		const s = http.createServer((req, resp) => s.emit(req.url, req, resp));
+
+		s.host = host;
+
+		s.port = port;
+
+		s.url = `http://${host}:${port}`;
+
+		s.protocol = 'http';
+
+		s.listen = pify(s.listen, Promise);
+
+		s.close = pify(s.close, Promise);
+
+		return s;
+
+	});
+
+exports.createSSLServer = function (opts) {
+
+	return getPort().then(port => {
+
+		const s = https.createServer(opts, (req, resp) => s.emit(req.url, req, resp));
+
+		s.host = host;
+
+		s.port = port;
+
+		s.url = `https://${host}:${port}`;
+
+		s.protocol = 'https';
+
+		s.listen = pify(s.listen, Promise);
+
+		s.close = pify(s.close, Promise);
+
+		return s;
+
+	});
+","const util = require('util');
+
+const {host} = exports;
+
+exports.createServer = async () => {
+
+	const port = await getPort();
+
+	const s = http.createServer((request, response) => {
+
+		s.emit(request.url, request, response);
+
+	});
+
+	s.host = host;
+
+	s.port = port;
+
+	s.url = `http://${host}:${port}`;
+
+	s.protocol = 'http';
+
+	s.listen = util.promisify(s.listen);
+
+	s.close = util.promisify(s.close);
+
+
+
+	return s;
+
+exports.createSSLServer = async options => {
+
+	const port = await getPort();
+
+	const s = https.createServer(options, (request, response) => {
+
+		s.emit(request.url, request, response);
+
+	});
+
+	s.host = host;
+
+	s.port = port;
+
+	s.url = `https://${host}:${port}`;
+
+	s.protocol = 'https';
+
+	s.listen = util.promisify(s.listen);
+
+	s.close = util.promisify(s.close);
+
+
+
+	return s;
+"
 b9a855d3728d9219ddbc5d25b90d21147b982119,Sindre Sorhus,"Upgrade dependencies (#1345)
 
-Co-authored-by: Szymon Marczak <36894700+szmarczak@users.noreply.github.com>",source\core\index.ts,https://github.com/sindresorhus/got/commit/b9a855d3728d9219ddbc5d25b90d21147b982119,result.then((request: unknown): void => {,(async () => {
+Co-authored-by: Szymon Marczak <36894700+szmarczak@users.noreply.github.com>",source/core/index.ts,https://github.com/sindresorhus/got/commit/b9a855d3728d9219ddbc5d25b90d21147b982119,"							// @ts-ignore
+
+									// eslint-disable-next-line promise/prefer-await-to-then
+
+									result.then((request: unknown): void => {
+
+										(request as ClientRequest).once('abort', handler);
+
+									});
+","							// @ts-expect-error
+
+									// The empty catch is needed here in case when
+
+									// it rejects before it's `await`ed in `_makeRequest`.
+
+									(async () => {
+
+										try {
+
+											const request = (await result) as ClientRequest;
+
+											request.once('abort', handler);
+
+										} catch {}
+
+									})();
+"

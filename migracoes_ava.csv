@@ -1,77 +1,981 @@
-commit_hash,author,message,file_path,commit_url,removed_lines,added_lines
-1c3c86c06c03ac86ee38679d25c72c954d75eb6f,Daniel Cousineau,"Limited Process Pools (#791)
+commit_hash,author,message,file_path,commit_url,removed_chunk,added_chunk
+affbb457445c792e62ea3c954e1af7e03cf7a8ee,Mark Wubben,"Fail tests that finish with pending assertions
 
-New experimental `--concurrency` option. Note that `.only` behavior won't work reliably across test files when concurrency is limited.",test\api.js,https://github.com/avajs/ava/commit/1c3c86c06c03ac86ee38679d25c72c954d75eb6f,.then(function () {,"['async-await', 'async function'].join(separator),"
-8530fcdf304eed0e23b7915633f3a15fd1a4e65a,Sindre Sorhus,"Drop support for Node.js 0.10 and 0.12
+`t.throws()` and `t.notThrows()` can be called with an observable or
+promise. This commit forces users to wait for the assertion to complete
+before finishing the test. Usually this means the test has to be written
+like:
 
-Not complete, but a good start. I didn't want to cause conflicts with the open active PRs or work on the new test failure output.",test\runner.js,https://github.com/avajs/ava/commit/8530fcdf304eed0e23b7915633f3a15fd1a4e65a,runner.run({}).then(function () {,"test('options.bail will bail out (async)', t => {"
-8530fcdf304eed0e23b7915633f3a15fd1a4e65a,Sindre Sorhus,"Drop support for Node.js 0.10 and 0.12
+```js
+test(async t => {
+  await t.throws(Promise.reject(new Error()))
+})
+```
 
-Not complete, but a good start. I didn't want to cause conflicts with the open active PRs or work on the new test failure output.",test\test.js,https://github.com/avajs/ava/commit/8530fcdf304eed0e23b7915633f3a15fd1a4e65a,"}).run().then(function (result) {
-}).run().then(function (result) {","test('planned async assertion', t => {
-test('async assertion with `.end()`', t => {"
-61cdd0941517a08b6aa526f623ba8ce6957e7783,Sindre Sorhus,More ES2015ification,test\api.js,https://github.com/avajs/ava/commit/61cdd0941517a08b6aa526f623ba8ce6957e7783,.then(function (result) {,"test(prefix + 'async/await support', t => {"
-705b787e3e09f4e2af0ed381ee1a1e30e1c73575,Mark Wubben,Remove 'with pool' prefix from API tests,test\api.js,https://github.com/avajs/ava/commit/705b787e3e09f4e2af0ed381ee1a1e30e1c73575,".then(result => {
-.then(result => {","return api.run([path.join(__dirname, 'fixture/async-await.js')])
-path.join(__dirname, 'fixture/async-await.js'),"
+Or for callback tests:
+
+```js
+test.cb(t => {
+  t.throws(Promise.reject(new Error())).then(t.end)
+})
+```
+
+This simplifies internal logic and helps discourage code like in #1327.
+Anecdotally users are surprised by the previous behavior where a
+synchronous test worked with an asynchronous assertion
+(https://github.com/avajs/ava/issues/1327#issuecomment-291122432).
+
+Fixes #1327.",test/test.js,https://github.com/avajs/ava/commit/affbb457445c792e62ea3c954e1af7e03cf7a8ee,"test('waits for t.throws to resolve after t.end is called', t => {
+
+	ava.cb(a => {
+
+		a.plan(1);
+
+		a.notThrows(delay(10), 'foo');
+
+		a.end();
+
+		t.is(result.result.planCount, 1);
+
+		t.is(result.result.assertCount, 1);
+
+test('waits for t.throws to reject after t.end is called', t => {
+
+	ava.cb(a => {
+
+		a.plan(1);
+
+		a.throws(delay.reject(10, new Error('foo')), 'foo');
+
+		a.end();
+
+	}).run().then(passed => {
+
+		t.is(passed, true);
+
+		t.is(result.result.planCount, 1);
+
+		t.is(result.result.assertCount, 1);
+
+		t.end();
+
+	});
+
+});
+
+test('waits for t.throws to resolve after the promise returned from the test resolves', t => {
+
+	let result;
+
+	ava(a => {
+
+		a.plan(1);
+
+		a.notThrows(delay(10), 'foo');
+
+		return Promise.resolve();
+
+	}, null, r => {
+
+		result = r;
+
+	}).run().then(passed => {
+
+		t.is(passed, true);
+
+		t.is(result.result.planCount, 1);
+
+		t.is(result.result.assertCount, 1);
+
+		t.end();
+
+	});
+
+test('waits for t.throws to reject after the promise returned from the test resolves', t => {
+
+	ava(a => {
+
+		a.plan(1);
+
+		a.throws(delay.reject(10, new Error('foo')), 'foo');
+
+		return Promise.resolve();
+
+	}).run().then(passed => {
+
+		t.is(passed, true);
+
+		t.is(result.result.planCount, 1);
+
+		t.is(result.result.assertCount, 1);
+
+		t.end();
+
+	});
+
+});
+
+test('multiple resolving and rejecting promises passed to t.throws/t.notThrows', t => {
+
+	let result;
+
+	ava(a => {
+
+		a.plan(6);
+
+		for (let i = 0; i < 3; i++) {
+
+			a.throws(delay.reject(10, new Error('foo')), 'foo');
+
+			a.notThrows(delay(10), 'foo');
+
+		}
+
+	}, null, r => {
+
+		result = r;
+
+	}).run().then(passed => {
+
+		t.is(passed, true);
+
+		t.is(result.result.planCount, 6);
+
+		t.is(result.result.assertCount, 6);
+
+		t.end();
+
+	});
+
+test('number of assertions matches t.plan when the test exits, but before all pending assertions resolve another is added', t => {
+
+		a.plan(2);
+
+		a.throws(delay.reject(10, new Error('foo')), 'foo');
+
+		a.notThrows(delay(10), 'foo');
+
+		setTimeout(() => {
+
+			a.pass();
+
+		}, 5);
+
+		t.match(result.reason.message, /Assertion passed, but test has already finished/);
+
+test('number of assertions matches t.plan when the test exits, but before all pending assertions resolve, a failing assertion is added', t => {
+
+	let result;
+
+		a.plan(2);
+
+		a.throws(delay.reject(10, new Error('foo')), 'foo');
+
+		a.notThrows(delay(10), 'foo');
+
+		setTimeout(() => {
+
+			a.fail();
+
+		}, 5);
+
+	}, null, r => {
+
+		result = r;
+
+	}).run().then(passed => {
+
+		t.is(passed, false);
+
+		t.match(result.reason.message, /Assertion failed, but test has already finished/);
+
+		t.is(result.reason.name, 'Error');
+
+		t.end();
+
+	});
+
+});
+
+test('number of assertions doesn\'t match plan when the test exits, but before all promises resolve another is added', t => {
+
+	let result;
+
+	const passed = ava(a => {
+
+		a.plan(3);
+
+		a.throws(delay.reject(10, new Error('foo')), 'foo');
+
+		a.notThrows(delay(10), 'foo');
+
+		setTimeout(() => {
+
+			a.throws(Promise.reject(new Error('foo')), 'foo');
+
+		}, 5);
+
+	}, null, r => {
+
+		result = r;
+
+	t.is(passed, false);
+
+	t.is(result.reason.assertion, 'plan');
+
+	t.is(result.reason.operator, '===');
+
+	t.end();
+","test('multiple resolving and rejecting promises passed to t.throws/t.notThrows', t => {
+
+	ava(a => {
+
+		a.plan(6);
+
+		const promises = [];
+
+		for (let i = 0; i < 3; i++) {
+
+			promises.push(
+
+				a.throws(delay.reject(10, new Error('foo')), 'foo'),
+
+				a.notThrows(delay(10), 'foo')
+
+			);
+
+		}
+
+		return Promise.all(promises);
+
+		t.is(result.result.planCount, 6);
+
+		t.is(result.result.assertCount, 6);
+
+test('fails if test ends while there are pending assertions', t => {
+
+	const passed = ava(a => {
+
+		a.throws(Promise.reject(new Error()));
+
+	}).run();
+
+	t.is(passed, false);
+
+	t.is(result.reason.name, 'Error');
+
+	t.match(result.reason.message, /Test finished, but an assertion is still pending/);
+
+	t.end();
+
+test('fails if callback test ends while there are pending assertions', t => {
+
+	const passed = ava.cb(a => {
+
+		a.throws(Promise.reject(new Error()));
+
+		a.end();
+
+	}).run();
+
+	t.is(passed, false);
+
+	t.is(result.reason.name, 'Error');
+
+	t.match(result.reason.message, /Test finished, but an assertion is still pending/);
+
+	t.end();
+
+test('fails if async test ends while there are pending assertions', t => {
+
+		a.throws(Promise.reject(new Error()));
+
+		return Promise.resolve();
+
+		t.match(result.reason.message, /Test finished, but an assertion is still pending/);
+
+// This behavior is incorrect, but feedback cannot be provided to the user due to
+
+// https://github.com/avajs/ava/issues/1330
+
+test('no crash when adding assertions after the test has ended', t => {
+
+	t.plan(3);
+
+
+
+		a.pass();
+
+		setImmediate(() => {
+
+			t.doesNotThrow(() => a.pass());
+
+		});
+
+	}).run();
+
+	ava(a => {
+
+		a.pass();
+
+		setImmediate(() => {
+
+			t.doesNotThrow(() => a.fail());
+
+		});
+
+	ava(a => {
+
+		a.pass();
+
+		setImmediate(() => {
+
+			t.doesNotThrow(() => a.notThrows(Promise.resolve()));
+
+		});
+
+	}).run();
+"
 3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,"Require Node.js 8.9.4
 
 * Remove support for `--debug` and `--debug-brk` CLI flags
-* Refactor to utilize object rest/spread and async/await",bench\run.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,return runTests(args).then(result => {,const result = await runTests(args);
+* Refactor to utilize object rest/spread and async/await",bench/run.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,"Promise.each(combined, definition => {
+
+	return runTests(args).then(result => {
+
+		const key = result.args.join(' ');
+
+		const passedOrFaild = result.err ? 'failed' : 'passed';
+
+		const seconds = result.time / 1000;
+
+		console.log('%s %s in %d seconds', key, passedOrFaild, seconds);
+
+		if (result.err && !definition.shouldFail) {
+
+			console.log(result.stdout);
+
+			console.log(result.stderr);
+
+			throw result.err;
+
+		}
+
+		results[key] = results[key] || [];
+
+		results[key].push({
+
+			passed: !results.err,
+
+			shouldFail: definition.shouldFail,
+
+			time: seconds
+
+		});
+","Promise.each(combined, async definition => {
+
+	const result = await runTests(args);
+
+	const key = result.args.join(' ');
+
+	const passedOrFaild = result.err ? 'failed' : 'passed';
+
+	const seconds = result.time / 1000;
+
+	console.log('%s %s in %d seconds', key, passedOrFaild, seconds);
+
+	if (result.err && !definition.shouldFail) {
+
+		console.log(result.stdout);
+
+		console.log(result.stderr);
+
+		throw result.err;
+
+	}
+
+	results[key] = results[key] || [];
+
+	results[key].push({
+
+		passed: !results.err,
+
+		shouldFail: definition.shouldFail,
+
+		time: seconds
+"
 3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,"Require Node.js 8.9.4
 
 * Remove support for `--debug` and `--debug-brk` CLI flags
-* Refactor to utilize object rest/spread and async/await",lib\api.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,".then(files => {
-.then(() => this._setupPrecompiler())
-.then(precompilation => {
-.then(precompilation => {","files = await new AvaFiles({cwd: apiOptions.resolveTestsFrom, files, extensions: this._allExtensions}).findTestFiles();
-const helpers = await new AvaFiles({cwd: this.options.resolveTestsFrom, extensions: this._allExtensions}).findTestHelpers();
-const helpers = await new AvaFiles({cwd: this.options.resolveTestsFrom, extensions: this._allExtensions}).findTestHelpers();
-await Bluebird.map(files, async file => {"
+* Refactor to utilize object rest/spread and async/await",lib/api.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,"	_computeForkExecArgv() {
+
+		let debugArgIndex = -1;
+
+
+
+		execArgv.some((arg, index) => {
+
+			const isDebugArg = /^--inspect(-brk)?($|=)/.test(arg);
+
+			if (isDebugArg) {
+
+				debugArgIndex = index;
+
+			}
+
+
+
+			return isDebugArg;
+
+		});
+
+
+
+		const isInspect = debugArgIndex >= 0;
+
+		if (!isInspect) {
+
+			execArgv.some((arg, index) => {
+
+				const isDebugArg = /^--debug(-brk)?($|=)/.test(arg);
+
+				if (isDebugArg) {
+
+					debugArgIndex = index;
+
+				}
+
+
+
+				return isDebugArg;
+
+			});
+
+		}
+
+
+
+		if (debugArgIndex === -1) {
+
+		return getPort().then(port => {
+
+			const forkExecArgv = execArgv.slice();
+
+			let flagName = isInspect ? '--inspect' : '--debug';
+
+			const oldValue = forkExecArgv[debugArgIndex];
+
+			if (oldValue.indexOf('brk') > 0) {
+
+				flagName += '-brk';
+
+			}
+
+			forkExecArgv[debugArgIndex] = `${flagName}=${port}`;
+
+			return forkExecArgv;
+
+		});
+","	async _computeForkExecArgv() {
+
+		const inspectArgIndex = execArgv.findIndex(arg => /^--inspect(-brk)?($|=)/.test(arg));
+
+		if (inspectArgIndex === -1) {
+
+		const port = await getPort();
+
+		const forkExecArgv = execArgv.slice();
+
+		let flagName = '--inspect';
+
+		const oldValue = forkExecArgv[inspectArgIndex];
+
+		if (oldValue.indexOf('brk') > 0) {
+
+			flagName += '-brk';
+
+		}
+
+		forkExecArgv[inspectArgIndex] = `${flagName}=${port}`;
+
+		return forkExecArgv;
+"
 3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,"Require Node.js 8.9.4
 
 * Remove support for `--debug` and `--debug-brk` CLI flags
-* Refactor to utilize object rest/spread and async/await",lib\cli.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,api.run(files).then(runStatus => {,const runStatus = await api.run(files);
+* Refactor to utilize object rest/spread and async/await",lib/cli.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,"		del('*', {
+
+			cwd: cacheDir,
+
+			nodir: true
+
+		}).then(() => {
+
+		}, error => {
+
+		});
+","		try {
+
+			await del('*', {
+
+				cwd: cacheDir,
+
+				nodir: true
+
+			});
+
+		} catch (error) {
+
+		}
+
+
+"
 3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,"Require Node.js 8.9.4
 
 * Remove support for `--debug` and `--debug-brk` CLI flags
-* Refactor to utilize object rest/spread and async/await",lib\runner.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,"return this.runSingle(runnable).then(result => {
-}, waitForSerial).then(() => ({allPassed, storedResults}));
-return runnable.run().then(result => {
-return this.runMultiple(hooks, this.serial).then(outcome => {
-return this.runHooks(this.tasks.beforeEach, contextRef, hookSuffix).then(hooksOk => {
-}).then(hooksAndTestOk => {
-return this.runHooks(this.tasks.afterEachAlways, contextRef, hookSuffix).then(alwaysOk => {
-const serialPromise = beforePromise.then(beforeHooksOk => {
-})).then(allOkays => allOkays.every(ok => ok));
-.then(ok => ok && this.runHooks(this.tasks.after, contextRef))
-.then(() => this.runHooks(this.tasks.afterAlways, contextRef))
-.then(() => {","const result = await this.runSingle(runnable);
-async runSingle(runnable) {
-const result = await runnable.run();
-const outcome = await this.runMultiple(hooks, this.serial);
-if (await this.runHooks(this.tasks.beforeEach, contextRef, hookSuffix)) {
-async start() {
-async start() {
-return serialTests.reduce(async (prev, task) => {
-const ok = await concurrentPromise;
-await this.emit('finish');
-await this.emit('error', error);
-await this.emit('error', error);"
+* Refactor to utilize object rest/spread and async/await",lib/cli.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,"		api.run(files).then(runStatus => {
+
+			process.exitCode = runStatus.suggestExitCode({matching: match.length > 0});
+
+			reporter.endRun();
+
+		});
+","		const runStatus = await api.run(files);
+
+		process.exitCode = runStatus.suggestExitCode({matching: match.length > 0});
+
+		reporter.endRun();
+"
 3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,"Require Node.js 8.9.4
 
 * Remove support for `--debug` and `--debug-brk` CLI flags
-* Refactor to utilize object rest/spread and async/await",lib\watcher.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,this.watcher.busy.then(() => {,await this.watcher.busy;
+* Refactor to utilize object rest/spread and async/await",lib/runner.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,"	runMultiple(runnables) {
+
+		const runAndStoreResult = runnable => {
+
+			return this.runSingle(runnable).then(result => {
+
+				if (!result.passed) {
+
+					allPassed = false;
+
+				}
+
+				storedResults.push(result);
+
+			});
+
+		return runnables.reduce((prev, runnable) => {
+","	async runMultiple(runnables) {
+
+		const runAndStoreResult = async runnable => {
+
+			const result = await this.runSingle(runnable);
+
+			if (!result.passed) {
+
+				allPassed = false;
+
+			}
+
+			storedResults.push(result);
+
+		await runnables.reduce((prev, runnable) => {
+"
 3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,"Require Node.js 8.9.4
 
 * Remove support for `--debug` and `--debug-brk` CLI flags
-* Refactor to utilize object rest/spread and async/await",lib\worker\ipc.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,"const promise = pendingPings.then(() => {
-}).then(() => {","await promise;
-await promise;"
+* Refactor to utilize object rest/spread and async/await",lib/runner.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,"		}, waitForSerial).then(() => ({allPassed, storedResults}));
+
+	runSingle(runnable) {
+
+		return runnable.run().then(result => {
+
+			// If run() throws or rejects then the entire test run crashes, so
+
+			// onRunComplete() doesn't *have* to be inside a finally().
+
+			this.onRunComplete(runnable);
+
+			return result;
+
+		});
+
+	runHooks(tasks, contextRef, titleSuffix) {
+","		}, waitForSerial);
+
+
+
+		return {allPassed, storedResults};
+
+	async runSingle(runnable) {
+
+		const result = await runnable.run();
+
+		// If run() throws or rejects then the entire test run crashes, so
+
+		// onRunComplete() doesn't *have* to be inside a finally.
+
+		this.onRunComplete(runnable);
+
+		return result;
+
+	async runHooks(tasks, contextRef, titleSuffix) {
+"
 3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,"Require Node.js 8.9.4
 
 * Remove support for `--debug` and `--debug-brk` CLI flags
-* Refactor to utilize object rest/spread and async/await",lib\worker\subprocess.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,return ipc.flush().then(() => process.exit());,await ipc.flush();
+* Refactor to utilize object rest/spread and async/await",lib/runner.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,"		return this.runMultiple(hooks, this.serial).then(outcome => {
+
+			for (const result of outcome.storedResults) {
+
+				if (result.passed) {
+
+					this.emit('stateChange', {
+
+						type: 'hook-finished',
+
+						title: result.title,
+
+						duration: result.duration,
+
+						logs: result.logs
+
+					});
+
+				} else {
+
+					this.emit('stateChange', {
+
+						type: 'hook-failed',
+
+						title: result.title,
+
+						err: serializeError('Hook failure', true, result.error),
+
+						duration: result.duration,
+
+						logs: result.logs
+
+					});
+
+				}
+
+			return outcome.allPassed;
+
+		});
+
+	runTest(task, contextRef) {
+
+		const hookSuffix = ` for ${task.title}`;
+
+		return this.runHooks(this.tasks.beforeEach, contextRef, hookSuffix).then(hooksOk => {
+
+			// Don't run the test if a `beforeEach` hook failed.
+
+			if (!hooksOk) {
+
+				return false;
+
+			}
+","		const outcome = await this.runMultiple(hooks, this.serial);
+
+		for (const result of outcome.storedResults) {
+
+			if (result.passed) {
+
+				this.emit('stateChange', {
+
+					type: 'hook-finished',
+
+					title: result.title,
+
+					duration: result.duration,
+
+					logs: result.logs
+
+				});
+
+			} else {
+
+				this.emit('stateChange', {
+
+					type: 'hook-failed',
+
+					title: result.title,
+
+					err: serializeError('Hook failure', true, result.error),
+
+					duration: result.duration,
+
+					logs: result.logs
+
+				});
+
+		}
+
+		return outcome.allPassed;
+
+	async runTest(task, contextRef) {
+
+		let hooksAndTestOk = false;
+
+		const hookSuffix = ` for ${task.title}`;
+
+		if (await this.runHooks(this.tasks.beforeEach, contextRef, hookSuffix)) {
+
+			// Only run the test if all `beforeEach` hooks passed.
+"
+3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,"Require Node.js 8.9.4
+
+* Remove support for `--debug` and `--debug-brk` CLI flags
+* Refactor to utilize object rest/spread and async/await",lib/runner.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,"			return this.runSingle(test).then(result => {
+
+				if (result.passed) {
+
+					this.emit('stateChange', {
+
+						type: 'test-passed',
+
+						title: result.title,
+
+						duration: result.duration,
+
+						knownFailing: result.metadata.failing,
+
+						logs: result.logs
+
+					});
+
+					return this.runHooks(this.tasks.afterEach, contextRef, hookSuffix);
+
+				}
+","			const result = await this.runSingle(test);
+
+			if (result.passed) {
+
+				this.emit('stateChange', {
+
+					type: 'test-passed',
+
+					title: result.title,
+
+					duration: result.duration,
+
+					knownFailing: result.metadata.failing,
+
+					logs: result.logs
+
+				});
+
+				hooksAndTestOk = await this.runHooks(this.tasks.afterEach, contextRef, hookSuffix);
+
+			} else {
+"
+3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,"Require Node.js 8.9.4
+
+* Remove support for `--debug` and `--debug-brk` CLI flags
+* Refactor to utilize object rest/spread and async/await",lib/runner.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,"				return false;
+
+			});
+
+		}).then(hooksAndTestOk => {
+
+			return this.runHooks(this.tasks.afterEachAlways, contextRef, hookSuffix).then(alwaysOk => {
+
+				return hooksAndTestOk && alwaysOk;
+
+			});
+
+		});
+
+	start() {
+","			}
+
+		}
+
+
+
+		const alwaysOk = await this.runHooks(this.tasks.afterEachAlways, contextRef, hookSuffix);
+
+		return hooksAndTestOk && alwaysOk;
+
+	async start() {
+"
+3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,"Require Node.js 8.9.4
+
+* Remove support for `--debug` and `--debug-brk` CLI flags
+* Refactor to utilize object rest/spread and async/await",lib/runner.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,"			return Promise.all(concurrentTests.map(task => {
+
+			})).then(allOkays => allOkays.every(ok => ok));
+
+		concurrentPromise
+
+			.then(ok => ok && this.runHooks(this.tasks.after, contextRef))
+
+			.then(() => this.runHooks(this.tasks.afterAlways, contextRef))
+
+			.then(() => {
+
+				process.removeListener('beforeExit', beforeExitHandler);
+
+			})
+
+			.then(() => this.emit('finish'), err => this.emit('error', err));
+","			const allOkays = await Promise.all(concurrentTests.map(task => {
+
+			}));
+
+			return allOkays.every(ok => ok);
+
+		try {
+
+			const ok = await concurrentPromise;
+
+			if (ok) {
+
+				await this.runHooks(this.tasks.after, contextRef);
+
+			}
+
+
+
+			await this.runHooks(this.tasks.afterAlways, contextRef);
+
+			process.removeListener('beforeExit', beforeExitHandler);
+
+			await this.emit('finish');
+
+		} catch (error) {
+
+			await this.emit('error', error);
+
+		}
+"
+3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,"Require Node.js 8.9.4
+
+* Remove support for `--debug` and `--debug-brk` CLI flags
+* Refactor to utilize object rest/spread and async/await",lib/watcher.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,"		const timer = setTimeout(() => {
+
+			this.watcher.busy.then(() => {
+
+				// Do nothing if debouncing was canceled while waiting for the busy
+
+				// promise to fulfil
+
+				if (this.timer !== timer) {
+
+					return;
+
+				}
+
+				if (this.again) {
+
+					this.timer = null;
+
+					this.again = false;
+
+					this.debounce(delay / 2);
+
+				} else {
+
+					this.watcher.runAfterChanges();
+
+					this.timer = null;
+
+					this.again = false;
+
+				}
+
+			});
+","		const timer = setTimeout(async () => {
+
+			await this.watcher.busy;
+
+			// Do nothing if debouncing was canceled while waiting for the busy
+
+			// promise to fulfil
+
+			if (this.timer !== timer) {
+
+				return;
+
+			}
+
+			if (this.again) {
+
+				this.timer = null;
+
+				this.again = false;
+
+				this.debounce(delay / 2);
+
+			} else {
+
+				this.watcher.runAfterChanges();
+
+				this.timer = null;
+
+				this.again = false;
+
+			}
+"
+3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,"Require Node.js 8.9.4
+
+* Remove support for `--debug` and `--debug-brk` CLI flags
+* Refactor to utilize object rest/spread and async/await",lib/watcher.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,"			this.busy.then(() => {
+
+				// Cancel the debouncer again, it might have restarted while waiting for
+
+				// the busy promise to fulfil
+
+				this.debouncer.cancel();
+
+				this.clearLogOnNextRun = false;
+
+				if (data === 'u') {
+
+					this.updatePreviousSnapshots();
+
+				} else {
+
+					this.rerunAll();
+
+				}
+
+			});
+","			await this.busy;
+
+			// Cancel the debouncer again, it might have restarted while waiting for
+
+			// the busy promise to fulfil
+
+			this.debouncer.cancel();
+
+			this.clearLogOnNextRun = false;
+
+			if (data === 'u') {
+
+				this.updatePreviousSnapshots();
+
+			} else {
+
+				this.rerunAll();
+
+			}
+"
+3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,Mark Wubben,"Require Node.js 8.9.4
+
+* Remove support for `--debug` and `--debug-brk` CLI flags
+* Refactor to utilize object rest/spread and async/await",lib/worker/subprocess.js,https://github.com/avajs/ava/commit/3a4afc6cf35aeffb6b019c6b75fa9b8e071bb53d,"	function exit(code) {
+
+		return ipc.flush().then(() => process.exit()); // eslint-disable-line unicorn/no-process-exit
+","	async function exit(code) {
+
+		await ipc.flush();
+
+		process.exit(); // eslint-disable-line unicorn/no-process-exit
+"
 83b43a58593ea3a4e1fd271099184963ccdb7d4c,Mark Wubben,"Allow CLI to select a subset of test files
 
 Rather than providing paths to specific test files, allow
@@ -81,36 +985,268 @@ select a subset of test files.
 This does mean that the files patterns in AVA's configuration need to
 select all desired test files: you can no longer run a different file.
 
-Fixes #2281.",test\watcher.js,https://github.com/avajs/ava/commit/83b43a58593ea3a4e1fd271099184963ccdb7d4c,"return delay().then(() => {
-}).then(() => {","await delay();
-await delay();"
+Fixes #2281.",test/watcher.js,https://github.com/avajs/ava/commit/83b43a58593ea3a4e1fd271099184963ccdb7d4c,"				t.strictDeepEqual(api.run.secondCall.args, [[], {...defaultApiOptions, runVector: 2}]);
+
+				t.strictDeepEqual(api.run.thirdCall.args, [[], {...defaultApiOptions, runVector: 3}]);
+
+	test('reruns previous tests and update snapshots when ""u"" is entered on stdin', t => {
+
+		const previousFiles = ['test.js'];
+
+		t.plan(4);
+
+		start(previousFiles).observeStdin(stdin);
+
+		return delay().then(() => {
+
+			t.ok(api.run.calledTwice);
+
+			t.strictDeepEqual(api.run.secondCall.args, [previousFiles, {...options, runVector: 2}]);
+
+			stdin.write('\tu  \n');
+
+			return delay();
+
+		}).then(() => {
+
+			t.ok(api.run.calledThrice);
+
+			t.strictDeepEqual(api.run.thirdCall.args, [previousFiles, {...options, runVector: 3}]);
+
+		});
+","				t.strictDeepEqual(api.run.secondCall.args, [{files: [], filter: [], runtimeOptions: {...defaultApiOptions, runVector: 2}}]);
+
+				t.strictDeepEqual(api.run.thirdCall.args, [{files: [], filter: [], runtimeOptions: {...defaultApiOptions, runVector: 3}}]);
+
+	test('reruns previous tests and update snapshots when ""u"" is entered on stdin', async t => {
+
+		t.plan(5);
+
+		start().observeStdin(stdin);
+
+
+
+		add('test-one.js');
+
+		await debounce();
+
+		t.ok(api.run.calledTwice);
+
+		await delay();
+
+		t.ok(api.run.calledThrice);
+
+		t.strictDeepEqual(api.run.thirdCall.args, [{files: [path.resolve('test-one.js')], filter: [], runtimeOptions: {...options, runVector: 3}}]);
+
+
+
+		stdin.write('\tu  \n');
+
+		await delay();
+
+
+
+		t.is(api.run.callCount, 4);
+
+		t.strictDeepEqual(api.run.lastCall.args, [{files: [path.resolve('test-one.js')], filter: [], runtimeOptions: {...options, runVector: 4}}]);
+"
 5a335729eab820a7ea1a17ab1c9425efd58803c8,Mark Wubben,"Fix fail-fast interrupt test
 
 Listen for the peer-failure notification before resuming tests. Then
 verify the test execution was interrupted.
 
-That's still not enough on Windows, where the passes-slow test results aren't always received. So only test for that when they are.",test\fixture\fail-fast\multiple-files\passes-slow.js,https://github.com/avajs/ava/commit/5a335729eab820a7ea1a17ab1c9425efd58803c8,"return new Promise(resolve => setTimeout(resolve, 60000));","await pEvent(process, 'message', message => {"
-c57067bfb69a9b685ea2b33624dee204ad369164,Mark Wubben,"Switch to ESM for internals
+That's still not enough on Windows, where the passes-slow test results aren't always received. So only test for that when they are.",test/api.js,https://github.com/avajs/ava/commit/5a335729eab820a7ea1a17ab1c9425efd58803c8,"	return api.run({files: [
 
-* Extract glob helpers that are needed in a CJS environment
+		path.join(__dirname, 'fixture/fail-fast/multiple-files/fails.js'),
 
-* Ensure ava/plugin works in a CJS environment
+		path.join(__dirname, 'fixture/fail-fast/multiple-files/passes-slow.js')
 
-Refactor and deploy some tricks so that ava/plugin is usable in a CJS environment, even if the rest of AVA's internals become ESM.
+	]})
 
-* Ensure 'ava' can be imported in a CJS environment
+		.then(runStatus => {
 
-* Convert to ESM
+			t.ok(api.options.failFast);
 
-* Load yargs as CJS due to strange compatibility issues
-* Keep line number parsing code as CJS because it attempts to lazy-load dependencies
-* Shared workers are always loaded through a dynamic import
-* Shared worker filenames must now be file:// URLs, but you can provide a URL instance
-* Test file paths within shared workers are now file:// URLs
-* Error serialization and code excerpts now support ESM
-* Title prefixes in the reporters now correctly skip all test file extensions, not just `js`
+			t.strictDeepEqual(tests, [{
 
-* CI: Increase delay on timeout test, mostly for Windows",lib\eslint-plugin-helper-worker.js,https://github.com/avajs/ava/commit/c57067bfb69a9b685ea2b33624dee204ad369164,"configCache.set(projectDir, loadConfig({resolveFrom: projectDir}).then(conf => {","const providers = await collectProviders({conf, projectDir});"
+				ok: true,
+
+				testFile: path.join(__dirname, 'fixture/fail-fast/multiple-files/fails.js'),
+
+				title: 'first pass'
+
+			}, {
+
+				ok: false,
+
+				testFile: path.join(__dirname, 'fixture/fail-fast/multiple-files/fails.js'),
+
+				title: 'second fail'
+
+			}, {
+
+				ok: true,
+
+				testFile: path.join(__dirname, 'fixture/fail-fast/multiple-files/fails.js'),
+
+				title: 'third pass'
+
+			}, {
+
+				ok: true,
+
+				testFile: path.join(__dirname, 'fixture/fail-fast/multiple-files/passes-slow.js'),
+
+				title: 'first pass'
+
+			}]);
+
+			t.is(runStatus.stats.passedTests, 3);
+
+			t.is(runStatus.stats.failedTests, 1);
+
+		});
+","	const fails = path.join(__dirname, 'fixture/fail-fast/multiple-files/fails.js');
+
+	const passesSlow = path.join(__dirname, 'fixture/fail-fast/multiple-files/passes-slow.js');
+
+
+
+	const runStatus = await api.run({files: [fails, passesSlow]});
+
+	t.ok(api.options.failFast);
+
+	t.ok(runStatus.stats.passedTests >= 2); // Results from passes-slow are not always received on Windows.
+
+	t.ok(runStatus.stats.passedTests <= 3);
+
+	t.is(runStatus.stats.failedTests, 1);
+
+
+
+	t.strictDeepEqual(tests.filter(({testFile}) => testFile === fails), [{
+
+		ok: true,
+
+		testFile: path.join(__dirname, 'fixture/fail-fast/multiple-files/fails.js'),
+
+		title: 'first pass'
+
+	}, {
+
+		ok: false,
+
+		testFile: path.join(__dirname, 'fixture/fail-fast/multiple-files/fails.js'),
+
+		title: 'second fail'
+
+	}, {
+
+		ok: true,
+
+		testFile: path.join(__dirname, 'fixture/fail-fast/multiple-files/fails.js'),
+
+		title: 'third pass'
+
+	}]);
+
+	if (runStatus.stats.passedTests === 3) {
+
+		t.strictDeepEqual(tests.filter(({testFile}) => testFile === passesSlow), [{
+
+			ok: true,
+
+			testFile: path.join(__dirname, 'fixture/fail-fast/multiple-files/passes-slow.js'),
+
+			title: 'first pass'
+
+		}]);
+
+	}
+"
+5a335729eab820a7ea1a17ab1c9425efd58803c8,Mark Wubben,"Fix fail-fast interrupt test
+
+Listen for the peer-failure notification before resuming tests. Then
+verify the test execution was interrupted.
+
+That's still not enough on Windows, where the passes-slow test results aren't always received. So only test for that when they are.",test/fixture/fail-fast/multiple-files/passes-slow.js,https://github.com/avajs/ava/commit/5a335729eab820a7ea1a17ab1c9425efd58803c8,"test.serial('first pass', t => {
+
+	return new Promise(resolve => setTimeout(resolve, 60000));
+","const pEvent = require('p-event');
+
+test.serial('first pass', async t => {
+
+	const timer = setTimeout(() => {}, 60000); // Ensure process stays alive.
+
+	await pEvent(process, 'message', message => {
+
+		if (message.ava) {
+
+			return message.ava.type === 'peer-failed';
+
+		}
+
+
+
+		return false;
+
+	});
+
+	clearTimeout(timer);
+"
+8571b2a7f7ebfefcdc014e7a43b6c874b765b722,Mark Wubben,"Remove test.cb()
+
+Fixes #2387.",test-tap/test.js,https://github.com/avajs/ava/commit/8571b2a7f7ebfefcdc014e7a43b6c874b765b722,"	return ava.cb(a => {
+
+		a.plan(1);
+
+
+
+		setTimeout(() => {
+
+			a.true(true);
+
+			a.end();
+
+		}, 1234);
+
+test('wait for test to end', t => {
+
+	const instance = ava.cb(a => {
+
+		a.plan(1);
+
+		setTimeout(() => {
+
+			a.pass();
+
+			a.end();
+
+		}, 1234);
+
+	});
+
+	return instance.run().then(result => {
+
+		t.is(result.passed, true);
+
+		t.is(instance.planCount, 1);
+
+		t.is(instance.assertCount, 1);
+
+		t.true(result.duration >= 1000);
+
+	});
+
+});
+
+
+","	return ava(async a => {
+
+		await delay(1234);
+
+		a.pass();
+"
 da3d2bcffbad0fe51c83220bb1e587b7b80d1707,Mark Wubben,"Update dependencies and such
 
 * Upgrade XO and reformat
@@ -129,7 +1265,11 @@ da3d2bcffbad0fe51c83220bb1e587b7b80d1707,Mark Wubben,"Update dependencies and su
 
 * Select Node.js version from Volta pin in most CI jobs
 
-* Only pin npm when testing for lockfile churn; ensure npm@8 for Node.js 14",lib\plugin-support\shared-worker-loader.js,https://github.com/avajs/ava/commit/da3d2bcffbad0fe51c83220bb1e587b7b80d1707,loadFactory(workerData.filename).then(factory => {,const factory = await loadFactory(workerData.filename);
+* Only pin npm when testing for lockfile churn; ensure npm@8 for Node.js 14",lib/plugin-support/shared-worker-loader.js,https://github.com/avajs/ava/commit/da3d2bcffbad0fe51c83220bb1e587b7b80d1707,"loadFactory(workerData.filename).then(factory => {
+","try {
+
+	const factory = await loadFactory(workerData.filename);
+"
 da3d2bcffbad0fe51c83220bb1e587b7b80d1707,Mark Wubben,"Update dependencies and such
 
 * Upgrade XO and reformat
@@ -148,4 +1288,136 @@ da3d2bcffbad0fe51c83220bb1e587b7b80d1707,Mark Wubben,"Update dependencies and su
 
 * Select Node.js version from Volta pin in most CI jobs
 
-* Only pin npm when testing for lockfile churn; ensure npm@8 for Node.js 14",lib\worker\base.js,https://github.com/avajs/ava/commit/da3d2bcffbad0fe51c83220bb1e587b7b80d1707,channel.options.then(run).catch(onError);,options = await channel.options;
+* Only pin npm when testing for lockfile churn; ensure npm@8 for Node.js 14",lib/worker/base.js,https://github.com/avajs/ava/commit/da3d2bcffbad0fe51c83220bb1e587b7b80d1707,"	const {options} = workerData;
+
+	run(options).catch(onError);
+
+	channel.options.then(run).catch(onError);
+","let options;
+
+	({options} = workerData);
+
+	options = await channel.options;
+
+}
+
+
+
+try {
+
+	await run(options);
+
+} catch (error) {
+
+	onError(error);
+"
+b6fbd5847a5d460e9ce435ab52fde91ba1bd287a,Mark Wubben,"Make assertions throw
+
+Fixes #3201.
+
+Assertions now throw a `TestFailure` error when they fail. This error is not exported or documented and should not be used or thrown manually. You cannot catch this error in order to recover from a failure, use `t.try()` instead.
+
+All assertions except for `throws` and `throwsAsync` now return `true` when they pass. This is useful for some of the assertions in TypeScript where they can be used as a type guard.
+
+Committing a failed `t.try()` result now also throws.",lib/test.js,https://github.com/avajs/ava/commit/b6fbd5847a5d460e9ce435ab52fde91ba1bd287a,"		promise
+
+			.catch(error => this.saveFirstError(error))
+
+			.then(() => {
+
+				this.pendingAssertionCount--;
+
+				this.refreshTimeout();
+
+			});
+","		try {
+
+			await promise;
+
+		} catch {
+
+			// Ignore errors.
+
+		} finally {
+
+			this.pendingAssertionCount--;
+
+			this.refreshTimeout();
+
+		}
+"
+b6fbd5847a5d460e9ce435ab52fde91ba1bd287a,Mark Wubben,"Make assertions throw
+
+Fixes #3201.
+
+Assertions now throw a `TestFailure` error when they fail. This error is not exported or documented and should not be used or thrown manually. You cannot catch this error in order to recover from a failure, use `t.try()` instead.
+
+All assertions except for `throws` and `throwsAsync` now return `true` when they pass. This is useful for some of the assertions in TypeScript where they can be used as a type guard.
+
+Committing a failed `t.try()` result now also throws.",test-tap/assert.js,https://github.com/avajs/ava/commit/b6fbd5847a5d460e9ce435ab52fde91ba1bd287a,"function failsWith(t, fn, subset, {expectBoolean = true} = {}) {
+
+	const retval = fn();
+
+	if (expectBoolean) {
+
+		t.notOk(retval);
+
+		return fn().then(retval => {
+
+			t.equal(retval, undefined);
+
+			assertFailure(t, subset);
+","function failsWith(t, fn, subset) {
+
+	try {
+
+		fn();
+
+	} catch (error) {
+
+		if (error.name !== 'AssertionFailed') {
+
+			throw error;
+
+		}
+
+	}
+
+
+
+}
+
+
+
+async function failsWithAsync(t, fn, subset) {
+
+	lastFailure = null;
+
+	try {
+
+		await fn();
+
+	} catch (error) {
+
+		if (error.name !== 'AssertionFailed') {
+
+			throw error;
+
+		}
+
+
+
+	assertFailure(t, subset);
+
+		return fn().catch(error => {
+
+			if (error.name === 'AssertionFailed') {
+
+				assertFailure(t, subset);
+
+			} else {
+
+				throw error;
+
+			}
+"

@@ -1,17 +1,361 @@
-commit_hash,author,message,file_path,commit_url,removed_lines,added_lines
-b94441ff71e10252b6b3806c8cd4730821dfe737,Matteo Collina,Node.js V19 support (#4366),test\close-pipelining.test.js,https://github.com/fastify/fastify/commit/b94441ff71e10252b6b3806c8cd4730821dfe737,).then(data => {,await instance.close()
-04cc8c1f8a9b561cf14c7f569461bc649c16c1a1,Simone Sanfratello,fix: citgm (#5075),test\custom-http-server.test.js,https://github.com/fastify/fastify/commit/04cc8c1f8a9b561cf14c7f569461bc649c16c1a1,t.teardown(() => new Promise(resolve => server.close(resolve))),const app = await Fastify({
-5927ca7957658c108d9fe4fdb06caef2aa0ddb90,Giovanni Laganà,"test: migrated custom-http-server from tap to node:test (#5773)
+commit_hash,author,message,file_path,commit_url,removed_chunk,added_chunk
+b94441ff71e10252b6b3806c8cd4730821dfe737,Matteo Collina,Node.js V19 support (#4366),test/close-pipelining.test.js,https://github.com/fastify/fastify/commit/b94441ff71e10252b6b3806c8cd4730821dfe737,"  fastify.listen({ port: 0 }, err => {
 
-* chore: migrated custom-http-server from tap to node:test
+    t.error(err)
 
-* fix: removed leftover",test\custom-http-server.test.js,https://github.com/fastify/fastify/commit/5927ca7957658c108d9fe4fdb06caef2aa0ddb90,t.teardown(() => new Promise(resolve => server.close(resolve))),await t.assert.doesNotReject(async () => { await app.listen({ port: 0 }) })
-794d7d19dfa0dbba4ec7284682050be93b2fcfc2,Coluzzi Andrea,test: migrate from tap to node test for close & custom-parser-async (#5915),test\close.test.js,https://github.com/fastify/fastify/commit/794d7d19dfa0dbba4ec7284682050be93b2fcfc2,"instance.request({ path: '/', method: 'GET' }).then(data => {
-instance.request({ path: '/', method: 'GET' }).then(data => {","fastify.listen({ port: 0 }, async err => {
-fastify.listen({ port: 0 }, async err => {"
-d4d3db2657235cf32cf827d87e3ef361ee7fdc13,Icaro Vieira,chore: remove tap from hooks-on ready file (#6080),test\hooks.on-ready.test.js,https://github.com/fastify/fastify/commit/d4d3db2657235cf32cf827d87e3ef361ee7fdc13,"one.ready().then(itself => { t.same(itself, one) })
-two.ready().then(itself => { t.same(itself, two) })
-twoDotOne.ready().then(itself => { t.same(itself, twoDotOne) })","test('ready return the server with Promise', async t => {
-await fastify.ready()
-await fastify.ready()"
-df9ea6f4622c3e41457bf9ce3e0fc9965f4ce627,Jean,test: mv skip-reply-send from tap (#6094),test\skip-reply-send.test.js,https://github.com/fastify/fastify/commit/df9ea6f4622c3e41457bf9ce3e0fc9965f4ce627,"]).then((err, res) => {","test('Calling reply.send() after hijacking logs a warning', async (t) => {"
+
+
+    const instance = new Client('http://localhost:' + fastify.server.address().port, {
+
+      pipelining: 1
+
+    })
+
+
+
+    const codes = [200, 200]
+
+    for (const code of codes) {
+
+      instance.request(
+
+        { path: '/', method: 'GET' }
+
+      ).then(data => {
+
+        t.equal(data.statusCode, code)
+
+      }).catch((e) => {
+
+        t.fail(e)
+
+      })
+
+    }
+
+    instance.close(() => {
+
+      t.end('Done')
+
+    })
+","  await fastify.listen({ port: 0 })
+
+
+
+  const instance = new Client('http://localhost:' + fastify.server.address().port, {
+
+    pipelining: 2
+
+
+
+  const responses = await Promise.allSettled([
+
+    instance.request({ path: '/', method: 'GET' }),
+
+    instance.request({ path: '/', method: 'GET' }),
+
+    instance.request({ path: '/', method: 'GET' })
+
+  ])
+
+  t.equal(responses[0].status, 'fulfilled')
+
+  t.equal(responses[1].status, 'rejected')
+
+  t.equal(responses[2].status, 'rejected')
+
+
+
+  await instance.close()
+"
+c85e0bf6f0bc26569ca8ebd1ba613db63459fb46,Antonio Tripodi,test: migrated content-length.test.js from tap to node:test (#5878),test/content-length.test.js,https://github.com/fastify/fastify/commit/c85e0bf6f0bc26569ca8ebd1ba613db63459fb46,"  fastify.inject({
+
+    .then(response => {
+
+      t.equal(response.headers['content-length'], '' + response.rawPayload.length)
+
+      t.end()
+
+    })
+
+test('#2543 - wrong content-length with errorHandler', t => {
+","  const response = await fastify.inject({
+
+  t.assert.strictEqual(response.headers['content-length'], '' + response.rawPayload.length)
+
+test('#2543 - wrong content-length with errorHandler', async (t) => {
+"
+c85e0bf6f0bc26569ca8ebd1ba613db63459fb46,Antonio Tripodi,test: migrated content-length.test.js from tap to node:test (#5878),test/content-length.test.js,https://github.com/fastify/fastify/commit/c85e0bf6f0bc26569ca8ebd1ba613db63459fb46,"  fastify.inject({
+
+    .then(res => {
+
+      t.equal(res.statusCode, 500)
+
+      t.equal(res.headers['content-length'], '' + res.rawPayload.length)
+
+      t.same(JSON.parse(res.payload), { message: 'longer than 2 bytes' })
+
+      t.end()
+
+    })
+","  const response = await fastify.inject({
+
+  t.assert.strictEqual(response.statusCode, 500)
+
+  t.assert.strictEqual(response.headers['content-length'], '' + response.rawPayload.length)
+
+  t.assert.deepStrictEqual(JSON.parse(response.payload), { message: 'longer than 2 bytes' })
+"
+794d7d19dfa0dbba4ec7284682050be93b2fcfc2,Coluzzi Andrea,test: migrate from tap to node test for close & custom-parser-async (#5915),test/close.test.js,https://github.com/fastify/fastify/commit/794d7d19dfa0dbba4ec7284682050be93b2fcfc2,"  fastify.listen({ port: 0 }, err => {
+
+    t.error(err)
+
+    instance.request({ path: '/', method: 'GET' }).then(data => {
+
+      t.equal(data.statusCode, 200)
+
+    })
+
+    instance.request({ path: '/', method: 'GET' }).then(data => {
+
+      t.equal(data.statusCode, 503)
+
+    })
+
+test('rejected incoming connections should be logged', t => {
+","  fastify.listen({ port: 0 }, async err => {
+
+    t.assert.ifError(err)
+
+    let response = await instance.request({ path: '/', method: 'GET' })
+
+    t.assert.strictEqual(response.statusCode, 200)
+
+
+
+    response = await instance.request({ path: '/', method: 'GET' })
+
+    t.assert.strictEqual(response.statusCode, 503)
+
+
+
+    done()
+
+test('rejected incoming connections should be logged', (t, done) => {
+"
+664204f231020b5230778996bf149dfd1aa507a0,Antonio Tripodi,test: migrated listen.3.test.js from tap to node:test (#6022),test/listen.3.test.js,https://github.com/fastify/fastify/commit/664204f231020b5230778996bf149dfd1aa507a0,"  test('listen on socket', t => {
+
+    t.plan(3)
+
+    t.teardown(fastify.close.bind(fastify))
+
+    fastify.listen({ path: sockFile }, (err, address) => {
+
+      t.error(err)
+
+      t.strictSame(fastify.addresses(), [sockFile])
+
+      t.equal(address, sockFile)
+
+    })
+
+  test('listen on socket', t => {
+
+    t.plan(3)
+
+    t.teardown(fastify.close.bind(fastify))
+
+    fastify.listen({ path: sockFile }, (err, address) => {
+
+      t.error(err)
+
+      t.strictSame(fastify.addresses(), [sockFile])
+
+      t.equal(address, sockFile)
+
+    })
+
+test('listen without callback with (address)', t => {
+
+  t.teardown(fastify.close.bind(fastify))
+
+  fastify.listen({ port: 0 })
+
+    .then(address => {
+
+      t.equal(address, `http://${localhostForURL}:${fastify.server.address().port}`)
+
+    })
+
+test('double listen without callback rejects', t => {
+
+  t.teardown(fastify.close.bind(fastify))
+
+          t.ok(err)
+
+    .catch(err => t.error(err))
+
+test('double listen without callback with (address)', t => {
+
+  t.teardown(fastify.close.bind(fastify))
+
+      t.equal(address, `http://${localhostForURL}:${fastify.server.address().port}`)
+
+          t.ok(err)
+
+    .catch(err => t.error(err))
+","  test('listen on socket', async t => {
+
+    t.plan(2)
+
+    t.after(() => fastify.close())
+
+    await fastify.listen({ path: sockFile })
+
+    t.assert.deepStrictEqual(fastify.addresses(), [sockFile])
+
+    t.assert.strictEqual(fastify.server.address(), sockFile)
+
+  test('listen on socket', async t => {
+
+    t.plan(2)
+
+    t.after(() => fastify.close())
+
+    await fastify.listen({ path: sockFile })
+
+    t.assert.deepStrictEqual(fastify.addresses(), [sockFile])
+
+    t.assert.strictEqual(fastify.server.address(), sockFile)
+
+test('listen without callback with (address)', async t => {
+
+  t.after(() => fastify.close())
+
+  const address = await fastify.listen({ port: 0 })
+
+  t.assert.strictEqual(address, `http://${localhostForURL}:${fastify.server.address().port}`)
+
+test('double listen without callback rejects', (t, done) => {
+
+  t.after(() => fastify.close())
+
+          t.assert.ok(err)
+
+          done()
+
+    .catch(err => t.assert.ifError(err))
+
+test('double listen without callback with (address)', (t, done) => {
+
+  t.after(() => fastify.close())
+
+      t.assert.strictEqual(address, `http://${localhostForURL}:${fastify.server.address().port}`)
+
+          t.assert.ok(err)
+
+          done()
+
+    .catch(err => t.assert.ifError(err))
+"
+6cbcfa7d82aaf25c7e53804e2a024c531d15c4d0,Antonio Tripodi,test: migrated listen.4.test.js from tap to node:test (#6024),test/listen.4.test.js,https://github.com/fastify/fastify/commit/6cbcfa7d82aaf25c7e53804e2a024c531d15c4d0,"test('listen twice on the same port without callback rejects', t => {
+
+  t.teardown(fastify.close.bind(fastify))
+
+      const s2 = Fastify()
+
+      t.teardown(s2.close.bind(s2))
+
+      s2.listen({ port: fastify.server.address().port })
+
+          t.ok(err)
+
+    .catch(err => t.error(err))
+
+test('listen twice on the same port without callback rejects with (address)', t => {
+
+  t.teardown(fastify.close.bind(fastify))
+
+      const s2 = Fastify()
+
+      t.teardown(s2.close.bind(s2))
+
+      t.equal(address, `http://${localhostForURL}:${fastify.server.address().port}`)
+
+      s2.listen({ port: fastify.server.address().port })
+
+          t.ok(err)
+
+    .catch(err => t.error(err))
+
+  t.teardown(fastify.close.bind(fastify))
+
+      t.ok(err)
+
+test('listen logs the port as info', t => {
+
+  t.teardown(fastify.close.bind(fastify))
+
+  fastify.listen({ port: 0 })
+
+    .then(() => {
+
+      t.ok(/http:\/\//.test(msgs[0]))
+
+    })
+","test('listen twice on the same port without callback rejects', (t, done) => {
+
+  t.after(() => fastify.close())
+
+      const server2 = Fastify()
+
+      t.after(() => server2.close())
+
+      server2.listen({ port: fastify.server.address().port })
+
+          t.assert.ok(err)
+
+          done()
+
+    .catch(err => {
+
+      t.assert.ifError(err)
+
+    })
+
+test('listen twice on the same port without callback rejects with (address)', (t, done) => {
+
+  t.after(() => fastify.close())
+
+      const server2 = Fastify()
+
+      t.after(() => server2.close())
+
+      t.assert.strictEqual(address, `http://${localhostForURL}:${fastify.server.address().port}`)
+
+
+
+      server2.listen({ port: fastify.server.address().port })
+
+          t.assert.ok(err)
+
+          done()
+
+    .catch(err => {
+
+      t.assert.ifError(err)
+
+    })
+
+  t.after(() => fastify.close())
+
+      t.assert.ok(err)
+
+test('listen logs the port as info', async t => {
+
+  t.after(() => fastify.close())
+
+  await fastify.listen({ port: 0 })
+
+  t.assert.ok(/http:\/\//.test(msgs[0]))
+"

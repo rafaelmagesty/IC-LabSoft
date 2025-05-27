@@ -1,29 +1,78 @@
-commit_hash,author,message,file_path,commit_url,removed_lines,added_lines
-7590fc28a616e49817a904afcde3b76308389204,Jonathan GUILLOT,"Hot reload configuration (#48)
+commit_hash,author,message,file_path,commit_url,removed_chunk,added_chunk
+672240ad27a7bc8a00524914fa8c5b4abfdc66b4,Jonathan GUILLOT,"Fix promise returned by background script (#67)
 
-* Group configurations variables in a dedicated obect
+Simplify browser.runtime.onMessage.addListener() handler promise return
+value using an async function first. Then, correctly use reject() /
+throw to return an error.
+In the content script, now use .catch() method to retrieve error in a
+cleaner way.",background.js,https://github.com/gurumukhi/youtube-screenshot/commit/672240ad27a7bc8a00524914fa8c5b4abfdc66b4,"browser.runtime.onMessage.addListener(request => {
 
-* Add an async loadConfiguration() function
+  if (request.cmd === ""downloadFile"") {
 
-* Re-organize a bit background script
+    browser.downloads.download({
 
-- Use async / await
-- Add a common sendNotification() function
-- Use only one parameter version of browser.runtime.onMessage.addListener()
+      url: URL.createObjectURL(request.data),
 
-* Add hot configuration reload mechanism
+      filename: request.filename,
 
-Send message from options to content script to reload configuration once
-preferences saved. It avoids to reload the page to apply the new settings.
+      saveAs: request.saveAs,
 
-* Handle hardcoded shift+a shortcut
+      conflictAction: ""uniquify"",
 
-Also add a dedicated settings to enable or disable the shortcut.
+    })
 
-* Put debug mode as last option
+    .then(() => { return Promise.resolve({}); })
 
-* Allow click on label to set option
+    .catch((e) => { return Promise.resolve(e); });
 
-Just add missing id in input elements to do so.",background.js,https://github.com/gurumukhi/youtube-screenshot/commit/7590fc28a616e49817a904afcde3b76308389204,".then((data) => {
-.then(() => {","async function copyToClipboard(data) {
-async function copyToClipboard(data) {"
+  } else if (request.cmd === ""copyToClipboard"") {
+
+    copyToClipboard(request.data)
+
+      .then(() => { return Promise.resolve({}); })
+
+      .catch((e) => { return Promise.resolve(e); });
+
+  } else if (request.cmd === ""showProtectionError"") {
+
+    showNotification(""Cannot screenshot DRM-protected content."");
+
+    return Promise.resolve({});
+","browser.runtime.onMessage.addListener(async request => {
+
+  try {
+
+    if (request.cmd === ""downloadFile"") {
+
+      await browser.downloads.download({
+
+        url: URL.createObjectURL(request.data),
+
+        filename: request.filename,
+
+        saveAs: request.saveAs,
+
+        conflictAction: ""uniquify"",
+
+      });
+
+    } else if (request.cmd === ""copyToClipboard"") {
+
+      return copyToClipboard(request.data);
+
+    } else if (request.cmd === ""showProtectionError"") {
+
+      showNotification(""Cannot screenshot DRM-protected content."");
+
+    }
+
+
+
+    // OK
+
+    return {};
+
+  } catch(e) {
+
+    throw e;
+"

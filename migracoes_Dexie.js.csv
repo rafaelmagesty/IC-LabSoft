@@ -1,45 +1,680 @@
-commit_hash,author,message,file_path,commit_url,removed_lines,added_lines
+commit_hash,author,message,file_path,commit_url,removed_chunk,added_chunk
 effd7f4f23f70679febab995b126a556882362fc,David Fahlander,"Preparing for ES6-ify plugins - ES6-ified the unit tests.
 
 * Rewrote build- and watch scripts to be more generic for use from plugins.
-* Using babel-node to execute npm run build.",build\build-utils.js,https://github.com/dexie/Dexie.js/commit/effd7f4f23f70679febab995b126a556882362fc,"return new Promise((resolve, reject) => {
-return readFile(source).then(content => new Promise((resolve, reject) =>
-)).then(gzipped => writeFile(destination, gzipped));
-return new Promise((resolve, reject) =>
-return new Promise((resolve, reject) =>
-.then(content => replace(content, replacements))
-.then(replacedContent => writeFile(filename, replacedContent));
-.then(onTimeout);
-.then(() =>rollup.rollup({ entry: ""tmp/Dexie.js"" }))
-.then(bundle =>bundle.write({
-.then(() => replaceInFile(""dist/dexie.js"", varsToReplace))
-.then(() => replaceInFile(""dist/dexie.es6.js"", varsToReplace));
-.then(() => {","export async function build (optionsList, replacements) {
-let files = flatten(await Promise.all(options.dirs.map(dir => readdir(dir))));
-let files = flatten(await Promise.all(options.dirs.map(dir => readdir(dir))));
-await makeBundle(bundleInfo, replacements);
+* Using babel-node to execute npm run build.",build/build-utils.js,https://github.com/dexie/Dexie.js/commit/effd7f4f23f70679febab995b126a556882362fc,"﻿var fs = require('fs');
+
+var rollup = require('rollup');
+
+var uglify = require(""uglify-js"");
+
+var babel = require('babel-core');
+
+var zlib = require('zlib');
+
+function listSourceFiles() {
+
+    return new Promise((resolve, reject) => {
+
+        fs.readdir('src/', (err, files) => {
+
+            if (err)
+
+                reject(err);
+
+            else
+
+                resolve(files.filter(f=>f.toLowerCase().endsWith('.js')));
+
+        });
+
+function gzip(source, destination) {
+
+    return readFile(source).then(content => new Promise((resolve, reject) =>
+
+        zlib.gzip(content, (err, data) => err ? reject(err) : resolve(data))
+
+    )).then(gzipped => writeFile(destination, gzipped));
+
+function babelTransform(source, destination) {
+
+            //presets: [""es2015""],
+","﻿const promisifyAll = require('es6-promisify-all');
+
+const fs = promisifyAll(require('fs'));
+
+const rollup = require('rollup');
+
+const uglify = require(""uglify-js"");
+
+const babel = require('babel-core');
+
+const zlib = promisifyAll(require('zlib'));
+
+const watch = require('node-watch');
+
+const path = require('path');
+
+export async function build (optionsList, replacements) {
+
+    // Create tmp directory
+
+    await mkdir(""tmp/"");
+
+    // Create sub dirs to tmp/
+
+    await Promise.all(
+
+        flatten(
+
+            optionsList.map(options =>
+
+                options.dirs.map(dir =>
+
+                    mkdir(""tmp/"" + dir)))
+
+        )
+
+    );
+
+
+
+    for (let options of optionsList) {
+
+        // List all source files
+
+        let files = flatten(await Promise.all(options.dirs.map(dir => readdir(dir))));
+
+        // Build them all
+
+        await rebuildFiles(options, replacements, files);
+
+    }
+
+}
+
+
+
+export async function rebuildFiles(options, replacements, files) {
+
+    // File exclusions
+
+    let exclusions = flatten(flatten(
+
+        (options.excludes || []).concat( // configured excludes...
+
+            Object.keys(options.bundles).map(
+
+                key => options.bundles[key]) // Output files (like bundle.js)
+
+        )).map(filepath=>[
+
+                filepath,
+
+                `./${filepath}`  // Be insensitive to whether file is referenced with ./ or not.
+
+        ])
+
+    );
+
+
+
+    // Run babel on each js file
+
+    /*await Promise.all(files
+
+        .filter(file => ext(file) === "".js"")
+
+        .filter(file => exclusions.indexOf(file) === -1)
+
+        .map (file => babelTransform(file, ""tmp/"" + file)));*/
+
+    files = files
+
+        .filter(file => ext(file) === "".js"")
+
+        .filter(file => exclusions.map(x=>x.replace(/\\/g, '/'))
+
+            .indexOf(file.replace(/\\/g, '/')) === -1); // Insensitive to path separator style (WIN/UX)
+
+
+
+    if (files.length === 0)
+
+        return false;
+
+
+
+    for (let file of files) {
+
+        console.log(`Babel '${file}'`);
+
+        await babelTransform(file, `tmp/${file}`);
+
+    }
+
+
+
+    // Define bundles config
+
+    let bundles = Object.keys(options.bundles).map(key => {
+
+        let entry = key,
+
+            targets = options.bundles[key];
+
+
+
+        return {
+
+            entry: entry,
+
+            rollups: targets.filter(f=>ext(f) === '.js' || ext(f) === '.es6.js').map(f => ({
+
+                entry: `tmp/${entry}`,
+
+                rollupCfg: {
+
+                    format: ext(f) === '.js' ? 'umd' : 'es6',
+
+                    dest: f,
+
+                    sourceMap: targets.indexOf(f + '.map') !== -1,
+
+                    moduleName: getUmdModuleName(entry)
+
+                },
+
+                file: f,
+
+                map: targets.filter(mapFile => mapFile === f + '.map')[0],
+
+                min: targets.filter(minFile => minFile === minName(f)).map(minFile => ({
+
+                    file: minFile,
+
+                    map: targets.filter(file => file === minFile + '.map')[0],
+
+                    gz: targets.filter(file => file === minFile + '.gz')[0]
+
+                }))[0]
+
+            })),
+
+            dts: targets.filter(f=>ext(f) === '.d.ts')[0],
+
+            targets: targets
+
+        };
+
+    });
+
+
+
+    // Execute bundling, minification, gzipping and copying of typings files
+
+    //await Promise.all(bundles.map(bundleInfo => makeBundle(bundleInfo, replacements)));
+
+    for (let bundleInfo of bundles) {
+
+        await makeBundle(bundleInfo, replacements);
+
+    }
+
+
+
+    return true;
+
+}
+
+
+
 async function makeBundle (bundleInfo, replacements) {
+
+
+
+    // Rollup (if anything to rollup)
+
+    //await Promise.all(bundleInfo.rollups.map(rollupInfo => rollupAndMinify(rollupInfo)));
+
+    for (let rollupInfo of bundleInfo.rollups) {
+
+        await rollupAndMinify(rollupInfo);
+
+    }
+
+
+
+    // Typings (if any .d.ts file to copy)
+
+    if (bundleInfo.dts) {
+
+        await copyFile (bundleInfo.entry, bundleInfo.dts);
+
+    }
+
+
+
+    // Replace version, date etc in targets
+
+    if (replacements) {
+
+        await Promise.all(bundleInfo.targets
+
+            .filter (file => file.toLowerCase().endsWith('.js') || file.toLowerCase().endsWith('.ts'))
+
+            .map(file => replaceInFile(file, replacements)));
+
+    }
+
+}
+
+
+
 async function rollupAndMinify(rollupInfo) {
-async function rollupAndMinify(rollupInfo) {
-await writeFile(rollupInfo.min.file, result.code);
-watch(options.dirs, throttle(50, async function (calls) {
-watch(options.dirs, throttle(50, async function (calls) {
-let anythingRebuilt = await rebuildFiles(options, {
+
+    // Call rollup to generate bundle in memory
+
+    console.log (`Rollup --> ${rollupInfo.file}`);
+
+    let bundle = await rollup.rollup({
+
+        entry: rollupInfo.entry,
+
+        onwarn: msg =>
+
+            !/Treating .* as external dependency/i.test(msg) &&
+
+            console.warn(msg)
+
+    });
+
+
+
+    // Write bundle to disk
+
+    await bundle.write(rollupInfo.rollupCfg);
+
+
+
+    // Minify
+
+    if (rollupInfo.min) {
+
+        console.log (`Minify --> ${rollupInfo.min.file}`);
+
+        let result = uglify.minify(rollupInfo.file, rollupInfo.map && rollupInfo.min.map  ? {
+
+            inSourceMap: rollupInfo.map,
+
+            outSourceMap: rollupInfo.min.map
+
+        } : {});
+
+
+
+        // min.js
+
+        await writeFile(rollupInfo.min.file, result.code);
+
+
+
+        // min.js.map
+
+        if (rollupInfo.min.map)
+
+            await writeFile(rollupInfo.min.map, result.map);
+
+
+
+        // min.js.gz
+
+        if (rollupInfo.min.gz)
+
+            await gzip(rollupInfo.min.file, rollupInfo.min.gz);
+
+
+
+    }
+
+}
+
+
+
+
+
+export async function buildAndWatch (optionsList, version) {
+
+    await build(optionsList, {
+
+        ""{version}"": version,
+
+        ""{date}"": new Date().toDateString()
+
+
+
+    for (let o of optionsList) {
+
+        let options = o;
+
+        watch(options.dirs, throttle(50, async function (calls) {
+
+            try {
+
+                var filenames = calls.map(args => args[0])
+
+                    .filter(filename => filename)
+
+                    .filter(filename => filename.toLowerCase().endsWith('.js') || filename.toLowerCase().endsWith('.ts'))
+
+                    .reduce((p, c) =>(p[c] = true, p), {});
+
+
+
+                var changedFiles = Object.keys(filenames);
+
+                if (changedFiles.length > 0) {
+
+                    let anythingRebuilt = await rebuildFiles(options, {
+
+                        ""{version}"": version,
+
+                        ""{date}"": new Date().toDateString()
+
+                    }, changedFiles);
+
+
+
+                    if (anythingRebuilt)
+
+                        console.log(""Done rebuilding all bundles"");
+
+                }
+
+            } catch (err) {
+
+                console.error(""Failed rebuilding: "" + err.stack);
+
+            }
+
+        }));
+
+    }
+
 export async function gzip(source, destination) {
-export async function gzip(source, destination) {"
-68b6ee3dc3bab5cb6d376c094074e9db53ddc842,David Fahlander,"Works on Chrome 55 beta now!
-Must remove debugger, console.log and make sure eslint works though. Also need to cleanup the code.",test\tests-asyncawait.js,https://github.com/dexie/Dexie.js/commit/68b6ee3dc3bab5cb6d376c094074e9db53ddc842,return NativePromise.resolve().then(()=> {,"await Promise.all([subFunc(11), subFunc(12), subFunc(13)]);"
-5bf23af41c25a31599a0016309b118c9b062e7cf,Christopher Hunt,"Upgrade QUnit (#384)
 
-* Update QUnit. Fixes #381.
+    let content = await readFile(source);
 
-Also changed the paths in karma.conf and run-unit-tests to point to the
-version which will be downloaded via npm.
+    let gzipped = await zlib.gzipAsync(content);
 
-* Upgrade tests to avoid hanging on asyncawait.
+    await fs.writeFileAsync(destination, gzipped);
 
-Also added the options that were previously in qunit to
-QUnit.config.urlConfig. This should address the comments in #381.",test\dexie-unittest-utils.js,https://github.com/dexie/Dexie.js/commit/5bf23af41c25a31599a0016309b118c9b062e7cf,"asyncTest(name, num, ()=>Promise.resolve().then(asyncFunction)
-.then(start));","let done = assert.async();
-let done = assert.async();"
-92542c7e420a126e1a244d2c59482b1fe814dee4,David Fahlander,Bugfix: some YJS updates were never sent to server,addons\dexie-cloud\src\yjs\createYClientUpdateObservable.ts,https://github.com/dexie/Dexie.js/commit/92542c7e420a126e1a244d2c59482b1fe814dee4,.then((syncer) => syncer?.unsentFrom || 1);,liveQuery(async () => {
+export function babelTransform(source, destination) {
+
+            babelrc: false,
+
+            presets: [],
+"
+f0781ba20eb6daf5ba666f9663b82d94a0c5e58b,dfahlander,"Dexie cloud sync flow complete (dry).
+Authentication flow not complete.
+Doesn't compile.",addons/dexie-cloud/src/dexie-cloud-client.ts,https://github.com/dexie/Dexie.js/commit/f0781ba20eb6daf5ba666f9663b82d94a0c5e58b,"import { createIdGenerationMiddleware } from ""./middlewares/createIdGenerationMiddleware"";
+
+import { ANONYMOUS_USER } from ""./authentication/ANONYMOUS_USER"";
+
+import { OTPTokenRequest, TokenFinalResponse, TokenOtpSentResponse, TokenResponse } from 'dexie-cloud-common';
+
+import { LoginState } from './types/LoginState';
+
+  const currentUserEmitter = new BehaviorSubject(ANONYMOUS_USER);
+
+      currentUserSubscription = liveQuery(() =>
+
+        db.$logins
+
+          .toArray()
+
+          .then((logins) => logins.find((l) => l.isLoggedIn) || ANONYMOUS_USER)
+
+      ).subscribe(currentUserEmitter);
+
+  
+
+  dexie.on(""close"", () => {
+
+    currentUserEmitter.next(ANONYMOUS_USER);
+
+    options: { databaseUrl: """" },
+
+    schema: {},
+
+      return currentUserEmitter.value.userId || ANONYMOUS_USER.userId!;
+
+    syncState: new BehaviorSubject<SyncState>({phase: ""initial""}),
+
+    loginState: new BehaviorSubject<LoginState>({type: ""silent""}), // fixthis! Or remove this observable?
+","import {
+
+  createIdGenerationMiddleware,
+
+  generateTablePrefix,
+
+} from ""./middlewares/createIdGenerationMiddleware"";
+
+import { UNAUTHORIZED_USER } from ""./authentication/UNAUTHORIZED_USER"";
+
+import {
+
+  OTPTokenRequest,
+
+  TokenFinalResponse,
+
+  TokenOtpSentResponse,
+
+  TokenResponse,
+
+} from ""dexie-cloud-common"";
+
+import { LoginState } from ""./types/LoginState"";
+
+import { verifySchema } from ""./to_remove_verifySchema"";
+
+import { throwVersionIncrementNeeded } from ""./helpers/throwVersionIncrementNeeded"";
+
+import { performInitialSync } from ""./performInitialSync"";
+
+import { startSyncWorker } from ""./sync/startSyncWorker"";
+
+import { dexieCloudGlobalDB } from ""./dexieCloudGlobalDB"";
+
+import { dbOnClosed } from ""./helpers/dbOnClosed"";
+
+import { IS_SERVICE_WORKER } from ""./helpers/IS_SERVICE_WORKER"";
+
+import { authenticate } from ""./authentication/authenticate"";
+
+  const currentUserEmitter = new BehaviorSubject(UNAUTHORIZED_USER);
+
+  let syncWorker: { stop: () => void } | null = null;
+
+      //verifyConfig(db.cloud.options); Not needed (yet at least!)
+
+      // Verify the user has allowed version increment.
+
+      if (!db.tables.every((table) => table.core)) {
+
+        throwVersionIncrementNeeded();
+
+      }
+
+
+
+      const initiallySynced = await db.transaction(""rw"", db.$syncState, async () => {
+
+        const { options, schema } = db.cloud;
+
+        const [
+
+          persistedOptions,
+
+          persistedSchema,
+
+          persistedSyncState,
+
+        ] = await Promise.all([
+
+          db.getOptions(),
+
+          db.getSchema(),
+
+          db.getPersistedSyncState(),
+
+        ]);
+
+        if (!options) {
+
+          // Options not specified programatically (use case for SW!)
+
+          // Take persisted options:
+
+          db.cloud.options = persistedOptions || null;
+
+        } else if (
+
+          !persistedOptions ||
+
+          JSON.stringify(persistedOptions) !== JSON.stringify(options)
+
+        ) {
+
+          // Update persisted options:
+
+          await db.$syncState.put(options, ""options"");
+
+        }
+
+        if (!schema) {
+
+          // Database opened dynamically (use case for SW!)
+
+          // Take persisted schema:
+
+          db.cloud.schema = persistedSchema || null;
+
+        } else if (
+
+          !persistedSchema ||
+
+          JSON.stringify(persistedSchema) !== JSON.stringify(schema)
+
+        ) {
+
+          // Update persisted schema
+
+          await db.$syncState.put(schema, ""schema"");
+
+        }
+
+        return persistedSyncState?.initiallySynced;
+
+      });
+
+      //await verifySchema(db); // TODO: Can we remove this?!
+
+
+
+      if (db.cloud.options?.databaseUrl && !initiallySynced) {
+
+        await performInitialSync(db);
+
+      }
+
+
+
+      // HERE: If requireAuth, do athentication now.
+
+      if (db.cloud.options?.requireAuth) {
+
+        // TODO: Do authentication here. BUT! Wait with this part for now!
+
+        // First, make sure all other sync flows are complete!
+
+        //await authenticate(db.cloud.options.databaseUrl, db.cloud.currentUser.value, )
+
+      }
+
+
+
+      if (!dexie.dynamicallyOpened() && !IS_SERVICE_WORKER) {
+
+        // Communicate to serviceWorker to take care of sync if options.serviceWorker is set.
+
+        await dexieCloudGlobalDB.transaction(
+
+          ""rw"",
+
+          dexieCloudGlobalDB.swManagedDBs,
+
+          async () => {
+
+            if (db.cloud.options?.usingServiceWorker) {
+
+              if (!(await dexieCloudGlobalDB.swManagedDBs.get(dexie.name))) {
+
+                // Communicate to service worker that it has a new DB to manage:
+
+                await dexieCloudGlobalDB.swManagedDBs.add({ db: dexie.name });
+
+              }
+
+            } else {
+
+              if (await dexieCloudGlobalDB.swManagedDBs.get(dexie.name)) {
+
+                // Communicate to service worker that it no longer need to manage this DB:
+
+                await dexieCloudGlobalDB.swManagedDBs.delete(dexie.name);
+
+              }
+
+            }
+
+          }
+
+        );
+
+      }
+
+
+
+      if (syncWorker) syncWorker.stop();
+
+      syncWorker = await startSyncWorker(db); // Will be a noop if options.serviceWorker and we're not the SW.
+
+      currentUserSubscription = liveQuery(() => db.getCurrentUser()).subscribe(
+
+        currentUserEmitter
+
+      );
+
+
+
+  dbOnClosed(dexie, () => {
+
+    syncWorker && syncWorker.stop();
+
+    syncWorker = null;
+
+    currentUserEmitter.next(UNAUTHORIZED_USER);
+
+    options: null,
+
+    schema: null,
+
+    serverState: null,
+
+      return currentUserEmitter.value.userId || UNAUTHORIZED_USER.userId!;
+
+    syncState: new BehaviorSubject<SyncState>({ phase: ""initial"" }),
+
+    loginState: new BehaviorSubject<LoginState>({ type: ""silent"" }), // fixthis! Or remove this observable?
+"

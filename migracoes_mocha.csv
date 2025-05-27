@@ -1,17 +1,948 @@
-commit_hash,author,message,file_path,commit_url,removed_lines,added_lines
+commit_hash,author,message,file_path,commit_url,removed_chunk,added_chunk
+12db9dbc9dd3b0ec31c182d0e41a6ec615735401,Christopher Hiller,"implementation of global setup/teardown; closes #4308 (#4360)
+
+* implementation of global setup/teardown; closes #4308
+
+* move deprecate() and warn() from utils into errors module
+
+This avoids a circular dependency which arises when Mocha is bundled.
+
+These are private APIs.",test/integration/options/watch.spec.js,https://github.com/mochajs/mocha/commit/12db9dbc9dd3b0ec31c182d0e41a6ec615735401,"    it('respects --fgrep on re-runs', function() {
+
+      return runMochaWatch([testFile, '--fgrep', 'match'], tempDir, () => {
+
+        touchFile(testFile);
+
+      }).then(results => {
+
+        expect(results, 'to have length', 2);
+
+        expect(results[0].tests, 'to have length', 2);
+
+        expect(results[1].tests, 'to have length', 2);
+
+      });
+","    it('respects --fgrep on re-runs', async function() {
+
+      return expect(
+
+        runMochaWatchJSONAsync([testFile, '--fgrep', 'match'], tempDir, () => {
+
+          touchFile(testFile);
+
+        }),
+
+        'when fulfilled',
+
+        'to satisfy',
+
+        {
+
+          length: 2,
+
+          0: {tests: expect.it('to have length', 2)},
+
+          1: {tests: expect.it('to have length', 2)}
+
+        }
+
+      );
+"
 6ceca82fdfd51341796caa523d696fa7621639cc,Christopher Hiller,"make guarantees about orphaned processes
 
 - updates workerpool to v6.0.2, which guarantees child processes exit before `Pool#terminate()` resolves
-- cleanup `test/integration/options/parallel.spec.js`",test\integration\options\parallel.spec.js,https://github.com/mochajs/mocha/commit/6ceca82fdfd51341796caa523d696fa7621639cc,"]).then(function(expected) {
-).then(function(actual) {
-).then(function(expected) {
-).then(function(result) {
-return runMochaAsync('options/parallel/bail', ['--parallel']).then(
-return compareReporters.call(this, 'json').then(function(result) {
-return compareReporters.call(this, 'xunit').then(function(result) {","async function compareReporters(reporter) {
-async function compareReporters(reporter) {
-it('should fail gracefully', async function() {
-it('should skip some tests', async function() {
-it('should skip some tests', async function() {
-it('should have the same output as when run with --no-parallel', async function() {
-it('should have the same output as when run with --no-parallel', async function() {"
+- cleanup `test/integration/options/parallel.spec.js`",test/integration/options/parallel.spec.js,https://github.com/mochajs/mocha/commit/6ceca82fdfd51341796caa523d696fa7621639cc,"    it('should have the same result as with --no-parallel', function() {
+
+      return runMochaAsync(
+
+        path.join('options', 'parallel', 'test-*.fixture.js'),
+
+        ['--no-parallel']
+
+      ).then(function(expected) {
+
+        return expect(
+
+          runMochaAsync(path.join('options', 'parallel', 'test-*.fixture.js'), [
+
+            '--parallel'
+
+          ]),
+
+          'to be fulfilled with value satisfying',
+
+          {
+
+            passing: expected.passing,
+
+            failing: expected.failing,
+
+            pending: expected.pending,
+
+            code: expected.code
+
+          }
+
+        );
+
+      });
+
+    var esmArgs =
+","    it('should have the same result as with --no-parallel', async function() {
+
+      const expected = await runMochaAsync('options/parallel/test-*', [
+
+        '--no-parallel'
+
+      ]);
+
+      return expect(
+
+        runMochaAsync('options/parallel/test-*', ['--parallel']),
+
+        'to be fulfilled with value satisfying',
+
+        {
+
+          passing: expected.passing,
+
+          failing: expected.failing,
+
+          pending: expected.pending,
+
+          code: expected.code
+
+        }
+
+      );
+
+    const esmArgs =
+"
+6ceca82fdfd51341796caa523d696fa7621639cc,Christopher Hiller,"make guarantees about orphaned processes
+
+- updates workerpool to v6.0.2, which guarantees child processes exit before `Pool#terminate()` resolves
+- cleanup `test/integration/options/parallel.spec.js`",test/integration/options/parallel.spec.js,https://github.com/mochajs/mocha/commit/6ceca82fdfd51341796caa523d696fa7621639cc,"    it('should have the same result as with --no-parallel', function() {
+
+      var glob = path.join(__dirname, '..', 'fixtures', 'esm', '*.fixture.mjs');
+
+      return invokeMochaAsync(esmArgs.concat('--no-parallel', glob))[1].then(
+
+        function(expected) {
+
+          expected = getSummary(expected);
+
+          return invokeMochaAsync(esmArgs.concat('--parallel', glob))[1].then(
+
+            function(actual) {
+
+              actual = getSummary(actual);
+
+              expect(actual, 'to satisfy', {
+
+                pending: expected.pending,
+
+                passing: expected.passing,
+
+                failing: expected.failing
+
+              });
+
+            }
+
+          );
+
+        }
+
+    it('should retry tests appropriately', function() {
+
+        runMochaAsync(
+
+          path.join('options', 'parallel', 'retries-*.fixture.js'),
+
+          ['--parallel']
+
+        ),
+
+        'to have failed'
+
+      )
+
+        .and('when fulfilled', 'to have passed test count', 1)
+
+        .and('when fulfilled', 'to have pending test count', 0)
+
+        .and('when fulfilled', 'to have failed test count', 1)
+
+        .and('when fulfilled', 'to contain output', /count: 3/);
+
+    it('should bubble up an exception', function() {
+
+            require.resolve('../fixtures/options/parallel/uncaught.fixture.js'),
+
+        'to contain output',
+
+        /Error: existential isolation/i
+
+      ).and('when fulfilled', 'to have exit code', 1);
+
+    it('should error out', function() {
+
+            path.join('options', 'parallel', 'test-a.fixture.js'),
+","    it('should have the same result as with --no-parallel', async function() {
+
+      const expected = getSummary(
+
+        await invokeMochaAsync([
+
+          ...esmArgs,
+
+          '--no-parallel',
+
+          resolveFixturePath('esm/*.fixture.mjs')
+
+        ])[1]
+
+      );
+
+
+
+      const actual = getSummary(
+
+        await invokeMochaAsync([
+
+          ...esmArgs,
+
+          '--parallel',
+
+          resolveFixturePath('esm/*.fixture.mjs')
+
+        ])[1]
+
+
+
+      return expect(actual, 'to satisfy', {
+
+        pending: expected.pending,
+
+        passing: expected.passing,
+
+        failing: expected.failing
+
+      });
+
+    it('should retry tests appropriately', async function() {
+
+        runMochaAsync('options/parallel/retries-*', ['--parallel']),
+
+        'to satisfy',
+
+        expect
+
+          .it('to have failed')
+
+          .and('to have passed test count', 1)
+
+          .and('to have pending test count', 0)
+
+          .and('to have failed test count', 1)
+
+          .and('to contain output', /count: 3/)
+
+      );
+
+    it('should bubble up an exception', async function() {
+
+            resolveFixturePath('options/parallel/uncaught'),
+
+        'to satisfy',
+
+        expect
+
+          .it('to contain output', /Error: existential isolation/i)
+
+          .and('to have exit code', 1)
+
+      );
+
+    it('should error out', async function() {
+
+            resolveFixturePath('options/parallel/test-a'),
+"
+6ceca82fdfd51341796caa523d696fa7621639cc,Christopher Hiller,"make guarantees about orphaned processes
+
+- updates workerpool to v6.0.2, which guarantees child processes exit before `Pool#terminate()` resolves
+- cleanup `test/integration/options/parallel.spec.js`",test/integration/options/parallel.spec.js,https://github.com/mochajs/mocha/commit/6ceca82fdfd51341796caa523d696fa7621639cc,"    it('should skip some tests', function() {
+
+      return runMochaAsync(
+
+        path.join('options', 'parallel', 'test-*.fixture.js'),
+
+        ['--parallel', '--bail']
+
+      ).then(function(result) {
+
+        // we don't know _exactly_ how many tests will be skipped here
+
+        // due to the --bail, but the number of tests completed should be
+
+        // less than the total, which is 5.
+
+        return expect(
+
+          result.passing + result.pending + result.failing,
+
+          'to be less than',
+
+          5
+
+        );
+
+      });
+
+    it('should fail', function() {
+
+        runMochaAsync(path.join('options', 'parallel', 'test-*.fixture.js'), [
+
+          '--parallel',
+
+          '--bail'
+
+        ]),
+","    it('should skip some tests', async function() {
+
+      const result = await runMochaAsync('options/parallel/test-*', [
+
+        '--parallel',
+
+        '--bail'
+
+      ]);
+
+      // we don't know _exactly_ how many tests will be skipped here
+
+      // due to the --bail, but the number of tests completed should be
+
+      // less than the total, which is 5.
+
+      return expect(
+
+        result.passing + result.pending + result.failing,
+
+        'to be less than',
+
+        5
+
+      );
+
+    it('should fail', async function() {
+
+        runMochaAsync('options/parallel/test-*', ['--parallel', '--bail']),
+"
+6ceca82fdfd51341796caa523d696fa7621639cc,Christopher Hiller,"make guarantees about orphaned processes
+
+- updates workerpool to v6.0.2, which guarantees child processes exit before `Pool#terminate()` resolves
+- cleanup `test/integration/options/parallel.spec.js`",test/integration/options/parallel.spec.js,https://github.com/mochajs/mocha/commit/6ceca82fdfd51341796caa523d696fa7621639cc,"    it('should skip some tests', function() {
+
+      return runMochaAsync('options/parallel/bail', ['--parallel']).then(
+
+        function(result) {
+
+          return expect(
+
+            result.passing + result.pending + result.failing,
+
+            'to be less than',
+
+            2
+
+          );
+
+        }
+
+    it('should fail', function() {
+","    it('should skip some tests', async function() {
+
+      const result = await runMochaAsync('options/parallel/bail', [
+
+        '--parallel'
+
+      ]);
+
+      return expect(
+
+        result.passing + result.pending + result.failing,
+
+        'to be less than',
+
+        2
+
+    it('should fail', async function() {
+"
+6ceca82fdfd51341796caa523d696fa7621639cc,Christopher Hiller,"make guarantees about orphaned processes
+
+- updates workerpool to v6.0.2, which guarantees child processes exit before `Pool#terminate()` resolves
+- cleanup `test/integration/options/parallel.spec.js`",test/integration/options/parallel.spec.js,https://github.com/mochajs/mocha/commit/6ceca82fdfd51341796caa523d696fa7621639cc,"    it('should be equivalent to running in serial', function() {
+
+      return runMochaAsync(
+
+        path.join('options', 'parallel', 'test-*.fixture.js'),
+
+        ['--no-parallel', '--grep=""suite d""']
+
+      ).then(function(expected) {
+
+        return expect(
+
+          runMochaAsync(path.join('options', 'parallel', 'test-*.fixture.js'), [
+
+            '--parallel',
+
+            '--grep=""suite d""'
+
+          ]),
+
+          'to be fulfilled with value satisfying',
+
+          {
+
+            passing: expected.passing,
+
+            failing: expected.failing,
+
+            pending: expected.pending,
+
+            code: expected.code
+
+          }
+
+        );
+
+      });
+
+    var DENY = ['progress', 'base', 'html', 'markdown', 'json-stream'];
+
+      .filter(function(name) {
+
+        return /^[a-z]/.test(name) && DENY.indexOf(name) === -1;
+
+      })
+
+      .forEach(function(reporter) {
+
+        describe(
+
+          'when multiple test files run with --reporter=' + reporter,
+
+          function() {
+
+            it('should have the same result as when run with --no-parallel', function() {
+
+              // note that the output may not be in the same order, as running file
+
+              // order is non-deterministic in parallel mode
+
+              return runMochaAsync(
+
+                path.join('options', 'parallel', 'test-*.fixture.js'),
+
+                ['--reporter', reporter, '--no-parallel']
+
+              ).then(function(expected) {
+
+                return expect(
+
+                  runMochaAsync(
+
+                    path.join('options', 'parallel', 'test-*.fixture.js'),
+
+                    ['--reporter', reporter, '--parallel']
+
+                  ),
+
+                  'to be fulfilled with value satisfying',
+
+                  {
+
+                    passing: expected.passing,
+
+                    failing: expected.failing,
+
+                    pending: expected.pending,
+
+                    code: expected.code
+
+                  }
+
+                );
+
+              });
+
+            });
+
+          }
+
+        );
+
+  });
+
+  describe('when a single test file is run with --reporter=dot', function() {
+
+    it('should have the same output as when run with --no-parallel', function() {
+
+      return runGenericReporterTest.call(this, 'dot');
+
+  });
+
+  describe('when a single test file is run with --reporter=doc', function() {
+
+    it('should have the same output as when run with --no-parallel', function() {
+
+      return runGenericReporterTest.call(this, 'doc');
+
+  });
+
+  describe('when a single test file is run with --reporter=tap', function() {
+
+    it('should have the same output as when run with --no-parallel', function() {
+
+      return runGenericReporterTest.call(this, 'tap');
+
+  });
+
+  describe('when a single test file is run with --reporter=list', function() {
+
+    it('should have the same output as when run with --no-parallel', function() {
+
+      return runGenericReporterTest.call(this, 'list');
+
+  });
+
+  describe('when a single test file is run with --reporter=min', function() {
+
+    it('should have the same output as when run with --no-parallel', function() {
+
+      return runGenericReporterTest.call(this, 'min');
+
+  });
+
+  describe('when a single test file is run with --reporter=spec', function() {
+
+    it('should have the same output as when run with --no-parallel', function() {
+
+      return runGenericReporterTest.call(this, 'spec');
+
+  });
+
+  describe('when a single test file is run with --reporter=nyan', function() {
+
+    it('should have the same output as when run with --no-parallel', function() {
+
+      return runGenericReporterTest.call(this, 'nyan');
+
+  });
+
+  describe('when a single test file is run with --reporter=landing', function() {
+
+    it('should have the same output as when run with --no-parallel', function() {
+
+      return runGenericReporterTest.call(this, 'landing');
+
+  });
+
+  describe('when a single test file is run with --reporter=progress', function() {
+
+    it('should fail due to incompatibility', function() {
+
+      return expect(
+
+        invokeMochaAsync(
+
+          [
+
+            require.resolve('../fixtures/options/parallel/test-a.fixture.js'),
+
+            '--reporter=progress',
+
+            '--parallel'
+
+          ],
+
+          'pipe'
+
+        )[1],
+
+        'when fulfilled',
+
+        'to have failed'
+
+      ).and('when fulfilled', 'to contain output', /mutually exclusive/);
+
+  });
+
+  describe('when a single test file is run with --reporter=markdown', function() {
+
+    it('should fail due to incompatibility', function() {
+
+      return expect(
+
+        invokeMochaAsync(
+
+          [
+
+            require.resolve('../fixtures/options/parallel/test-a.fixture.js'),
+
+            '--reporter=markdown',
+
+            '--parallel'
+
+          ],
+
+          'pipe'
+
+        )[1],
+
+        'when fulfilled',
+
+        'to have failed'
+
+      ).and('when fulfilled', 'to contain output', /mutually exclusive/);
+
+  });
+
+  describe('when a single test file is run with --reporter=json-stream', function() {
+
+    it('should fail due to incompatibility', function() {
+
+      return expect(
+
+        invokeMochaAsync(
+
+          [
+
+            require.resolve('../fixtures/options/parallel/test-a.fixture.js'),
+
+            '--reporter=json-stream',
+
+            '--parallel'
+
+          ],
+
+          'pipe'
+
+        )[1],
+
+        'when fulfilled',
+
+        'to have failed'
+
+      ).and('when fulfilled', 'to contain output', /mutually exclusive/);
+
+  });
+
+  describe('when a single test file is run with --reporter=json', function() {
+
+    it('should have the same output as when run with --no-parallel', function() {
+
+      // this one has some timings/durations that we can safely ignore
+
+      return compareReporters.call(this, 'json').then(function(result) {
+
+        var expected = result.shift();
+
+        var actual = result.shift();
+","    it('should be equivalent to running in serial', async function() {
+
+      const expected = await runMochaAsync('options/parallel/test-*', [
+
+        '--no-parallel',
+
+        '--grep=""suite d""'
+
+      ]);
+
+      return expect(
+
+        runMochaAsync('options/parallel/test-*', [
+
+          '--parallel',
+
+          '--grep=""suite d""'
+
+        ]),
+
+        'to be fulfilled with value satisfying',
+
+        {
+
+          passing: expected.passing,
+
+          failing: expected.failing,
+
+          pending: expected.pending,
+
+          code: expected.code
+
+        }
+
+      );
+
+    const DENY = ['progress', 'base', 'html', 'markdown', 'json-stream'];
+
+      .filter(name => /^[a-z]/.test(name) && DENY.indexOf(name) === -1)
+
+      .forEach(reporter => {
+
+        describe(`when multiple test files run with --reporter=${reporter}`, function() {
+
+          it('should have the same result as when run with --no-parallel', async function() {
+
+            // note that the output may not be in the same order, as running file
+
+            // order is non-deterministic in parallel mode
+
+            const expected = await runMochaAsync('options/parallel/test-*', [
+
+              '--reporter',
+
+              reporter,
+
+              '--no-parallel'
+
+            ]);
+
+            return expect(
+
+              runMochaAsync('options/parallel/test-*', [
+
+                '--reporter',
+
+                reporter,
+
+                '--parallel'
+
+              ]),
+
+              'to be fulfilled with value satisfying',
+
+              {
+
+                passing: expected.passing,
+
+                failing: expected.failing,
+
+                pending: expected.pending,
+
+                code: expected.code
+
+              }
+
+            );
+
+          });
+
+        });
+
+    describe('when a single test file is run with --reporter=dot', function() {
+
+      it('should have the same output as when run with --no-parallel', async function() {
+
+        return assertReporterOutputEquality.call(this, 'dot');
+
+      });
+
+    describe('when a single test file is run with --reporter=doc', function() {
+
+      it('should have the same output as when run with --no-parallel', async function() {
+
+        return assertReporterOutputEquality.call(this, 'doc');
+
+      });
+
+    describe('when a single test file is run with --reporter=tap', function() {
+
+      it('should have the same output as when run with --no-parallel', async function() {
+
+        return assertReporterOutputEquality.call(this, 'tap');
+
+      });
+
+    describe('when a single test file is run with --reporter=list', function() {
+
+      it('should have the same output as when run with --no-parallel', async function() {
+
+        return assertReporterOutputEquality.call(this, 'list');
+
+      });
+
+    describe('when a single test file is run with --reporter=min', function() {
+
+      it('should have the same output as when run with --no-parallel', async function() {
+
+        return assertReporterOutputEquality.call(this, 'min');
+
+      });
+
+    describe('when a single test file is run with --reporter=spec', function() {
+
+      it('should have the same output as when run with --no-parallel', async function() {
+
+        return assertReporterOutputEquality.call(this, 'spec');
+
+      });
+
+    describe('when a single test file is run with --reporter=nyan', function() {
+
+      it('should have the same output as when run with --no-parallel', async function() {
+
+        return assertReporterOutputEquality.call(this, 'nyan');
+
+      });
+
+    describe('when a single test file is run with --reporter=landing', function() {
+
+      it('should have the same output as when run with --no-parallel', async function() {
+
+        return assertReporterOutputEquality.call(this, 'landing');
+
+      });
+
+    describe('when a single test file is run with --reporter=progress', function() {
+
+      it('should fail due to incompatibility', async function() {
+
+        return expect(
+
+          invokeMochaAsync(
+
+            [
+
+              resolveFixturePath('options/parallel/test-a'),
+
+              '--reporter=progress',
+
+              '--parallel'
+
+            ],
+
+            'pipe'
+
+          )[1],
+
+          'when fulfilled',
+
+          'to satisfy',
+
+          expect
+
+            .it('to have failed')
+
+            .and('to contain output', /mutually exclusive/)
+
+        );
+
+      });
+
+    describe('when a single test file is run with --reporter=markdown', function() {
+
+      it('should fail due to incompatibility', async function() {
+
+        return expect(
+
+          invokeMochaAsync(
+
+            [
+
+              resolveFixturePath('options/parallel/test-a'),
+
+              '--reporter=markdown',
+
+              '--parallel'
+
+            ],
+
+            'pipe'
+
+          )[1],
+
+          'when fulfilled',
+
+          'to satisfy',
+
+          expect
+
+            .it('to have failed')
+
+            .and('to contain output', /mutually exclusive/)
+
+        );
+
+      });
+
+    describe('when a single test file is run with --reporter=json-stream', function() {
+
+      it('should fail due to incompatibility', async function() {
+
+        return expect(
+
+          invokeMochaAsync(
+
+            [
+
+              resolveFixturePath('options/parallel/test-a'),
+
+              '--reporter=json-stream',
+
+              '--parallel'
+
+            ],
+
+            'pipe'
+
+          )[1],
+
+          'when fulfilled',
+
+          'to satisfy',
+
+          expect
+
+            .it('to have failed')
+
+            .and('to contain output', /mutually exclusive/)
+
+        );
+
+      });
+
+    describe('when a single test file is run with --reporter=json', function() {
+
+      it('should have the same output as when run with --no-parallel', async function() {
+
+        // this one has some timings/durations that we can safely ignore
+
+        const {expected, actual} = await compareReporters('json');
+"
+6ceca82fdfd51341796caa523d696fa7621639cc,Christopher Hiller,"make guarantees about orphaned processes
+
+- updates workerpool to v6.0.2, which guarantees child processes exit before `Pool#terminate()` resolves
+- cleanup `test/integration/options/parallel.spec.js`",test/integration/options/parallel.spec.js,https://github.com/mochajs/mocha/commit/6ceca82fdfd51341796caa523d696fa7621639cc,"  });
+
+  describe('when a single test file is run with --reporter=xunit', function() {
+
+    it('should have the same output as when run with --no-parallel', function() {
+
+      // durations need replacing
+
+      return compareReporters.call(this, 'xunit').then(function(result) {
+
+        var expected = result.shift();
+
+        var actual = result.shift();
+","    describe('when a single test file is run with --reporter=xunit', function() {
+
+      it('should have the same output as when run with --no-parallel', async function() {
+
+        // durations need replacing
+
+        const {expected, actual} = await compareReporters('xunit');
+"
