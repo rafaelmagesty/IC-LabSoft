@@ -1,0 +1,442 @@
+commit_hash,author,message,file_path,commit_url,removed_chunk,added_chunk,commit_date
+9fc43f8fa51f5a5d1c36d07ea34db0f042264316,Evan You,improve log utils organization,packages/@vue/cli/lib/create.js,https://github.com/vuejs/vue-cli/commit/9fc43f8fa51f5a5d1c36d07ea34db0f042264316,"const { warn, error } = require('./util/log')
+
+program
+
+  .usage('<app-name>')
+
+  .parse(process.argv)
+
+
+
+const projectName = program.args[0]
+
+if (!projectName) {
+
+  warn(`\n  Please provide an app name.`)
+
+  program.outputHelp()
+
+  process.exit(1)
+
+}
+
+const createGenerator = (id, requirePath = id) => ({
+
+  id,
+
+  apply: require(requirePath)
+
+})
+
+const builtInGenerators = fs
+
+  .readdirSync(path.resolve(__dirname, './generators'))
+
+  .filter(dir => dir.charAt(0) !== '.')
+
+  .map(id => createGenerator(id, `./generators/${id}`))
+
+debug(builtInGenerators)
+
+const installedGenerators = resolveInstalledGenerators().map(id => {
+
+  return createGenerator(id)
+
+})
+
+const targetDir = path.resolve(process.cwd(), projectName)
+
+const creator = new Creator(projectName, builtInGenerators.concat(installedGenerators))
+
+creator
+
+  .create(targetDir)
+
+  .then(() => {
+
+    // TODO: log instructions
+
+  })
+
+  .catch(error)
+","const chalk = require('chalk')
+
+const rimraf = require('rimraf')
+
+const inquirer = require('inquirer')
+
+const { warn, error } = require('@vue/cli-shared-utils')
+
+async function run () {
+
+  program
+
+    .usage('<app-name>')
+
+    .parse(process.argv)
+
+
+
+  const projectName = program.args[0]
+
+  if (!projectName) {
+
+    warn(`\n  Please provide an app name.`)
+
+    program.outputHelp()
+
+    process.exit(1)
+
+  }
+
+
+
+  const targetDir = path.resolve(process.cwd(), projectName)
+
+  if (fs.existsSync(targetDir)) {
+
+    const { overwrite } = await inquirer.prompt([
+
+      {
+
+        name: 'overwrite',
+
+        type: 'confirm',
+
+        message: `Target directory ${chalk.cyan(targetDir)} already exists.\n  Overwrite?`
+
+      }
+
+    ])
+
+    if (overwrite) {
+
+      rimraf.sync(targetDir)
+
+    } else {
+
+      return
+
+    }
+
+  }
+
+
+
+  const createGenerator = (id, requirePath = id) => ({
+
+    id,
+
+    apply: require(requirePath)
+
+  })
+
+  const builtInGenerators = fs
+
+    .readdirSync(path.resolve(__dirname, './generators'))
+
+    .filter(dir => dir.charAt(0) !== '.')
+
+    .map(id => createGenerator(id, `./generators/${id}`))
+
+  debug(builtInGenerators)
+
+  const installedGenerators = resolveInstalledGenerators().map(id => {
+
+    return createGenerator(id)
+
+  })
+
+  const creator = new Creator(projectName, builtInGenerators.concat(installedGenerators))
+
+  await creator.create(targetDir)
+
+}
+
+run().catch(error)
+",2017-12-28 13:06:17-05:00
+69ebd800a2cd0726aa4bbeb1bdb3ade3bc0c0c4f,Evan You,"refactor: rename test commands
+
+BREAKING CHANGE: `cli-plugin-unit-jest` and `cli-plugin-unit-mocha` now register
+""test:unit"" command and script instead of ""test""; `cli-plugin-e2e-cypress` now
+register ""test:e2e"" with optional `--headless` flag instead of ""e2e"" and
+""e2e:open""; `cli-plugin-e2e-nightwatch` now register ""test:e2e"" instead of ""e2e"".
+
+close #876, close #878",packages/@vue/cli-plugin-e2e-cypress/index.js,https://github.com/vuejs/vue-cli/commit/69ebd800a2cd0726aa4bbeb1bdb3ade3bc0c0c4f,"  const chalk = require('chalk')
+
+
+
+  function run (command, args, rawArgs) {
+
+    removeArg(rawArgs, 'url')
+
+    removeArg(rawArgs, 'mode')
+
+
+
+    const serverPromise = args.url
+
+      ? Promise.resolve({ url: args.url })
+
+      : api.service.run('serve')
+
+
+
+    return serverPromise.then(({ url, server }) => {
+
+      const { info } = require('@vue/cli-shared-utils')
+
+      info(`Starting e2e tests...`)
+
+
+
+      const cyArgs = [
+
+        command, // open or run
+
+        '--config', `baseUrl=${url}`,
+
+        ...rawArgs
+
+      ]
+
+
+
+      const execa = require('execa')
+
+      const cypressBinPath = require.resolve('cypress/bin/cypress')
+
+      const runner = execa(cypressBinPath, cyArgs, { stdio: 'inherit' })
+
+      if (server) {
+
+        runner.on('exit', () => server.close())
+
+        runner.on('error', () => server.close())
+
+      }
+
+
+
+      if (process.env.VUE_CLI_TEST) {
+
+        runner.on('exit', code => {
+
+          process.exit(code)
+
+        })
+
+      }
+
+
+
+      return runner
+
+    })
+
+  }
+
+
+
+  const commandOptions = {
+
+    '--mode': 'specify the mode the dev server should run in. (default: production)',
+
+    '--url': 'run e2e tests against given url instead of auto-starting dev server'
+
+  }
+
+
+
+  api.registerCommand('e2e', {
+
+    description: 'run e2e tests headlessly with `cypress run`',
+
+    usage: 'vue-cli-service e2e [options]',
+
+    options: Object.assign({
+
+      '-s, --spec': 'runs a specific spec file. defaults to ""all""'
+
+    }, commandOptions),
+
+  }, (args, rawArgs) => run('run', args, rawArgs))
+
+  api.registerCommand('e2e:open', {
+
+    description: 'run e2e tests in interactive mode with `cypress open`',
+
+    usage: 'vue-cli-service e2e:open [options]',
+
+    options: commandOptions,
+
+    details:
+
+      `All Cypress CLI options are supported:\n` +
+
+      chalk.yellow(`https://docs.cypress.io/guides/guides/command-line.html#cypress-open`)
+
+  }, (args, rawArgs) => run('open', args, rawArgs))
+
+  e2e: 'production',
+
+  'e2e:open': 'production'
+","  api.registerCommand('test:e2e', {
+
+    description: 'run e2e tests with Cypress',
+
+    usage: 'vue-cli-service test:e2e [options]',
+
+    options: {
+
+      '--headless': 'run in headless mode without GUI',
+
+      '--mode': 'specify the mode the dev server should run in. (default: production)',
+
+      '--url': 'run e2e tests against given url instead of auto-starting dev server',
+
+      '-s, --spec': '(headless only) runs a specific spec file. defaults to ""all""'
+
+    },
+
+  }, async (args, rawArgs) => {
+
+    removeArg(rawArgs, 'headless')
+
+    removeArg(rawArgs, 'mode')
+
+    removeArg(rawArgs, 'url')
+
+    const { info } = require('@vue/cli-shared-utils')
+
+    info(`Starting e2e tests...`)
+
+
+
+    const { url, server } = args.url
+
+      ? { url: args.url }
+
+      : await api.service.run('serve')
+
+
+
+    const cyArgs = [
+
+      args.headless ? 'run' : 'open', // open or run
+
+      '--config', `baseUrl=${url}`,
+
+      ...rawArgs
+
+    ]
+
+
+
+    const execa = require('execa')
+
+    const cypressBinPath = require.resolve('cypress/bin/cypress')
+
+    const runner = execa(cypressBinPath, cyArgs, { stdio: 'inherit' })
+
+    if (server) {
+
+      runner.on('exit', () => server.close())
+
+      runner.on('error', () => server.close())
+
+    }
+
+
+
+    if (process.env.VUE_CLI_TEST) {
+
+      runner.on('exit', code => {
+
+        process.exit(code)
+
+      })
+
+    }
+
+
+
+    return runner
+
+  })
+
+  'test:e2e': 'production'
+",2018-05-01 18:15:25-04:00
+d2d2f7f346cd0a4faf24f754817e07163365b6e5,Guillaume Chau,refactor(ui): use fs-extra,packages/@vue/cli-ui/src/graphql-api/connectors/folders.js,https://github.com/vuejs/vue-cli/commit/d2d2f7f346cd0a4faf24f754817e07163365b6e5,"function list (base, context) {
+
+  return new Promise((resolve, reject) => {
+
+    fs.readdir(base, 'utf8', (err, files) => {
+
+      if (err) {
+
+        reject(err)
+
+      } else {
+
+        resolve(files.map(
+
+          file => ({
+
+            path: path.join(base, file),
+
+            name: file
+
+          })
+
+        ).filter(
+
+          file => fs.statSync(file.path).isDirectory()
+
+        ))
+
+      }
+
+  })
+","async function list (base, context) {
+
+  const files = await fs.readdir(base, 'utf8')
+
+  return files.map(
+
+    file => ({
+
+      path: path.join(base, file),
+
+      name: file
+
+  ).filter(
+
+    file => fs.statSync(file.path).isDirectory()
+
+  )
+",2018-05-02 17:18:01+02:00
+d2d2f7f346cd0a4faf24f754817e07163365b6e5,Guillaume Chau,refactor(ui): use fs-extra,packages/@vue/cli-ui/src/graphql-api/connectors/folders.js,https://github.com/vuejs/vue-cli/commit/d2d2f7f346cd0a4faf24f754817e07163365b6e5,"function deleteFolder (file) {
+
+  return new Promise((resolve, reject) => {
+
+    rimraf(file, err => {
+
+      if (err) {
+
+        reject(err)
+
+      } else {
+
+        resolve()
+
+      }
+
+    })
+
+  })
+","async function deleteFolder (file) {
+
+  await fs.remove(file)
+",2018-05-02 17:18:01+02:00

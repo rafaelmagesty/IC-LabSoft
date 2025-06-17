@@ -1,0 +1,835 @@
+commit_hash,author,message,file_path,commit_url,removed_chunk,added_chunk,commit_date
+702d47e6b0b1c71ead1111c1d3952fbaf86abf2a,azivner,initial decallbackization and promisification of frontend,public/javascripts/note.js,https://github.com/TriliumNext/trilium/commit/702d47e6b0b1c71ead1111c1d3952fbaf86abf2a,"function loadNoteToEditor(noteId) {
+
+    $.get(baseApiUrl + 'notes/' + noteId).then(note => {
+
+        globalCurrentNote = note;
+
+        globalCurrentNoteLoadTime = Math.floor(new Date().getTime() / 1000);
+
+        if (newNoteCreated) {
+
+            newNoteCreated = false;
+
+            $(""#note-title"").focus().select();
+
+        }
+
+        handleEncryption(note.detail.encryption > 0, false, () => {
+
+            $(""#note-detail-wrapper"").show();
+
+            // this may fal if the dialog has not been previously opened
+
+            try {
+
+                $(""#encryption-password-dialog"").dialog('close');
+
+            }
+
+            catch(e) {}
+
+            $(""#encryption-password"").val('');
+
+            decryptNoteIfNecessary(note);
+
+            $(""#note-title"").val(note.detail.note_title);
+
+            noteChangeDisabled = true;
+
+            // Clear contents and remove all stored history. This is to prevent undo from going across notes
+
+            $('#note-detail').summernote('reset');
+
+            $('#note-detail').summernote('code', note.detail.note_text);
+
+            document.location.hash = noteId;
+
+            addRecentNote(noteId, note.detail.note_id);
+
+            noteChangeDisabled = false;
+
+            setNoteBackgroundIfEncrypted(note);
+
+        });
+
+    });
+
+function loadNote(noteId, callback) {
+
+    $.get(baseApiUrl + 'notes/' + noteId).then(note => {
+
+        if (note.detail.encryption > 0 && !isEncryptionAvailable()) {
+
+            return;
+
+        }
+
+        decryptNoteIfNecessary(note);
+
+        callback(note);
+
+    });
+","async function loadNoteToEditor(noteId) {
+
+    const note = await $.get(baseApiUrl + 'notes/' + noteId);
+
+    globalCurrentNote = note;
+
+    globalCurrentNoteLoadTime = Math.floor(new Date().getTime() / 1000);
+
+    if (newNoteCreated) {
+
+        newNoteCreated = false;
+
+        $(""#note-title"").focus().select();
+
+    }
+
+    await handleEncryption(note.detail.encryption > 0, false);
+
+    $(""#note-detail-wrapper"").show();
+
+    // this may fal if the dialog has not been previously opened
+
+    try {
+
+        $(""#encryption-password-dialog"").dialog('close');
+
+    }
+
+    catch(e) {}
+
+    $(""#encryption-password"").val('');
+
+    decryptNoteIfNecessary(note);
+
+    $(""#note-title"").val(note.detail.note_title);
+
+    noteChangeDisabled = true;
+
+    // Clear contents and remove all stored history. This is to prevent undo from going across notes
+
+    $('#note-detail').summernote('reset');
+
+    $('#note-detail').summernote('code', note.detail.note_text);
+
+    document.location.hash = noteId;
+
+    addRecentNote(noteId, note.detail.note_id);
+
+    noteChangeDisabled = false;
+
+
+
+    setNoteBackgroundIfEncrypted(note);
+
+async function loadNote(noteId) {
+
+    const note = await $.get(baseApiUrl + 'notes/' + noteId);
+
+
+
+    if (note.detail.encryption > 0 && !isEncryptionAvailable()) {
+
+        return;
+
+    }
+
+    decryptNoteIfNecessary(note);
+
+    return note;
+",2017-11-03 20:01:32-04:00
+4efa00f36bf435f49180a7900a9a00406651a49f,azivner,"cosmetic cleanup, mostly in encryption",public/javascripts/encryption.js,https://github.com/TriliumNext/trilium/commit/4efa00f36bf435f49180a7900a9a00406651a49f,"    encryptionPasswordFormEl.submit(() => {
+
+        getDataKey(password).then(key => {
+
+            dialogEl.dialog(""close"");
+
+
+
+            dataKey = key;
+
+            decryptTreeItems();
+
+            if (encryptionDeferred !== null) {
+
+                encryptionDeferred.resolve();
+
+                encryptionDeferred = null;
+
+            }
+
+        })
+
+            .catch(reason => {
+
+                console.log(reason);
+
+                error(reason);
+
+            });
+
+        return false;
+
+    });
+","    async function setupEncryptionSession() {
+
+        const key = await getDataKey(password);
+
+        if (key === false) {
+
+            showError(""Wrong password!"");
+
+            return;
+
+        }
+
+        dialogEl.dialog(""close"");
+
+        dataKey = key;
+
+        decryptTreeItems();
+
+        if (encryptionDeferred !== null) {
+
+            encryptionDeferred.resolve();
+
+            encryptionDeferred = null;
+
+        }
+
+    }
+",2017-11-08 22:33:08-05:00
+34f1eb930c01b6c34eaa18b0a514bc6da77acbf8,azivner,recent notes are reloaded if synced,public/javascripts/dialogs/recent_notes.js,https://github.com/TriliumNext/trilium/commit/34f1eb930c01b6c34eaa18b0a514bc6da77acbf8,"    server.get('recent-notes').then(result => {
+
+    });
+","    async function reload() {
+
+        const result = await server.get('recent-notes');
+
+
+
+    }
+",2017-12-03 10:42:23-05:00
+7ea23586fe04814a9780e70dd0b7808e6620d98d,azivner,"improvements to search, fixing issue #1",public/javascripts/search_tree.js,https://github.com/TriliumNext/trilium/commit/7ea23586fe04814a9780e70dd0b7808e6620d98d,"            server.get('notes?search=' + searchText).then(resp => {
+
+                // Pass a string to perform case insensitive matching
+
+                getTree().filterBranches(node => {
+
+                    return resp.includes(node.data.note_id);
+
+                });
+
+            });
+","            const noteIds = await server.get('notes?search=' + encodeURIComponent(searchText));
+
+
+
+            for (const noteId of noteIds) {
+
+                await noteTree.expandToNote(noteId, {noAnimation: true, noEvents: true});
+
+            }
+
+
+
+            // Pass a string to perform case insensitive matching
+
+            getTree().filterBranches(node => noteIds.includes(node.data.note_id));
+",2018-01-15 20:54:22-05:00
+0e9473119ebd0bcfd77eaf78e27ab33827b33586,azivner,global keyboard shortcuts for quick creating sub-notes under day note,src/public/javascripts/note_tree.js,https://github.com/TriliumNext/trilium/commit/0e9473119ebd0bcfd77eaf78e27ab33827b33586,"    function loadTree() {
+
+        return server.get('tree').then(resp => {
+
+            startNotePath = resp.start_note_path;
+
+            if (document.location.hash) {
+
+                startNotePath = getNotePathFromAddress();
+
+            }
+
+            return prepareNoteTree(resp.notes);
+
+        });
+","    async function loadTree() {
+
+        const resp = await server.get('tree');
+
+        startNotePath = resp.start_note_path;
+
+        if (document.location.hash) {
+
+            startNotePath = getNotePathFromAddress();
+
+        }
+
+        return prepareNoteTree(resp.notes);
+",2018-02-12 23:53:00-05:00
+b10b0048f31e7ec5b828aa4c86d070ad8bf08115,azivner,split out library loader,src/public/javascripts/dialogs/edit_tree_prefix.js,https://github.com/TriliumNext/trilium/commit/b10b0048f31e7ec5b828aa4c86d070ad8bf08115,"$form.submit(() => {
+
+    server.put('tree/' + branchId + '/set-prefix', {
+
+        prefix: prefix
+
+    }).then(() => treeService.setPrefix(branchId, prefix));
+","async function savePrefix() {
+
+    await server.put('tree/' + branchId + '/set-prefix', { prefix: prefix });
+
+
+
+    await treeService.setPrefix(branchId, prefix);
+
+}
+
+
+
+$form.submit(() => {
+
+    savePrefix();
+",2018-03-27 22:42:46-04:00
+e827ddffb9279a0dcd67d62efd0a38d280cb3e91,azivner,electron fixes,src/public/javascripts/migration.js,https://github.com/TriliumNext/trilium/commit/e827ddffb9279a0dcd67d62efd0a38d280cb3e91,"$(document).ready(() => {
+
+    server.get('migration').then(result => {
+
+        const appDbVersion = result.app_dbVersion;
+
+        const dbVersion = result.dbVersion;
+
+        if (appDbVersion === dbVersion) {
+
+            $(""#up-to-date"").show();
+
+        }
+
+        else {
+
+            $(""#need-to-migrate"").show();
+
+            $(""#app-db-version"").html(appDbVersion);
+
+            $(""#db-version"").html(dbVersion);
+
+        }
+
+    });
+","$(document).ready(async () => {
+
+    const {appDbVersion, dbVersion} = await server.get('migration');
+
+    console.log(""HI"", {appDbVersion, dbVersion});
+
+    if (appDbVersion === dbVersion) {
+
+        $(""#up-to-date"").show();
+
+    }
+
+    else {
+
+        $(""#need-to-migrate"").show();
+
+
+
+        $(""#app-db-version"").html(appDbVersion);
+
+        $(""#db-version"").html(dbVersion);
+
+    }
+",2018-04-05 23:17:19-04:00
+1fe7c62f5a90e8dbf6e93f268069dbf87fc59d74,azivner,"#98, sync setup now doesn't copy the whole DB file, but sets up minimal database and starts off sync",src/public/javascripts/setup.js,https://github.com/TriliumNext/trilium/commit/1fe7c62f5a90e8dbf6e93f268069dbf87fc59d74,"            $.post('/api/setup/sync-from-server', {
+
+            }).then(() => {
+
+                window.location.replace(""/"");
+
+            }).catch((err) => {
+
+                alert(""Error, see dev console for details."");
+
+                console.error(err);
+","            const resp = await $.post('/api/setup/sync-from-server', {
+
+
+
+            if (resp.result === 'success') {
+
+                this.step('sync-in-progress');
+
+
+
+                checkOutstandingSyncs();
+
+
+
+                setInterval(checkOutstandingSyncs, 1000);
+
+            }
+
+            else {
+
+                showAlert('Sync setup failed: ', resp.error);
+
+            }
+
+async function checkOutstandingSyncs() {
+
+    const stats = await $.get('/api/sync/stats');
+
+    const totalOutstandingSyncs = stats.outstandingPushes + stats.outstandingPulls;
+
+
+
+    $(""#outstanding-syncs"").html(totalOutstandingSyncs);
+
+}
+
+
+",2018-07-23 21:15:32+02:00
+51175e3676ab98a678e49d9d17c7ab1cf1630bb9,zadam,import/export refactorign,src/public/javascripts/dialogs/import.js,https://github.com/TriliumNext/trilium/commit/51175e3676ab98a678e49d9d17c7ab1cf1630bb9,"    exportService.importIntoNote(currentNode.data.noteId).then(() => {
+
+        $dialog.modal('hide');
+
+    });
+","    importIntoNote(currentNode.data.noteId);
+
+function importIntoNote(importNoteId) {
+
+    const formData = new FormData();
+
+    formData.append('upload', $fileUploadInput[0].files[0]);
+
+
+
+    // this is done to reset the field otherwise triggering import same file again would not work
+
+    // https://github.com/zadam/trilium/issues/388
+
+    $fileUploadInput.val('');
+
+
+
+    $.ajax({
+
+        url: baseApiUrl + 'notes/' + importNoteId + '/import',
+
+        headers: server.getHeaders(),
+
+        data: formData,
+
+        dataType: 'json',
+
+        type: 'POST',
+
+        contentType: false, // NEEDED, DON'T REMOVE THIS
+
+        processData: false, // NEEDED, DON'T REMOVE THIS
+
+    })
+
+        .fail((xhr, status, error) => alert('Import error: ' + xhr.responseText))
+
+        .done(async note => {
+
+            $dialog.modal('hide');
+
+
+
+            infoService.showMessage(""Import finished successfully."")
+
+
+
+            await treeService.reload();
+
+
+
+            if (note) {
+
+                const node = await treeService.activateNote(note.noteId);
+
+
+
+                node.setExpanded(true);
+
+            }
+
+        });
+
+}
+
+
+",2019-02-10 15:33:56+01:00
+dad47d115f010cff18239b787e80b76c5fea2b81,zadam,fixes for SQL console schema view,src/public/javascripts/dialogs/sql_console.js,https://github.com/TriliumNext/trilium/commit/dad47d115f010cff18239b787e80b76c5fea2b81,"function showDialog() {
+
+    server.get('sql/schema').then(tables => {
+
+        $tables.empty();
+
+
+
+        for (const table of tables) {
+
+            const $tableLink = $('<a href=""javascript:"">').text(table.name);
+
+
+
+            const $columns = $(""<table>"");
+
+
+
+            for (const column of table.columns) {
+
+                $columns.append(
+
+                    $(""<tr>"")
+
+                        .append($(""<td>"").text(column.name))
+
+                        .append($(""<td>"").text(column.type))
+
+                );
+
+            }
+
+
+
+            $tableLink
+
+                .attr(""title"", $columns.html())
+
+                .tooltip({ html: true })
+
+                .click(() => codeEditor.setValue(""SELECT * FROM "" + table.name + "" LIMIT 100""));
+
+
+
+            $tables.append($tableLink).append("" "");
+
+        }
+
+    });
+
+
+","async function showDialog() {
+
+    await showTables();
+
+
+",2019-02-13 23:27:00+01:00
+b84542064cd4d0615f298f9f9ef68690c8fe92a6,zadam,saving of widget configuration,src/public/javascripts/dialogs/options/sidebar.js,https://github.com/TriliumNext/trilium/commit/b84542064cd4d0615f298f9f9ef68690c8fe92a6,"        libraryLoader.requireLibrary(libraryLoader.SORTABLE).then(() => {
+
+            new Sortable(this.$widgetsEnabled[0], {
+
+                group: 'widgets',
+
+                handle: '.handle',
+
+                animation: 150
+
+            });
+
+            new Sortable(this.$widgetsDisabled[0], {
+
+                group: 'widgets',
+
+                handle: '.handle',
+
+                animation: 150
+","        await libraryLoader.requireLibrary(libraryLoader.SORTABLE);
+
+
+
+        new Sortable(this.$widgetsEnabled[0], {
+
+            group: 'widgets',
+
+            handle: '.handle',
+
+            animation: 150,
+
+            onSort: evt => this.save()
+
+        });
+
+        new Sortable(this.$widgetsDisabled[0], {
+
+            group: 'widgets',
+
+            handle: '.handle',
+
+            animation: 150,
+
+            onSort: evt => this.save()
+
+        });
+
+    }
+
+
+
+    async save() {
+
+        const opts = {};
+
+
+
+        this.$widgetsConfiguration.find('.list-group-item').each((i, el) => {
+
+            const widgetName = $(el).find('div[data-widget-name]').attr('data-widget-name');
+
+
+
+            opts[widgetName + 'Widget'] = JSON.stringify({
+
+                enabled: $.contains(this.$widgetsEnabled[0], el),
+
+                expanded: $(el).find(""input[type=checkbox]"").is("":checked""),
+
+                position: (i + 1) * 10
+
+
+
+        await server.put('options', opts);
+",2019-08-22 22:14:01+02:00
+465c3b87a76f5396d0e2fd3dc69330b8887be847,zadam,tree keyboard shortcuts,src/public/javascripts/services/tree_keybindings.js,https://github.com/TriliumNext/trilium/commit/465c3b87a76f5396d0e2fd3dc69330b8887be847,"    // code below shouldn't be necessary normally, however there's some problem with interaction with context menu plugin
+
+    // after opening context menu, standard shortcuts don't work, but they are detected here
+
+    // so we essentially takeover the standard handling with our implementation.
+
+    ""left"": node => {
+
+        node.navigate($.ui.keyCode.LEFT, true).then(treeService.clearSelectedNodes);
+
+
+
+        return false;
+
+    },
+
+    ""right"": node => {
+
+        node.navigate($.ui.keyCode.RIGHT, true).then(treeService.clearSelectedNodes);
+
+    },
+
+    ""up"": node => {
+
+        node.navigate($.ui.keyCode.UP, true).then(treeService.clearSelectedNodes);
+
+        return false;
+
+    },
+
+    ""down"": node => {
+
+        node.navigate($.ui.keyCode.DOWN, true).then(treeService.clearSelectedNodes);
+
+        return false;
+
+    },
+
+    ""ctrl+shift+s"": node => {
+
+        searchNoteService.searchInSubtree(node.data.noteId);
+
+        return false;
+
+};
+
+export default keyBindings;
+","    ""SearchInSubtree"": node => {
+
+        searchNoteService.searchInSubtree(node.data.noteId);
+
+    }
+
+};
+
+async function getKeyboardBindings() {
+
+    const bindings = Object.assign({}, fixedKeyBindings);
+
+    for (const actionName in templates) {
+
+        const action = await keyboardActionService.getAction(actionName);
+
+        for (const shortcut of action.effectiveShortcuts || []) {
+
+            bindings[shortcut] = templates[actionName];
+
+        }
+
+    return bindings;
+
+}
+
+
+
+export default {
+
+    getKeyboardBindings
+
+};
+",2019-11-21 22:24:07+01:00
+bcb3a707f403e711c4a1bbe89deba313c34d7ae3,zadam,option tabs refactored,src/public/app/widgets/dialogs/options/options_tab.js,https://github.com/TriliumNext/trilium/commit/bcb3a707f403e711c4a1bbe89deba313c34d7ae3,"        server.put('options', opts).then(() => {
+
+            toastService.showPersistent({
+
+                id: ""options-change-saved"",
+
+                title: ""Options status"",
+
+                message: ""Options change have been saved."",
+
+                icon: ""slider"",
+
+                closeAfter: 2000
+
+            })
+","
+
+        await this.updateMultipleOptions(opts);
+
+    }
+
+
+
+    async updateMultipleOptions(opts) {
+
+        await server.put('options', opts);
+
+
+
+        this.showUpdateNotification();
+
+    }
+
+
+
+    showUpdateNotification() {
+
+        toastService.showPersistent({
+
+            id: ""options-change-saved"",
+
+            title: ""Options status"",
+
+            message: ""Options change have been saved."",
+
+            icon: ""slider"",
+
+            closeAfter: 2000
+
+
+
+    async updateCheckboxOption(name, $checkbox) {
+
+        const isChecked = $checkbox.prop(""checked"");
+
+
+
+        return await this.updateOption(name, isChecked ? 'true' : 'false');
+
+    }
+
+
+
+    setCheckboxState($checkbox, optionValue) {
+
+        $checkbox.prop('checked', optionValue === 'true');
+
+    }
+",2022-11-20 23:20:42+01:00
+8c4dda45eff76887b6690eb3f67dba35456548c4,zadam,"bookmark buttons should behave similarly as other launcher buttons in respect to context menu, ctrl-click, left click",src/public/app/widgets/buttons/open_note_button_widget.js,https://github.com/TriliumNext/trilium/commit/8c4dda45eff76887b6690eb3f67dba35456548c4,"import froca from ""../../services/froca.js"";
+
+
+
+// FIXME: this widget might not be useful anymore
+
+    targetNote(noteId) {
+
+        froca.getNote(noteId).then(note => {
+
+            if (!note) {
+
+                console.log(`Note ${noteId} has not been found. This might happen on the first run before the target note is created.`);
+
+
+
+                if (!this.retried) {
+
+                    this.retried = true;
+
+
+
+                    setTimeout(() => this.targetNote(noteId), 15000); // should be higher than timeout for checkHiddenSubtree
+
+                }
+
+                return;
+
+            }
+
+            this.icon(note.getIcon());
+
+            this.title(() => {
+
+                const n = froca.getNoteFromCache(noteId);
+
+
+
+                // always fresh, always decoded (when protected session is available)
+
+                return n.title;
+
+            });
+
+
+
+            this.refreshIcon();
+
+        });
+
+        this.onClick(() => appContext.tabManager.openTabWithNoteWithHoisting(noteId, true));
+
+        return this;
+","import linkContextMenuService from ""../../menus/link_context_menu.js"";
+
+import utils from ""../../services/utils.js"";
+
+    constructor(noteToOpen) {
+
+        super();
+
+        this.noteToOpen = noteToOpen;
+
+        this.title(() => this.noteToOpen.title)
+
+            .icon(() => this.noteToOpen.getIcon())
+
+            .onClick((widget, evt) => this.launch(evt))
+
+            .onAuxClick((widget, evt) => this.launch(evt))
+
+            .onContextMenu(evt => linkContextMenuService.openContextMenu(this.noteToOpen.noteId, null, evt));
+
+    }
+
+    async launch(evt) {
+
+        const ctrlKey = utils.isCtrlKey(evt);
+
+        if ((evt.which === 1 && ctrlKey) || evt.which === 2) {
+
+            await appContext.tabManager.openInNewTab(this.noteToOpen.noteId);
+
+        } else {
+
+            await appContext.tabManager.openInSameTab(this.noteToOpen.noteId);
+
+        }
+",2022-12-19 23:19:47+01:00

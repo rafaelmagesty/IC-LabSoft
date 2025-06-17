@@ -1,0 +1,18 @@
+commit_hash,author,message,file_path,commit_url,removed_chunk,added_chunk,commit_date
+eecc773923f2a97038e4c94c288e855a8ab3e978,Michel Weststrate,"feat: Dropped node 6 support
+
+BREAKING CHANGE",__tests__/base.js,https://github.com/immerjs/immer/commit/eecc773923f2a97038e4c94c288e855a8ab3e978,"        // TODO: rewrite tests with async/await once node 6 support is dropped
+
+                return produce(base, d => {
+
+                    return Promise.resolve().then(() => {
+
+                        d.b = 1
+
+                    })
+","                return produce(base, async d => {
+
+                    await Promise.resolve()
+
+                    d.b = 1
+",2019-04-15 12:57:27+02:00

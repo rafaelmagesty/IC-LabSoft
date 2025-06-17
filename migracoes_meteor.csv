@@ -1,0 +1,7878 @@
+commit_hash,author,message,file_path,commit_url,removed_chunk,added_chunk,commit_date
+f7b2735d2320eecafe478f3e4dd77ccaab848194,Ben Newman,Reimplement fiberHelpers.parallelEach without explicit Fibers.,tools/utils/fiber-helpers.js,https://github.com/meteor/meteor/commit/f7b2735d2320eecafe478f3e4dd77ccaab848194,"  var errors = [];
+
+  var results = Promise.all(_.map(collection, function (...args) {
+
+    return new Promise(function (resolve, reject) {
+
+      Fiber(function () {
+
+        try {
+
+          resolve(callback.apply(context, args));
+
+        } catch (err) {
+
+          reject(err);
+
+        }
+
+      }).run();
+
+    }).catch(function (error) {
+","  const errors = [];
+
+  const results = Promise.all(_.map(collection, (...args) => {
+
+    async function run() {
+
+      return callback.apply(context, args);
+
+    }
+
+
+
+    return run().catch(error => {
+",2015-07-01 12:47:59-04:00
+4b17a0b760086ced573124a85b467e23ec44af18,Ben Newman,"Allow sending IPC messages from build process to server process.
+
+Instead of having every message consumer listen to every message and act
+on the ones that seem relevant to its interests, we now have a single
+process.on(""message"", callback) hook that can dispatch messages to
+different Meteor packages running in the server process.
+
+Receiving packages should export an onMessage function. The onMessage
+function may be async, and its result will be delivered back to the build
+process as the result of the sendMessage Promise.",tools/runners/run-app.js,https://github.com/meteor/meteor/commit/4b17a0b760086ced573124a85b467e23ec44af18,"    let lastSendMessagePromise = Promise.resolve();
+
+    function sendMessageAsync(message) {
+
+      // Keep the messages strictly ordered, one after the last.
+
+      return lastSendMessagePromise =
+
+        lastSendMessagePromise.then(both, both);
+
+
+
+      function both() {
+
+        return new Promise((resolve, reject) => {
+
+          appProcess.proc.send(message, error => {
+
+            error ? reject(error) : resolve();
+
+          });
+
+        });
+
+      }
+
+    }
+
+
+
+    function refreshClient(arch) {
+
+        sendMessageAsync({
+
+          ""package"": ""webapp"",
+
+          ""method"": ""generateClientProgram"",
+
+          ""args"": [arch],
+
+      return sendMessageAsync({
+","    async function refreshClient(arch) {
+
+        await appProcess.proc.sendMessage(""webapp"", {
+
+          method: ""generateClientProgram"",
+
+          args: [arch],
+
+      await appProcess.proc.sendMessage(""autoupdate"", {
+",2018-07-09 17:55:41-04:00
+1387473cf56dfa095f57eb472288e68530f6ecd4,Ben Newman,"Pause requests for the legacy bundle while rewriting it.
+
+This is the solution I came up with for the problems I described here:
+https://github.com/meteor/meteor/pull/10055#issuecomment-403219805",tools/isobuild/bundler.js,https://github.com/meteor/meteor/commit/1387473cf56dfa095f57eb472288e68530f6ecd4,"        postStartupCallbacks.push(({
+
+          // Build and write the target in one step.
+
+          writeClientTarget(makeClientTarget(app, arch, { minifiers }));
+
+          return refreshClient(arch).then(() => {
+
+            runLog.log(`Finished delayed build of ${arch} in ${
+
+              new Date - start
+
+            }ms`, { arrow: true });
+
+          });
+","        postStartupCallbacks.push(async ({
+
+          pauseClient,
+
+          // Build the target first.
+
+          const target = makeClientTarget(app, arch, { minifiers });
+
+
+
+          // Tell the webapp package to pause responding to requests from
+
+          // clients that use this arch, because we're about to write a
+
+          // new version of this bundle to disk.
+
+          await pauseClient(arch);
+
+
+
+          // Now write the target to disk. Note that we are rewriting the
+
+          // bundle in place, so this work is not atomic by any means,
+
+          // which is why we needed to pause the client.
+
+          writeClientTarget(target);
+
+
+
+          // Refresh and unpause the client, now that writing is finished.
+
+          await refreshClient(arch);
+
+          runLog.log(`Finished delayed build of ${arch} in ${
+
+            new Date - start
+
+          }ms`, { arrow: true });
+",2018-07-10 19:19:32-04:00
+996ab0b831bfff60e325e1895a7c35f1cc0e2f24,Edimar Cardoso,"Using `Promise.await` to resolve the async method.
+
+Suggested in Code Review",packages/minifier-css/minifier.js,https://github.com/meteor/meteor/commit/996ab0b831bfff60e325e1895a7c35f1cc0e2f24,"    const f = new Future();
+
+    CssTools.minifyCssAsync(cssText)
+
+      .then((res) => f.return(res))
+
+      .catch((error) => f.throw(error));
+
+    // Since this function has always returned an array, we'll wrap the
+
+    // minified css string in an array before returning, even though we're
+
+    // only ever returning one minified css string in that array (maintaining
+
+    // backwards compatibility).
+
+    return f.wait();
+","    return Promise.await(CssTools.minifyCssAsync(cssText));
+",2022-07-29 09:25:30-03:00
+e7060c29f4a3fbaf91d0fe291700f1fb46e6e9e5,Edimar Cardoso,Make method test async and return promise to handle rejection.,packages/minifier-css/minifier-async-tests.js,https://github.com/meteor/meteor/commit/e7060c29f4a3fbaf91d0fe291700f1fb46e6e9e5,"  (test, onComplete) => {
+
+    Promise.all(promises).then(() => onComplete());
+","  async (test) => {
+
+    return Promise.all(promises);
+",2022-07-29 10:27:06-03:00
+d08790778a984e28ac73d81a5f42cd366b82ceb0,Edimar Cardoso,Changing accounts-password to no more use Meteor.wrapAsync.,packages/accounts-password/password_server.js,https://github.com/meteor/meteor/commit/d08790778a984e28ac73d81a5f42cd366b82ceb0,"  return hashPassword(newPlaintextPassword).then(hash => {
+
+    const update = {
+
+      $unset: {
+
+        'services.password.reset': 1
+
+      },
+
+      $set: {'services.password.bcrypt': hash}
+
+    };
+
+    if (options.logout) {
+
+      update.$unset['services.resume.loginTokens'] = 1;
+
+    }
+
+    Meteor.users.update({_id: user._id}, update);
+
+  });
+","  const update = {
+
+    $unset: {
+
+      'services.password.reset': 1
+
+    },
+
+    $set: {'services.password.bcrypt': await hashPassword(newPlaintextPassword)}
+
+  };
+
+  if (options.logout) {
+
+    update.$unset['services.resume.loginTokens'] = 1;
+
+  }
+
+  Meteor.users.update({_id: user._id}, update);
+
+};
+
+
+
+/**
+
+ * @summary Forcibly change the password for a user.
+
+ * @locus Server
+
+ * @param {String} userId The id of the user to update.
+
+ * @param {String} newPassword A new password for the user.
+
+ * @param {Object} [options]
+
+ * @param {Object} options.logout Logout all current connections with this userId (default: true)
+
+ * @importFromPackage accounts-base
+
+ */
+
+Accounts.setPassword = (userId, newPlaintextPassword, options) => {
+
+  return Promise.await(Accounts.setPasswordAsync(userId, newPlaintextPassword, options));
+",2022-08-26 15:53:40-03:00
+b86b2a122c4dcc3e82d11c87e6e8922720140c1d,denihs,"Removing withValueAsync from the server, and using the setNewContextAndGetCurrent and set strategy.
+
+When creating a new fiber inside withValueAsync, some contexts where missing, and when calling Meteor.call without a callback, no result were returned.",packages/ddp-server/livedata_server.js,https://github.com/meteor/meteor/commit/b86b2a122c4dcc3e82d11c87e6e8922720140c1d,"      promise.then((result) => {
+
+      }, (exception) => {
+
+      });
+","      try {
+
+        const result = Promise.await(promise);
+
+      } catch (exception) {
+
+      }
+",2022-10-05 13:27:16-04:00
+3186c0436b0d31ed5e13cbaa9b33e87e7f1678d1,Matheus Castro,Trying to make oplog work without Fibers.,packages/mongo/oplog_observe_driver.js,https://github.com/meteor/meteor/commit/3186c0436b0d31ed5e13cbaa9b33e87e7f1678d1,"  _doneQuerying: function () {
+
+    const afterCaughtUp = () => {
+
+      if (self._stopped)
+
+        return;
+
+      if (self._phase !== PHASE.QUERYING)
+
+        throw Error(""Phase unexpectedly "" + self._phase);
+
+
+
+      Meteor._noYieldsAllowed(function () {
+
+        if (self._requeryWhenDoneThisQuery) {
+
+          self._requeryWhenDoneThisQuery = false;
+
+          self._pollQuery();
+
+        } else if (self._needToFetch.empty()) {
+
+          self._beSteady();
+
+        } else {
+
+          self._fetchModifiedDocuments();
+
+        }
+
+      });
+
+    };
+
+    if (Meteor._isFibersEnabled) {
+
+      self._mongoHandle._oplogHandle.waitUntilCaughtUp();  // yields
+
+      return afterCaughtUp();
+
+    }
+
+    // TODO -> Should we wait? This doesn't make much sense without Fibers.
+
+    return self._mongoHandle._oplogHandle.waitUntilCaughtUp().then(afterCaughtUp);
+","  _doneQuerying: async function () {
+
+    await self._mongoHandle._oplogHandle.waitUntilCaughtUp();
+
+    if (self._stopped)
+
+      return;
+
+    if (self._phase !== PHASE.QUERYING)
+
+      throw Error(""Phase unexpectedly "" + self._phase);
+
+    await Meteor._noYieldsAllowed(async function () {
+
+      if (self._requeryWhenDoneThisQuery) {
+
+        self._requeryWhenDoneThisQuery = false;
+
+        self._pollQuery();
+
+      } else if (self._needToFetch.empty()) {
+
+        await self._beSteady();
+
+      } else {
+
+        self._fetchModifiedDocuments();
+
+      }
+
+    });
+",2022-10-31 21:09:26-03:00
+4b31d2b352b46275ec18fc0de7851b6862325025,Matheus Castro,"Remove Fibers for meteor tools:
+
+- Package building is done, at least I hope so!",tools/isobuild/builder.js,https://github.com/meteor/meteor/commit/4b31d2b352b46275ec18fc0de7851b6862325025,"    // Build the output from scratch
+
+    if (resetBuildPath) {
+
+      files.rm_recursive(this.buildPath).then(() => {
+
+        files.mkdir_p(this.buildPath, 0o755);
+
+        this.watchSet = new WatchSet();
+
+      });
+
+    }
+","    this.resetBuildPath = resetBuildPath;
+
+  async init() {
+
+    // Build the output from scratch
+
+    if (this.resetBuildPath) {
+
+      await files.rm_recursive(this.buildPath);
+
+      files.mkdir_p(this.buildPath, 0o755);
+
+      this.watchSet = new WatchSet();
+
+    }
+
+  }
+
+
+",2022-11-26 00:09:33-03:00
+b1a6cc07615a875847068c4df16bcc7b39286e1e,Matheus Castro,Remove Fibers for meteor tools: turns out the package building is still not done. Still need to check why it's failing to require node_modules when evaluating/loading the plugin.,tools/isobuild/compiler-plugin.js,https://github.com/meteor/meteor/commit/b1a6cc07615a875847068c4df16bcc7b39286e1e,"        Promise.resolve().then(() => {
+
+          try {
+
+            files.rm_recursive(wildcardCacheFilename);
+
+          } finally {
+
+            files.writeFileAtomically(cacheFilename, retAsJSON);
+
+          }
+
+        });
+","        try {
+
+          await files.rm_recursive(wildcardCacheFilename);
+
+        } finally {
+
+          await files.writeFileAtomically(cacheFilename, retAsJSON);
+
+        }
+",2022-12-04 00:27:41-03:00
+a76c30693f8697885787e9baab80107a8471a0c4,Matheus Castro,"Remove Fibers for Meteor Tools:
+
+- Start changing the meteor run command now. It's throwing errors when trying to check constraints/package-versions.",tools/runners/run-all.js,https://github.com/meteor/meteor/commit/a76c30693f8697885787e9baab80107a8471a0c4,"    function startMongo(tries = 3) {
+
+      self._startMongoAsync().then(
+
+        ok => unblockAppRunner(),
+
+        error => {
+
+          --tries;
+
+          const left = tries + (tries === 1 ? "" try"" : "" tries"");
+
+          Console.error(
+
+          );
+
+
+
+          if (tries > 0) {
+
+            self.mongoRunner.stop();
+
+            setTimeout(() => startMongo(tries), 1000);
+
+          } else {
+
+            self.mongoRunner._fail();
+
+          }
+
+      );
+
+    startMongo();
+
+      self.updater.start();
+
+      self.hmrServer.start();
+","    async function startMongo(tries = 3) {
+
+      try {
+
+        await self._startMongoAsync();
+
+        await unblockAppRunner();
+
+      } catch (error) {
+
+        --tries;
+
+        const left = tries + (tries === 1 ? "" try"" : "" tries"");
+
+        Console.error(
+
+        );
+
+
+
+        if (tries > 0) {
+
+          await self.mongoRunner.stop();
+
+          await setTimeout(() => startMongo(tries), 1000);
+
+        } else {
+
+          await self.mongoRunner._fail();
+
+
+
+      }
+
+    await startMongo();
+
+      await self.updater.start();
+
+      await self.hmrServer.start();
+",2022-12-14 21:48:59-03:00
+a76c30693f8697885787e9baab80107a8471a0c4,Matheus Castro,"Remove Fibers for Meteor Tools:
+
+- Start changing the meteor run command now. It's throwing errors when trying to check constraints/package-versions.",tools/runners/run-mongo.js,https://github.com/meteor/meteor/commit/a76c30693f8697885787e9baab80107a8471a0c4,"  findMongoPids = function(dbDir_unused, port) {
+
+    return new Promise((resolve, reject) => {
+
+      child_process.exec('tasklist /fi ""IMAGENAME eq mongod.exe""', function(
+
+        error,
+
+        stdout,
+
+        stderr
+
+      ) {
+
+        if (error) {
+
+          var additionalInfo = JSON.stringify(error);
+
+          if (error.code === 'ENOENT') {
+
+            additionalInfo =
+
+              ""tasklist wasn't found on your system, it usually can be found at C:\\Windows\\System32\\."";
+
+          reject(
+
+            new Error(""Couldn't run tasklist.exe: "" + additionalInfo)
+
+          );
+
+          return;
+
+        } else {
+
+          // Find the pids of all mongod processes
+
+          var mongo_pids = [];
+
+          stdout.split('\n')
+
+            .forEach(function(line) {
+
+              var m = line.match(/^mongod.exe\s+(\d+) /);
+
+              if (m) {
+
+                mongo_pids[m[1]] = true;
+
+              }
+
+            });
+
+
+
+          // Now get the corresponding port numbers
+
+          child_process.exec(
+
+            'netstat -ano',
+
+            { maxBuffer: 1024 * 1024 * 10 },
+
+            function(error, stdout, stderr) {
+
+              if (error) {
+
+                promise.reject(
+
+                  new Error(""Couldn't run netstat -ano: "" + JSON.stringify(error))
+
+                return;
+
+              } else {
+
+                var pids = [];
+
+                stdout.split('\n')
+
+                  .forEach(function(line) {
+
+                    var m = line.match(
+
+                      /^\s*TCP\s+\S+:(\d+)\s+\S+\s+LISTENING\s+(\d+)/
+
+                    );
+
+                    if (m) {
+
+                      var found_pid = parseInt(m[2], 10);
+
+                      var found_port = parseInt(m[1], 10);
+
+
+
+                      // We can't check the path app_dir so assume it always matches
+
+                      if (mongo_pids[found_pid] && (!port || port === found_port)) {
+
+                        // Note that if the mongo rest interface is enabled the
+
+                        // initial port + 1000 is also likely to be open.
+
+                        // So remove the pid so we only match it once.
+
+                        delete mongo_pids[found_pid];
+
+                        pids.push({
+
+                          pid: found_pid,
+
+                          port: found_port,
+
+                          app_dir: null,
+
+                        });
+
+                      }
+
+                    }
+
+                  });
+
+
+
+                resolve(pids);
+
+              }
+
+          );
+
+        }
+
+      });
+
+  findMongoPids = function(dbDir, port) {
+
+    return new Promise((resolve, reject) => {
+
+
+
+      // 'ps ax' should be standard across all MacOS and Linux.
+
+      // However, ps on OS X corrupts some non-ASCII characters in arguments,
+
+      // such as т (CYRILLIC SMALL LETTER TE), leading to this function
+
+      // failing to properly match pathnames with those characters.  #3999
+
+      //
+
+      // pgrep appears to do a better job (and has output that is roughly
+
+      // similar; it lacks a few fields that we don't care about).  Plus,
+
+      // it can do some of the grepping for us.
+
+      //
+
+      // However, 'pgrep' only started shipping with OS X 10.8 (and may be less
+
+      // common on Linux too), so we check to see if it exists and fall back to
+
+      // 'ps' if we can't find it.
+
+      //
+
+      // We avoid using pgrep on Linux, because some versions of Linux pgrep
+
+      // require you to pass -a/--list-full to include the arguments in the
+
+      // output, and other versions fail if you pass that option. We have not
+
+      // observed the Unicode corruption on Linux, so using ps ax there is fine.
+
+      var psScript = 'ps ax';
+
+      if (process.platform === 'darwin') {
+
+        psScript =
+
+          'if type pgrep >/dev/null 2>&1; then ' +
+
+          // -lf means to display and match against full argument lists.
+
+          // pgrep exits 1 if no processes match the argument; we're OK
+
+          // considering this as a success, but we don't want other errors
+
+          // to be ignored.  Note that this is sh not bash, so we can't use
+
+          // [[.
+
+          'pgrep -lf mongod; test ""$?"" -eq 0 -o ""$?"" -eq 1;' +
+
+          'else ps ax; fi';
+
+      }
+
+
+
+      // If the child process output includes unicode, make sure it's
+
+      // handled properly.
+
+      const {
+
+        LANG = 'en_US.UTF-8',
+
+        LC_ALL = LANG,
+
+        LANGUAGE = LANG,
+
+        // Remainder of process.env without above properties.
+
+        ...env
+
+      } = process.env;
+
+
+
+      // Make sure all three properties are set to the same value, which
+
+      // defaults to ""en_US.UTF-8"" or whatever LANG was already set to.
+
+      Object.assign(env, {
+
+        LANG,
+
+        LC_ALL,
+
+        LANGUAGE
+
+      });
+
+      child_process.exec(
+
+        psScript,
+
+        {
+
+          env,
+
+          // we don't want this to randomly fail just because you're running
+
+          // lots of processes. 10MB should be more than ps ax will ever
+
+          // spit out; the default is 200K, which at least one person hit
+
+          // (#2158).
+
+          maxBuffer: 1024 * 1024 * 10,
+
+        },
+
+        function(error, stdout, stderr) {
+
+          if (error) {
+
+            reject(
+
+              new Error(
+
+                ""Couldn't run ps ax: "" +
+
+              )
+
+            );
+
+            return;
+
+          var ret = [];
+
+          stdout.split('\n')
+
+            .forEach(function(line) {
+
+              // Matches mongos we start. Note that this matches
+
+              // 'fake-mongod' (our mongod stub for automated tests) as well
+
+              // as 'mongod'.
+
+              var m = line.match(
+
+                /^\s*(\d+).+mongod .+--port (\d+) --dbpath (.+(?:\/|\\)db)/
+
+              );
+
+              if (m && m.length === 4) {
+
+                var foundPid = parseInt(m[1], 10);
+
+                var foundPort = parseInt(m[2], 10);
+
+                var foundPath = m[3];
+
+
+
+                if (
+
+                  (!port || port === foundPort) &&
+
+                  (!dbDir || dbDir === foundPath)
+
+                ) {
+
+                  ret.push({
+
+                    pid: foundPid,
+
+                    port: foundPort,
+
+                    dbDir: foundPath,
+
+                  });
+
+                }
+
+              }
+
+            });
+
+          resolve(ret);
+
+        }
+
+      );
+
+    });
+","  findMongoPids = async function(dbDir_unused, port) {
+
+    var promise = fiberHelpers.makeFulfillablePromise();
+
+    child_process.exec('tasklist /fi ""IMAGENAME eq mongod.exe""', function(
+
+      error,
+
+      stdout,
+
+      stderr
+
+    ) {
+
+      if (error) {
+
+        var additionalInfo = JSON.stringify(error);
+
+        if (error.code === 'ENOENT') {
+
+          additionalInfo =
+
+            ""tasklist wasn't found on your system, it usually can be found at C:\\Windows\\System32\\."";
+
+        }
+
+        promise.reject(
+
+          new Error(""Couldn't run tasklist.exe: "" + additionalInfo)
+
+        );
+
+        return;
+
+      } else {
+
+        // Find the pids of all mongod processes
+
+        var mongo_pids = [];
+
+        stdout.split('\n').forEach(function(line) {
+
+          var m = line.match(/^mongod.exe\s+(\d+) /);
+
+          if (m) {
+
+            mongo_pids[m[1]] = true;
+
+        });
+
+
+
+        // Now get the corresponding port numbers
+
+        child_process.exec(
+
+          'netstat -ano',
+
+          { maxBuffer: 1024 * 1024 * 10 },
+
+          function(error, stdout, stderr) {
+
+            if (error) {
+
+              promise.reject(
+
+                new Error(""Couldn't run netstat -ano: "" + JSON.stringify(error))
+
+              );
+
+              return;
+
+            } else {
+
+              var pids = [];
+
+              stdout.split('\n').forEach(function(line) {
+
+                var m = line.match(
+
+                  /^\s*TCP\s+\S+:(\d+)\s+\S+\s+LISTENING\s+(\d+)/
+
+                if (m) {
+
+                  var found_pid = parseInt(m[2], 10);
+
+                  var found_port = parseInt(m[1], 10);
+
+
+
+                  // We can't check the path app_dir so assume it always matches
+
+                  if (mongo_pids[found_pid] && (!port || port === found_port)) {
+
+                    // Note that if the mongo rest interface is enabled the
+
+                    // initial port + 1000 is also likely to be open.
+
+                    // So remove the pid so we only match it once.
+
+                    delete mongo_pids[found_pid];
+
+                    pids.push({
+
+                      pid: found_pid,
+
+                      port: found_port,
+
+                      app_dir: null,
+
+                    });
+
+                  }
+
+                }
+
+              });
+
+
+
+              promise.resolve(pids);
+
+          }
+
+        );
+
+      }
+
+
+
+    return await promise;
+
+  findMongoPids = async function(dbDir, port) {
+
+    var promise = fiberHelpers.makeFulfillablePromise();
+
+
+
+    // 'ps ax' should be standard across all MacOS and Linux.
+
+    // However, ps on OS X corrupts some non-ASCII characters in arguments,
+
+    // such as т (CYRILLIC SMALL LETTER TE), leading to this function
+
+    // failing to properly match pathnames with those characters.  #3999
+
+    //
+
+    // pgrep appears to do a better job (and has output that is roughly
+
+    // similar; it lacks a few fields that we don't care about).  Plus,
+
+    // it can do some of the grepping for us.
+
+    //
+
+    // However, 'pgrep' only started shipping with OS X 10.8 (and may be less
+
+    // common on Linux too), so we check to see if it exists and fall back to
+
+    // 'ps' if we can't find it.
+
+    //
+
+    // We avoid using pgrep on Linux, because some versions of Linux pgrep
+
+    // require you to pass -a/--list-full to include the arguments in the
+
+    // output, and other versions fail if you pass that option. We have not
+
+    // observed the Unicode corruption on Linux, so using ps ax there is fine.
+
+    var psScript = 'ps ax';
+
+    if (process.platform === 'darwin') {
+
+      psScript =
+
+        'if type pgrep >/dev/null 2>&1; then ' +
+
+        // -lf means to display and match against full argument lists.
+
+        // pgrep exits 1 if no processes match the argument; we're OK
+
+        // considering this as a success, but we don't want other errors
+
+        // to be ignored.  Note that this is sh not bash, so we can't use
+
+        // [[.
+
+        'pgrep -lf mongod; test ""$?"" -eq 0 -o ""$?"" -eq 1;' +
+
+        'else ps ax; fi';
+
+    }
+
+    // If the child process output includes unicode, make sure it's
+
+    // handled properly.
+
+    const {
+
+      LANG = 'en_US.UTF-8',
+
+      LC_ALL = LANG,
+
+      LANGUAGE = LANG,
+
+      // Remainder of process.env without above properties.
+
+      ...env
+
+    } = process.env;
+
+
+
+    // Make sure all three properties are set to the same value, which
+
+    // defaults to ""en_US.UTF-8"" or whatever LANG was already set to.
+
+    Object.assign(env, { LANG, LC_ALL, LANGUAGE });
+
+
+
+    child_process.exec(
+
+      psScript,
+
+      {
+
+        env,
+
+        // we don't want this to randomly fail just because you're running
+
+        // lots of processes. 10MB should be more than ps ax will ever
+
+        // spit out; the default is 200K, which at least one person hit
+
+        // (#2158).
+
+        maxBuffer: 1024 * 1024 * 10,
+
+      },
+
+      function(error, stdout, stderr) {
+
+        if (error) {
+
+          promise.reject(
+
+            new Error(
+
+              ""Couldn't run ps ax: "" +
+
+            )
+
+          );
+
+          return;
+
+        }
+
+
+
+        var ret = [];
+
+        stdout.split('\n').forEach(function(line) {
+
+          // Matches mongos we start. Note that this matches
+
+          // 'fake-mongod' (our mongod stub for automated tests) as well
+
+          // as 'mongod'.
+
+          var m = line.match(
+
+            /^\s*(\d+).+mongod .+--port (\d+) --dbpath (.+(?:\/|\\)db)/
+
+          );
+
+          if (m && m.length === 4) {
+
+            var foundPid = parseInt(m[1], 10);
+
+            var foundPort = parseInt(m[2], 10);
+
+            var foundPath = m[3];
+
+
+
+            if (
+
+              (!port || port === foundPort) &&
+
+              (!dbDir || dbDir === foundPath)
+
+            ) {
+
+              ret.push({
+
+                pid: foundPid,
+
+                port: foundPort,
+
+                dbDir: foundPath,
+
+              });
+
+            }
+
+        });
+
+        promise.resolve(ret);
+
+      }
+
+    );
+
+    return await promise;
+",2022-12-14 21:48:59-03:00
+34b53168884ddf15c2f47435913cb5fcf0edbc80,Matheus Castro,"Remove Fibers from meteor-tools:
+
+- Make meteor show and search packages command work.",tools/cli/commands-packages-query.js,https://github.com/meteor/meteor/commit/34b53168884ddf15c2f47435913cb5fcf0edbc80,"  // Collect the data for this package, including looking up any specific
+
+  // package version that we care about.
+
+  return new Promise(resolve => {
+
+    console.log('init .....');
+
+    if (options.version) {
+
+      var versionRecord = self._getVersionRecord(options.version);
+
+      if (versionRecord.local) {
+
+        self._getLocalVersion(versionRecord).then(res => {
+
+          self.data = res;
+
+          console.log('init .....', {res});
+
+          resolve();
+
+        });
+
+      } else {
+
+        self.data = self._getOfficialVersion(versionRecord);
+
+      }
+
+
+
+      self.data = self._collectPackageData();
+
+      resolve();
+
+  });
+
+};
+
+
+
+Object.assign(PackageQuery.prototype, {
+
+  _getVersionRecord: function (version) {
+
+    var versionRecord = self.localCatalog.getLatestVersion(self.name);
+","  self.version = options.version;
+
+};
+
+Object.assign(PackageQuery.prototype, {
+
+  init: async function() {
+
+    const self = this;
+
+    // Collect the data for this package, including looking up any specific
+
+    // package version that we care about.
+
+    if (self.version) {
+
+      var versionRecord = await self._getVersionRecord(self.version);
+
+      self.data = versionRecord.local ?
+
+          await self._getLocalVersion(versionRecord) :
+
+          await self._getOfficialVersion(versionRecord);
+
+      self.data = await self._collectPackageData();
+
+  },
+
+  _getVersionRecord: async function (version) {
+
+    var versionRecord = await self.localCatalog.getLatestVersion(self.name);
+",2022-12-29 12:57:56-03:00
+fcb7f8f8e7cd0c8e75f60f6abc1c9950458d9477,Edimar Cardoso,Remove callback and transform mongodb methods in async,packages/mongo/doc_fetcher_tests.js,https://github.com/meteor/meteor/commit/fcb7f8f8e7cd0c8e75f60f6abc1c9950458d9477,"  function (test, expect) {
+
+    // var id1 = await ;
+
+    // var id2 = await collection.insert({y: 2});
+
+    Promise.all([collection.insert({x: 1}), collection.insert({y: 2})]).then(([id1, id2]) => {
+
+      console.trace({id1, id2});
+
+    });
+
+    //
+
+    // var fetcher = new DocFetcher(
+
+    //   MongoInternals.defaultRemoteCollectionDriver().mongo);
+
+    //
+
+    // // Test basic operation.
+
+    // const fakeOp1 = {};
+
+    // const fakeOp2 = {};
+","  async function (test, expect) {
+
+    var id1 = await collection.insert({x: 1});
+
+    var id2 = await collection.insert({y: 2});
+
+
+
+    var fetcher = new DocFetcher(
+
+      MongoInternals.defaultRemoteCollectionDriver().mongo);
+
+
+
+    // Test basic operation.
+
+    const fakeOp1 = {};
+
+    const fakeOp2 = {};
+",2023-01-03 11:25:17-03:00
+1b2b87499b1c6988448564074df328915f5f03a3,Edimar Cardoso,Fix error for undefined `global.asyncLocalStorage`,packages/mongo/collection_tests.js,https://github.com/meteor/meteor/commit/1b2b87499b1c6988448564074df328915f5f03a3,"    Promise.resolve(
+
+      Meteor.isServer &&
+
+        collection.rawCollection().createIndex({ a: 1 })
+
+    ).then(() => {
+
+        collection.find({}, {
+
+        }).count().then((count => {
+
+            test.equal(count , 1);
+
+            done();
+
+        }));
+
+    }).catch(error => test.fail(error.message));
+","    if (Meteor.isServer) {
+
+        await collection.rawCollection().createIndex({ a: 1 });
+
+        const count = await collection.find({}, {
+
+        }).count();
+
+        test.equal(count , 1);
+
+        done();
+
+    }
+",2023-01-06 16:43:46-03:00
+57afe0a7bfa2b4b58d5c651659e146aa6d170ca5,Edimar Cardoso,"Minimongo tests
+
+- Fix minimongo tests;
+- Create asyncrounous tests from syncronous.",packages/minimongo/local_collection.js,https://github.com/meteor/meteor/commit/57afe0a7bfa2b4b58d5c651659e146aa6d170ca5,"  LocalCollection.prototype[methodNameAsync] = function(...args) {
+
+    return new Promise((resolve, reject) => self[methodName](...args,(err, result) => {
+
+      if (err) {
+
+        reject(err);
+
+      } else {
+
+        resolve(result);
+
+      }
+
+    }));
+","  LocalCollection.prototype[methodNameAsync] = async function(...args) {
+
+    return self[methodName](...args);
+",2023-01-31 20:57:37-03:00
+bdc2ff478a448720697d2ffa715a2d1785bd4461,Gabriel Grubba,wip on tla,packages/webapp/webapp_server.js,https://github.com/meteor/meteor/commit/bdc2ff478a448720697d2ffa715a2d1785bd4461,"runWebAppServer()
+
+  .then(_ => _)
+
+  .catch(e => {
+
+    
+
+  console.error(e.stack);
+
+  process.exit(1);
+
+})
+","await runWebAppServer()
+
+
+",2023-03-01 09:53:25-03:00
+a8bc5a80ac615b1b2f560a914eddd7afc3dfd62b,Jan Dvorak,Get more async tests and fix lint test error,roles/tests/serverAsync.js,https://github.com/meteor/meteor/commit/a8bc5a80ac615b1b2f560a914eddd7afc3dfd62b,"  it('get an empty list of roles for an empty user', function () {
+
+    assert.sameMembers(Roles.getRolesForUser(undefined), [])
+
+    assert.sameMembers(Roles.getRolesForUser(null), [])
+
+    assert.sameMembers(Roles.getRolesForUser({}), [])
+
+  })
+
+
+
+  it('get an empty list of roles for non-existant user', function () {
+
+    assert.sameMembers(Roles.getRolesForUser('1'), [])
+
+    assert.sameMembers(Roles.getRolesForUser('1', 'scope1'), [])
+
+  })
+
+
+
+  it('can get all roles for user', function () {
+
+    Roles.createRole('admin')
+
+    Roles.createRole('user')
+
+
+
+    const userId = users.eve
+
+    let userObj
+
+
+
+    // by userId
+
+    assert.sameMembers(Roles.getRolesForUser(userId), [])
+
+
+
+    // by user object
+
+    userObj = Meteor.users.findOne({ _id: userId })
+
+    assert.sameMembers(Roles.getRolesForUser(userObj), [])
+
+
+
+    Roles.addUsersToRoles(userId, ['admin', 'user'])
+
+
+
+    // by userId
+
+    assert.sameMembers(Roles.getRolesForUser(userId), ['admin', 'user'])
+
+
+
+    // by user object
+
+    userObj = Meteor.users.findOne({ _id: userId })
+
+    assert.sameMembers(Roles.getRolesForUser(userObj), ['admin', 'user'])
+
+
+
+    assert.sameDeepMembers(Roles.getRolesForUser(userId, { fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+      role: { _id: 'admin' },
+
+      scope: null,
+
+      user: { _id: userId },
+
+      inheritedRoles: [{ _id: 'admin' }]
+
+    }, {
+
+      role: { _id: 'user' },
+
+      scope: null,
+
+      user: { _id: userId },
+
+      inheritedRoles: [{ _id: 'user' }]
+
+    }])
+
+  })
+
+
+
+  it('can get all roles for user by scope', function () {
+
+    Roles.createRole('admin')
+
+    Roles.createRole('user')
+
+
+
+    const userId = users.eve
+
+    let userObj
+
+
+
+    // by userId
+
+    assert.sameMembers(Roles.getRolesForUser(userId, 'scope1'), [])
+
+
+
+    // by user object
+
+    userObj = Meteor.users.findOne({ _id: userId })
+
+    assert.sameMembers(Roles.getRolesForUser(userObj, 'scope1'), [])
+
+
+
+    // add roles
+
+    Roles.addUsersToRoles(userId, ['admin', 'user'], 'scope1')
+
+    Roles.addUsersToRoles(userId, ['admin'], 'scope2')
+
+
+
+    // by userId
+
+    assert.sameMembers(Roles.getRolesForUser(userId, 'scope1'), ['admin', 'user'])
+
+    assert.sameMembers(Roles.getRolesForUser(userId, 'scope2'), ['admin'])
+
+    assert.sameMembers(Roles.getRolesForUser(userId), [])
+
+
+
+    // by user object
+
+    userObj = Meteor.users.findOne({ _id: userId })
+
+    assert.sameMembers(Roles.getRolesForUser(userObj, 'scope1'), ['admin', 'user'])
+
+    assert.sameMembers(Roles.getRolesForUser(userObj, 'scope2'), ['admin'])
+
+    assert.sameMembers(Roles.getRolesForUser(userObj), [])
+
+
+
+    assert.sameDeepMembers(Roles.getRolesForUser(userId, { fullObjects: true, scope: 'scope1' }).map(obj => { delete obj._id; return obj }), [{
+
+      role: { _id: 'admin' },
+
+      scope: 'scope1',
+
+      user: { _id: userId },
+
+      inheritedRoles: [{ _id: 'admin' }]
+
+    }, {
+
+      role: { _id: 'user' },
+
+      scope: 'scope1',
+
+      user: { _id: userId },
+
+      inheritedRoles: [{ _id: 'user' }]
+
+    }])
+
+    assert.sameDeepMembers(Roles.getRolesForUser(userId, { fullObjects: true, scope: 'scope2' }).map(obj => { delete obj._id; return obj }), [{
+
+      role: { _id: 'admin' },
+
+      scope: 'scope2',
+
+      user: { _id: userId },
+
+      inheritedRoles: [{ _id: 'admin' }]
+
+    }])
+
+
+
+    assert.sameDeepMembers(Roles.getRolesForUser(userId, { fullObjects: true, anyScope: true }).map(obj => { delete obj._id; return obj }), [{
+
+      role: { _id: 'admin' },
+
+      scope: 'scope1',
+
+      user: { _id: userId },
+
+      inheritedRoles: [{ _id: 'admin' }]
+
+    }, {
+
+      role: { _id: 'user' },
+
+      scope: 'scope1',
+
+      user: { _id: userId },
+
+      inheritedRoles: [{ _id: 'user' }]
+
+    }, {
+
+      role: { _id: 'admin' },
+
+      scope: 'scope2',
+
+      user: { _id: userId },
+
+      inheritedRoles: [{ _id: 'admin' }]
+
+    }])
+
+
+
+    Roles.createRole('PERMISSION')
+
+    Roles.addRolesToParent('PERMISSION', 'user')
+
+
+
+    assert.sameDeepMembers(Roles.getRolesForUser(userId, { fullObjects: true, scope: 'scope1' }).map(obj => { delete obj._id; return obj }), [{
+
+      role: { _id: 'admin' },
+
+      scope: 'scope1',
+
+      user: { _id: userId },
+
+      inheritedRoles: [{ _id: 'admin' }]
+
+    }, {
+
+      role: { _id: 'user' },
+
+      scope: 'scope1',
+
+      user: { _id: userId },
+
+      inheritedRoles: [{ _id: 'user' }, { _id: 'PERMISSION' }]
+
+    }])
+
+    assert.sameDeepMembers(Roles.getRolesForUser(userId, { fullObjects: true, scope: 'scope2' }).map(obj => { delete obj._id; return obj }), [{
+
+      role: { _id: 'admin' },
+
+      scope: 'scope2',
+
+      user: { _id: userId },
+
+      inheritedRoles: [{ _id: 'admin' }]
+
+    }])
+
+    assert.sameMembers(Roles.getRolesForUser(userId, { scope: 'scope1' }), ['admin', 'user', 'PERMISSION'])
+
+    assert.sameMembers(Roles.getRolesForUser(userId, { scope: 'scope2' }), ['admin'])
+
+
+
+    assert.sameDeepMembers(Roles.getRolesForUser(userId, { fullObjects: true, anyScope: true }).map(obj => { delete obj._id; return obj }), [{
+
+      role: { _id: 'admin' },
+
+      scope: 'scope1',
+
+      user: { _id: userId },
+
+      inheritedRoles: [{ _id: 'admin' }]
+
+    }, {
+
+      role: { _id: 'user' },
+
+      scope: 'scope1',
+
+      user: { _id: userId },
+
+      inheritedRoles: [{ _id: 'user' }, { _id: 'PERMISSION' }]
+
+    }, {
+
+      role: { _id: 'admin' },
+
+      scope: 'scope2',
+
+      user: { _id: userId },
+
+      inheritedRoles: [{ _id: 'admin' }]
+
+    }])
+
+    assert.sameMembers(Roles.getRolesForUser(userId, { anyScope: true }), ['admin', 'user', 'PERMISSION'])
+
+
+
+    assert.sameDeepMembers(Roles.getRolesForUser(userId, { fullObjects: true, scope: 'scope1', onlyAssigned: true }).map(obj => { delete obj._id; return obj }), [{
+
+      role: { _id: 'admin' },
+
+      scope: 'scope1',
+
+      user: { _id: userId },
+
+      inheritedRoles: [{ _id: 'admin' }]
+
+    }, {
+
+      role: { _id: 'user' },
+
+      scope: 'scope1',
+
+      user: { _id: userId },
+
+      inheritedRoles: [{ _id: 'user' }, { _id: 'PERMISSION' }]
+
+    }])
+
+    assert.sameDeepMembers(Roles.getRolesForUser(userId, { fullObjects: true, scope: 'scope2', onlyAssigned: true }).map(obj => { delete obj._id; return obj }), [{
+
+      role: { _id: 'admin' },
+
+      scope: 'scope2',
+
+      user: { _id: userId },
+
+      inheritedRoles: [{ _id: 'admin' }]
+
+    }])
+
+    assert.sameMembers(Roles.getRolesForUser(userId, { scope: 'scope1', onlyAssigned: true }), ['admin', 'user'])
+
+    assert.sameMembers(Roles.getRolesForUser(userId, { scope: 'scope2', onlyAssigned: true }), ['admin'])
+
+
+
+    assert.sameDeepMembers(Roles.getRolesForUser(userId, { fullObjects: true, anyScope: true, onlyAssigned: true }).map(obj => { delete obj._id; return obj }), [{
+
+      role: { _id: 'admin' },
+
+      scope: 'scope1',
+
+      user: { _id: userId },
+
+      inheritedRoles: [{ _id: 'admin' }]
+
+    }, {
+
+      role: { _id: 'user' },
+
+      scope: 'scope1',
+
+      user: { _id: userId },
+
+      inheritedRoles: [{ _id: 'user' }, { _id: 'PERMISSION' }]
+
+    }, {
+
+      role: { _id: 'admin' },
+
+      scope: 'scope2',
+
+      user: { _id: userId },
+
+      inheritedRoles: [{ _id: 'admin' }]
+
+    }])
+
+    assert.sameMembers(Roles.getRolesForUser(userId, { anyScope: true, onlyAssigned: true }), ['admin', 'user'])
+
+  })
+
+
+
+  it('can get only scoped roles for user', function () {
+
+    Roles.createRole('admin')
+
+    Roles.createRole('user')
+
+
+
+    const userId = users.eve
+
+
+
+    // add roles
+
+    Roles.addUsersToRoles(userId, ['user'], 'scope1')
+
+    Roles.addUsersToRoles(userId, ['admin'])
+
+
+
+    Roles.createRole('PERMISSION')
+
+    Roles.addRolesToParent('PERMISSION', 'user')
+
+
+
+    assert.sameMembers(Roles.getRolesForUser(userId, { onlyScoped: true, scope: 'scope1' }), ['user', 'PERMISSION'])
+
+    assert.sameMembers(Roles.getRolesForUser(userId, { onlyScoped: true, onlyAssigned: true, scope: 'scope1' }), ['user'])
+
+    assert.sameDeepMembers(Roles.getRolesForUser(userId, { onlyScoped: true, fullObjects: true, scope: 'scope1' }).map(obj => { delete obj._id; return obj }), [{
+
+      role: { _id: 'user' },
+
+      scope: 'scope1',
+
+      user: { _id: userId },
+
+      inheritedRoles: [{ _id: 'user' }, { _id: 'PERMISSION' }]
+
+    }])
+
+  })
+
+
+
+  it('can get all roles for user by scope with periods in name', function () {
+
+    Roles.createRole('admin')
+
+
+
+    Roles.addUsersToRoles(users.joe, ['admin'], 'example.k12.va.us')
+
+
+
+    assert.sameMembers(Roles.getRolesForUser(users.joe, 'example.k12.va.us'), ['admin'])
+
+  })
+
+
+
+  it('can get all roles for user by scope including Roles.GLOBAL_SCOPE', function () {
+
+    Roles.createRole('admin')
+
+    Roles.createRole('user')
+
+    Roles.createRole('editor')
+
+
+
+    const userId = users.eve
+
+
+
+    Roles.addUsersToRoles([users.eve], ['editor'], Roles.GLOBAL_SCOPE)
+
+    Roles.addUsersToRoles([users.eve], ['admin', 'user'], 'scope1')
+
+
+
+    // by userId
+
+    assert.sameMembers(Roles.getRolesForUser(userId, 'scope1'), ['editor', 'admin', 'user'])
+
+    assert.sameMembers(Roles.getRolesForUser(userId), ['editor'])
+
+
+
+    // by user object
+
+    const userObj = Meteor.users.findOne({ _id: userId })
+
+    assert.sameMembers(Roles.getRolesForUser(userObj, 'scope1'), ['editor', 'admin', 'user'])
+
+    assert.sameMembers(Roles.getRolesForUser(userObj), ['editor'])
+
+  })
+
+
+
+  it('getRolesForUser should not return null entries if user has no roles for scope', function () {
+
+    Roles.createRole('editor')
+
+
+
+    const userId = users.eve
+
+    let userObj
+
+
+
+    // by userId
+
+    assert.sameMembers(Roles.getRolesForUser(userId, 'scope1'), [])
+
+    assert.sameMembers(Roles.getRolesForUser(userId), [])
+
+
+
+    // by user object
+
+    userObj = Meteor.users.findOne({ _id: userId })
+
+    assert.sameMembers(Roles.getRolesForUser(userObj, 'scope1'), [])
+
+    assert.sameMembers(Roles.getRolesForUser(userObj), [])
+
+
+
+    Roles.addUsersToRoles([users.eve], ['editor'], Roles.GLOBAL_SCOPE)
+
+
+
+    // by userId
+
+    assert.sameMembers(Roles.getRolesForUser(userId, 'scope1'), ['editor'])
+
+    assert.sameMembers(Roles.getRolesForUser(userId), ['editor'])
+
+
+
+    // by user object
+
+    userObj = Meteor.users.findOne({ _id: userId })
+
+    assert.sameMembers(Roles.getRolesForUser(userObj, 'scope1'), ['editor'])
+
+    assert.sameMembers(Roles.getRolesForUser(userObj), ['editor'])
+
+  })
+
+
+
+  it('getRolesForUser should not fail during a call of addUsersToRoles', function () {
+
+    Roles.createRole('editor')
+
+
+
+    const userId = users.eve
+
+    const promises = []
+
+    const interval = setInterval(() => {
+
+      promises.push(Promise.resolve().then(() => { Roles.getRolesForUser(userId) }))
+
+    }, 0)
+
+
+
+    Roles.addUsersToRoles([users.eve], ['editor'], Roles.GLOBAL_SCOPE)
+
+    clearInterval(interval)
+
+
+
+    return Promise.all(promises)
+
+  })
+
+
+
+  it('returns an empty list of scopes for null as user-id', function () {
+
+    assert.sameMembers(Roles.getScopesForUser(undefined), [])
+
+    assert.sameMembers(Roles.getScopesForUser(null), [])
+
+    assert.sameMembers(Roles.getScopesForUser('foo'), [])
+
+    assert.sameMembers(Roles.getScopesForUser({}), [])
+
+    assert.sameMembers(Roles.getScopesForUser({ _id: 'foo' }), [])
+
+  })
+
+
+
+  it('can get all scopes for user', function () {
+
+    Roles.createRole('admin')
+
+    Roles.createRole('user')
+
+    Roles.createRole('editor')
+
+
+
+    const userId = users.eve
+
+
+
+    Roles.addUsersToRoles([users.eve], ['editor'], 'scope1')
+
+    Roles.addUsersToRoles([users.eve], ['admin', 'user'], 'scope2')
+
+
+
+    // by userId
+
+    assert.sameMembers(Roles.getScopesForUser(userId), ['scope1', 'scope2'])
+
+
+
+    // by user object
+
+    const userObj = Meteor.users.findOne({ _id: userId })
+
+    assert.sameMembers(Roles.getScopesForUser(userObj), ['scope1', 'scope2'])
+
+  })
+
+
+
+  it('can get all scopes for user by role', function () {
+
+    Roles.createRole('admin')
+
+    Roles.createRole('user')
+
+    Roles.createRole('editor')
+
+
+
+    const userId = users.eve
+
+
+
+    Roles.addUsersToRoles([users.eve], ['editor'], 'scope1')
+
+    Roles.addUsersToRoles([users.eve], ['editor', 'user'], 'scope2')
+
+
+
+    // by userId
+
+    assert.sameMembers(Roles.getScopesForUser(userId, 'user'), ['scope2'])
+
+    assert.sameMembers(Roles.getScopesForUser(userId, 'editor'), ['scope1', 'scope2'])
+
+    assert.sameMembers(Roles.getScopesForUser(userId, 'admin'), [])
+
+
+
+    // by user object
+
+    const userObj = Meteor.users.findOne({ _id: userId })
+
+    assert.sameMembers(Roles.getScopesForUser(userObj, 'user'), ['scope2'])
+
+    assert.sameMembers(Roles.getScopesForUser(userObj, 'editor'), ['scope1', 'scope2'])
+
+    assert.sameMembers(Roles.getScopesForUser(userObj, 'admin'), [])
+
+  })
+
+
+
+  it('getScopesForUser returns [] when not using scopes', function () {
+
+    Roles.createRole('user')
+
+    Roles.createRole('editor')
+
+
+
+    const userId = users.eve
+
+
+
+    Roles.addUsersToRoles([users.eve], ['editor', 'user'])
+
+
+
+    // by userId
+
+    assert.sameMembers(Roles.getScopesForUser(userId), [])
+
+    assert.sameMembers(Roles.getScopesForUser(userId, 'editor'), [])
+
+    assert.sameMembers(Roles.getScopesForUser(userId, ['editor']), [])
+
+    assert.sameMembers(Roles.getScopesForUser(userId, ['editor', 'user']), [])
+
+
+
+    // by user object
+
+    const userObj = Meteor.users.findOne({ _id: userId })
+
+    assert.sameMembers(Roles.getScopesForUser(userObj), [])
+
+    assert.sameMembers(Roles.getScopesForUser(userObj, 'editor'), [])
+
+    assert.sameMembers(Roles.getScopesForUser(userObj, ['editor']), [])
+
+    assert.sameMembers(Roles.getScopesForUser(userObj, ['editor', 'user']), [])
+
+  })
+
+
+
+  it('can get all groups for user by role array', function () {
+
+    const userId = users.eve
+
+
+
+    Roles.createRole('user')
+
+    Roles.createRole('editor')
+
+    Roles.createRole('moderator')
+
+    Roles.createRole('admin')
+
+
+
+    Roles.addUsersToRoles([users.eve], ['editor'], 'group1')
+
+    Roles.addUsersToRoles([users.eve], ['editor', 'user'], 'group2')
+
+    Roles.addUsersToRoles([users.eve], ['moderator'], 'group3')
+
+
+
+    // by userId, one role
+
+    assert.sameMembers(Roles.getScopesForUser(userId, ['user']), ['group2'])
+
+    assert.sameMembers(Roles.getScopesForUser(userId, ['editor']), ['group1', 'group2'])
+
+    assert.sameMembers(Roles.getScopesForUser(userId, ['admin']), [])
+
+
+
+    // by userId, multiple roles
+
+    assert.sameMembers(Roles.getScopesForUser(userId, ['editor', 'user']), ['group1', 'group2'])
+
+    assert.sameMembers(Roles.getScopesForUser(userId, ['editor', 'moderator']), ['group1', 'group2', 'group3'])
+
+    assert.sameMembers(Roles.getScopesForUser(userId, ['user', 'moderator']), ['group2', 'group3'])
+
+
+
+    // by user object, one role
+
+    const userObj = Meteor.users.findOne({ _id: userId })
+
+    assert.sameMembers(Roles.getScopesForUser(userObj, ['user']), ['group2'])
+
+    assert.sameMembers(Roles.getScopesForUser(userObj, ['editor']), ['group1', 'group2'])
+
+    assert.sameMembers(Roles.getScopesForUser(userObj, ['admin']), [])
+
+
+
+    // by user object, multiple roles
+
+    assert.sameMembers(Roles.getScopesForUser(userObj, ['editor', 'user']), ['group1', 'group2'])
+
+    assert.sameMembers(Roles.getScopesForUser(userObj, ['editor', 'moderator']), ['group1', 'group2', 'group3'])
+
+    assert.sameMembers(Roles.getScopesForUser(userObj, ['user', 'moderator']), ['group2', 'group3'])
+
+  })
+
+
+
+  it('getting all scopes for user does not include GLOBAL_SCOPE', function () {
+
+    Roles.createRole('admin')
+
+    Roles.createRole('user')
+
+    Roles.createRole('editor')
+
+
+
+    const userId = users.eve
+
+
+
+    Roles.addUsersToRoles([users.eve], ['editor'], 'scope1')
+
+    Roles.addUsersToRoles([users.eve], ['editor', 'user'], 'scope2')
+
+    Roles.addUsersToRoles([users.eve], ['editor', 'user', 'admin'], Roles.GLOBAL_SCOPE)
+
+
+
+    // by userId
+
+    assert.sameMembers(Roles.getScopesForUser(userId, 'user'), ['scope2'])
+
+    assert.sameMembers(Roles.getScopesForUser(userId, 'editor'), ['scope1', 'scope2'])
+
+    assert.sameMembers(Roles.getScopesForUser(userId, 'admin'), [])
+
+    assert.sameMembers(Roles.getScopesForUser(userId, ['user']), ['scope2'])
+
+    assert.sameMembers(Roles.getScopesForUser(userId, ['editor']), ['scope1', 'scope2'])
+
+    assert.sameMembers(Roles.getScopesForUser(userId, ['admin']), [])
+
+    assert.sameMembers(Roles.getScopesForUser(userId, ['user', 'editor', 'admin']), ['scope1', 'scope2'])
+
+
+
+    // by user object
+
+    const userObj = Meteor.users.findOne({ _id: userId })
+
+    assert.sameMembers(Roles.getScopesForUser(userObj, 'user'), ['scope2'])
+
+    assert.sameMembers(Roles.getScopesForUser(userObj, 'editor'), ['scope1', 'scope2'])
+
+    assert.sameMembers(Roles.getScopesForUser(userObj, 'admin'), [])
+
+    assert.sameMembers(Roles.getScopesForUser(userObj, ['user']), ['scope2'])
+
+    assert.sameMembers(Roles.getScopesForUser(userObj, ['editor']), ['scope1', 'scope2'])
+
+    assert.sameMembers(Roles.getScopesForUser(userObj, ['admin']), [])
+
+    assert.sameMembers(Roles.getScopesForUser(userObj, ['user', 'editor', 'admin']), ['scope1', 'scope2'])
+
+  })
+
+
+
+  it('can get all users in role', function () {
+
+    Roles.createRole('admin')
+
+    Roles.createRole('user')
+
+    Roles.createRole('editor')
+
+
+
+    Roles.addUsersToRoles([users.eve, users.joe], ['admin', 'user'])
+
+    Roles.addUsersToRoles([users.bob, users.joe], ['editor'])
+
+
+
+    const expected = [users.eve, users.joe]
+
+    const actual = Roles.getUsersInRole('admin').fetch().map(r => r._id)
+
+
+
+    assert.sameMembers(actual, expected)
+
+  })
+
+
+
+  it('can get all users in role by scope', function () {
+
+    Roles.createRole('admin')
+
+    Roles.createRole('user')
+
+
+
+    Roles.addUsersToRoles([users.eve, users.joe], ['admin', 'user'], 'scope1')
+
+    Roles.addUsersToRoles([users.bob, users.joe], ['admin'], 'scope2')
+
+
+
+    let expected = [users.eve, users.joe]
+
+    let actual = Roles.getUsersInRole('admin', 'scope1').fetch().map(r => r._id)
+
+
+
+    assert.sameMembers(actual, expected)
+
+
+
+    expected = [users.eve, users.joe]
+
+    actual = Roles.getUsersInRole('admin', { scope: 'scope1' }).fetch().map(r => r._id)
+
+    assert.sameMembers(actual, expected)
+
+
+
+    expected = [users.eve, users.bob, users.joe]
+
+    actual = Roles.getUsersInRole('admin', { anyScope: true }).fetch().map(r => r._id)
+
+    assert.sameMembers(actual, expected)
+
+
+
+    actual = Roles.getUsersInRole('admin').fetch().map(r => r._id)
+
+    assert.sameMembers(actual, [])
+
+  })
+
+
+
+  it('can get all users in role by scope including Roles.GLOBAL_SCOPE', function () {
+
+    Roles.createRole('admin')
+
+    Roles.createRole('user')
+
+
+
+    Roles.addUsersToRoles([users.eve], ['admin', 'user'], Roles.GLOBAL_SCOPE)
+
+    Roles.addUsersToRoles([users.bob, users.joe], ['admin'], 'scope2')
+
+
+
+    let expected = [users.eve]
+
+    let actual = Roles.getUsersInRole('admin', 'scope1').fetch().map(r => r._id)
+
+
+
+    assert.sameMembers(actual, expected)
+
+
+
+    expected = [users.eve, users.bob, users.joe]
+
+    actual = Roles.getUsersInRole('admin', 'scope2').fetch().map(r => r._id)
+
+
+
+    assert.sameMembers(actual, expected)
+
+
+
+    expected = [users.eve]
+
+    actual = Roles.getUsersInRole('admin').fetch().map(r => r._id)
+
+
+
+    assert.sameMembers(actual, expected)
+
+
+
+    expected = [users.eve, users.bob, users.joe]
+
+    actual = Roles.getUsersInRole('admin', { anyScope: true }).fetch().map(r => r._id)
+
+
+
+    assert.sameMembers(actual, expected)
+
+  })
+
+
+
+  it('can get all users in role by scope excluding Roles.GLOBAL_SCOPE', function () {
+
+    Roles.createRole('admin')
+
+
+
+    Roles.addUsersToRoles([users.eve], ['admin'], Roles.GLOBAL_SCOPE)
+
+    Roles.addUsersToRoles([users.bob], ['admin'], 'scope1')
+
+
+
+    let expected = [users.eve]
+
+    let actual = Roles.getUsersInRole('admin').fetch().map(r => r._id)
+
+    assert.sameMembers(actual, expected)
+
+
+
+    expected = [users.eve, users.bob]
+
+    actual = Roles.getUsersInRole('admin', { scope: 'scope1' }).fetch().map(r => r._id)
+
+    assert.sameMembers(actual, expected)
+
+
+
+    expected = [users.bob]
+
+    actual = Roles.getUsersInRole('admin', { scope: 'scope1', onlyScoped: true }).fetch().map(r => r._id)
+
+    assert.sameMembers(actual, expected)
+
+  })
+
+
+
+  it('can get all users in role by scope and passes through mongo query arguments', function () {
+
+    Roles.createRole('admin')
+
+    Roles.createRole('user')
+
+
+
+    Roles.addUsersToRoles([users.eve, users.joe], ['admin', 'user'], 'scope1')
+
+    Roles.addUsersToRoles([users.bob, users.joe], ['admin'], 'scope2')
+
+
+
+    const results = Roles.getUsersInRole('admin', 'scope1', { fields: { username: 0 }, limit: 1 }).fetch()
+
+  it('can use Roles.GLOBAL_SCOPE to assign blanket roles', function () {
+
+    Roles.createRole('admin')
+
+
+
+    Roles.addUsersToRoles([users.joe, users.bob], ['admin'], Roles.GLOBAL_SCOPE)
+
+
+
+    testUser('eve', [], 'scope1')
+
+    testUser('joe', ['admin'], 'scope2')
+
+    testUser('joe', ['admin'], 'scope1')
+
+    testUser('bob', ['admin'], 'scope2')
+
+    testUser('bob', ['admin'], 'scope1')
+
+
+
+    Roles.removeUsersFromRoles(users.joe, ['admin'], Roles.GLOBAL_SCOPE)
+
+
+
+    testUser('eve', [], 'scope1')
+
+    testUser('joe', [], 'scope2')
+
+    testUser('joe', [], 'scope1')
+
+    testUser('bob', ['admin'], 'scope2')
+
+    testUser('bob', ['admin'], 'scope1')
+
+  })
+
+
+
+  it('Roles.GLOBAL_SCOPE is independent of other scopes', function () {
+
+    Roles.createRole('admin')
+
+
+
+    Roles.addUsersToRoles([users.joe, users.bob], ['admin'], 'scope5')
+
+    Roles.addUsersToRoles([users.joe, users.bob], ['admin'], Roles.GLOBAL_SCOPE)
+
+
+
+    testUser('eve', [], 'scope1')
+
+    testUser('joe', ['admin'], 'scope5')
+
+    testUser('joe', ['admin'], 'scope2')
+
+    testUser('joe', ['admin'], 'scope1')
+
+    testUser('bob', ['admin'], 'scope5')
+
+    testUser('bob', ['admin'], 'scope2')
+
+    testUser('bob', ['admin'], 'scope1')
+
+
+
+    Roles.removeUsersFromRoles(users.joe, ['admin'], Roles.GLOBAL_SCOPE)
+
+
+
+    testUser('eve', [], 'scope1')
+
+    testUser('joe', ['admin'], 'scope5')
+
+    testUser('joe', [], 'scope2')
+
+    testUser('joe', [], 'scope1')
+
+    testUser('bob', ['admin'], 'scope5')
+
+    testUser('bob', ['admin'], 'scope2')
+
+    testUser('bob', ['admin'], 'scope1')
+
+  })
+
+
+
+  it('Roles.GLOBAL_SCOPE also checked when scope not specified', function () {
+
+    Roles.createRole('admin')
+
+
+
+    Roles.addUsersToRoles(users.joe, 'admin', Roles.GLOBAL_SCOPE)
+
+
+
+    testUser('joe', ['admin'])
+
+
+
+    Roles.removeUsersFromRoles(users.joe, 'admin', Roles.GLOBAL_SCOPE)
+
+
+
+    testUser('joe', [])
+
+  })
+
+
+
+  it('can use \'.\' in scope name', function () {
+
+    Roles.createRole('admin')
+
+
+
+    Roles.addUsersToRoles(users.joe, ['admin'], 'example.com')
+
+    testUser('joe', ['admin'], 'example.com')
+
+  })
+
+
+
+  it('can use multiple periods in scope name', function () {
+
+    Roles.createRole('admin')
+
+
+
+    Roles.addUsersToRoles(users.joe, ['admin'], 'example.k12.va.us')
+
+    testUser('joe', ['admin'], 'example.k12.va.us')
+
+  })
+
+
+
+  it('renaming of roles', function () {
+
+    Roles.createRole('admin')
+
+    Roles.createRole('user')
+
+    Roles.createRole('editor')
+
+
+
+    Roles.setUserRoles([users.eve, users.bob], ['editor', 'user'], 'scope1')
+
+    Roles.setUserRoles([users.bob, users.joe], ['user', 'admin'], 'scope2')
+
+
+
+    assert.isTrue(Roles.userIsInRole(users.eve, 'editor', 'scope1'))
+
+    assert.isFalse(Roles.userIsInRole(users.eve, 'editor', 'scope2'))
+
+
+
+    assert.isFalse(Roles.userIsInRole(users.joe, 'admin', 'scope1'))
+
+    assert.isTrue(Roles.userIsInRole(users.joe, 'admin', 'scope2'))
+
+
+
+    assert.isTrue(Roles.userIsInRole(users.eve, 'user', 'scope1'))
+
+    assert.isTrue(Roles.userIsInRole(users.bob, 'user', 'scope1'))
+
+    assert.isFalse(Roles.userIsInRole(users.joe, 'user', 'scope1'))
+
+
+
+    assert.isFalse(Roles.userIsInRole(users.eve, 'user', 'scope2'))
+
+    assert.isTrue(Roles.userIsInRole(users.bob, 'user', 'scope2'))
+
+    assert.isTrue(Roles.userIsInRole(users.joe, 'user', 'scope2'))
+
+
+
+    assert.isFalse(Roles.userIsInRole(users.eve, 'user2', 'scope1'))
+
+    assert.isFalse(Roles.userIsInRole(users.eve, 'user2', 'scope2'))
+
+
+
+    Roles.renameRole('user', 'user2')
+
+
+
+    assert.isTrue(Roles.userIsInRole(users.eve, 'editor', 'scope1'))
+
+    assert.isFalse(Roles.userIsInRole(users.eve, 'editor', 'scope2'))
+
+
+
+    assert.isFalse(Roles.userIsInRole(users.joe, 'admin', 'scope1'))
+
+    assert.isTrue(Roles.userIsInRole(users.joe, 'admin', 'scope2'))
+
+
+
+    assert.isTrue(Roles.userIsInRole(users.eve, 'user2', 'scope1'))
+
+    assert.isTrue(Roles.userIsInRole(users.bob, 'user2', 'scope1'))
+
+    assert.isFalse(Roles.userIsInRole(users.joe, 'user2', 'scope1'))
+
+
+
+    assert.isFalse(Roles.userIsInRole(users.eve, 'user2', 'scope2'))
+
+    assert.isTrue(Roles.userIsInRole(users.bob, 'user2', 'scope2'))
+
+    assert.isTrue(Roles.userIsInRole(users.joe, 'user2', 'scope2'))
+
+
+
+    assert.isFalse(Roles.userIsInRole(users.eve, 'user', 'scope1'))
+
+    assert.isFalse(Roles.userIsInRole(users.eve, 'user', 'scope2'))
+
+  })
+
+
+
+  it('migration without global groups (to v2)', function () {
+
+    assert.isOk(Meteor.roles.insert({ name: 'admin' }))
+
+    assert.isOk(Meteor.roles.insert({ name: 'editor' }))
+
+    assert.isOk(Meteor.roles.insert({ name: 'user' }))
+
+
+
+    assert.isOk(Meteor.users.update(users.eve, { $set: { roles: ['admin', 'editor'] } }))
+
+    assert.isOk(Meteor.users.update(users.bob, { $set: { roles: [] } }))
+
+    assert.isOk(Meteor.users.update(users.joe, { $set: { roles: ['user'] } }))
+
+
+
+    Roles._forwardMigrate()
+
+
+
+    assert.deepEqual(Meteor.users.findOne(users.eve, { fields: { roles: 1, _id: 0 } }), {
+
+      roles: [{
+
+        _id: 'admin',
+
+        scope: null,
+
+        assigned: true
+
+      }, {
+
+        _id: 'editor',
+
+        scope: null,
+
+        assigned: true
+
+      }]
+
+    })
+
+    assert.deepEqual(Meteor.users.findOne(users.bob, { fields: { roles: 1, _id: 0 } }), {
+
+      roles: []
+
+    })
+
+    assert.deepEqual(Meteor.users.findOne(users.joe, { fields: { roles: 1, _id: 0 } }), {
+
+      roles: [{
+
+        _id: 'user',
+
+        scope: null,
+
+        assigned: true
+
+      }]
+
+    })
+
+
+
+    assert.deepEqual(Meteor.roles.findOne({ _id: 'admin' }), {
+
+      _id: 'admin',
+
+      children: []
+
+    })
+
+    assert.deepEqual(Meteor.roles.findOne({ _id: 'editor' }), {
+
+      _id: 'editor',
+
+      children: []
+
+    })
+
+    assert.deepEqual(Meteor.roles.findOne({ _id: 'user' }), {
+
+      _id: 'user',
+
+      children: []
+
+    })
+
+
+
+    Roles._backwardMigrate(null, null, false)
+
+
+
+    assert.deepEqual(Meteor.users.findOne(users.eve, { fields: { roles: 1, _id: 0 } }), {
+
+      roles: ['admin', 'editor']
+
+    })
+
+    assert.deepEqual(Meteor.users.findOne(users.bob, { fields: { roles: 1, _id: 0 } }), {
+
+      roles: []
+
+    })
+
+    assert.deepEqual(Meteor.users.findOne(users.joe, { fields: { roles: 1, _id: 0 } }), {
+
+      roles: ['user']
+
+    })
+
+
+
+    assert.deepEqual(Meteor.roles.findOne({ name: 'admin' }, { fields: { _id: 0 } }), {
+
+      name: 'admin'
+
+    })
+
+    assert.deepEqual(Meteor.roles.findOne({ name: 'editor' }, { fields: { _id: 0 } }), {
+
+      name: 'editor'
+
+    })
+
+    assert.deepEqual(Meteor.roles.findOne({ name: 'user' }, { fields: { _id: 0 } }), {
+
+      name: 'user'
+
+    })
+
+  })
+
+
+
+  it('migration without global groups (to v3)')
+
+
+
+  it('migration with global groups (to v2)', function () {
+
+    assert.isOk(Meteor.roles.insert({ name: 'admin' }))
+
+    assert.isOk(Meteor.roles.insert({ name: 'editor' }))
+
+    assert.isOk(Meteor.roles.insert({ name: 'user' }))
+
+
+
+    assert.isOk(Meteor.users.update(users.eve, { $set: { roles: { __global_roles__: ['admin', 'editor'], foo_bla: ['user'] } } }))
+
+    assert.isOk(Meteor.users.update(users.bob, { $set: { roles: { } } }))
+
+    assert.isOk(Meteor.users.update(users.joe, { $set: { roles: { __global_roles__: ['user'], foo_bla: ['user'] } } }))
+
+
+
+    Roles._forwardMigrate(null, null, false)
+
+
+
+    assert.deepEqual(Meteor.users.findOne(users.eve, { fields: { roles: 1, _id: 0 } }), {
+
+      roles: [{
+
+        _id: 'admin',
+
+        scope: null,
+
+        assigned: true
+
+      }, {
+
+        _id: 'editor',
+
+        scope: null,
+
+        assigned: true
+
+      }, {
+
+        _id: 'user',
+
+        scope: 'foo_bla',
+
+        assigned: true
+
+      }]
+
+    })
+
+    assert.deepEqual(Meteor.users.findOne(users.bob, { fields: { roles: 1, _id: 0 } }), {
+
+      roles: []
+
+    })
+
+    assert.deepEqual(Meteor.users.findOne(users.joe, { fields: { roles: 1, _id: 0 } }), {
+
+      roles: [{
+
+        _id: 'user',
+
+        scope: null,
+
+        assigned: true
+
+      }, {
+
+        _id: 'user',
+
+        scope: 'foo_bla',
+
+        assigned: true
+
+      }]
+
+    })
+
+
+
+    assert.deepEqual(Meteor.roles.findOne({ _id: 'admin' }), {
+
+      _id: 'admin',
+
+      children: []
+
+    })
+
+    assert.deepEqual(Meteor.roles.findOne({ _id: 'editor' }), {
+
+      _id: 'editor',
+
+      children: []
+
+    })
+
+    assert.deepEqual(Meteor.roles.findOne({ _id: 'user' }), {
+
+      _id: 'user',
+
+      children: []
+
+    })
+
+
+
+    Roles._backwardMigrate(null, null, true)
+
+
+
+    assert.deepEqual(Meteor.users.findOne(users.eve, { fields: { roles: 1, _id: 0 } }), {
+
+      roles: {
+
+        __global_roles__: ['admin', 'editor'],
+
+        foo_bla: ['user']
+
+      }
+
+    })
+
+    assert.deepEqual(Meteor.users.findOne(users.bob, { fields: { roles: 1, _id: 0 } }), {
+
+      roles: {}
+
+    })
+
+    assert.deepEqual(Meteor.users.findOne(users.joe, { fields: { roles: 1, _id: 0 } }), {
+
+      roles: {
+
+        __global_roles__: ['user'],
+
+        foo_bla: ['user']
+
+      }
+
+    })
+
+
+
+    assert.deepEqual(Meteor.roles.findOne({ name: 'admin' }, { fields: { _id: 0 } }), {
+
+      name: 'admin'
+
+    })
+
+    assert.deepEqual(Meteor.roles.findOne({ name: 'editor' }, { fields: { _id: 0 } }), {
+
+      name: 'editor'
+
+    })
+
+    assert.deepEqual(Meteor.roles.findOne({ name: 'user' }, { fields: { _id: 0 } }), {
+
+      name: 'user'
+
+    })
+
+
+
+    Roles._forwardMigrate(null, null, true)
+
+
+
+    assert.deepEqual(Meteor.users.findOne(users.eve, { fields: { roles: 1, _id: 0 } }), {
+
+      roles: [{
+
+        _id: 'admin',
+
+        scope: null,
+
+        assigned: true
+
+      }, {
+
+        _id: 'editor',
+
+        scope: null,
+
+        assigned: true
+
+      }, {
+
+        _id: 'user',
+
+        scope: 'foo.bla',
+
+        assigned: true
+
+      }]
+
+    })
+
+    assert.deepEqual(Meteor.users.findOne(users.bob, { fields: { roles: 1, _id: 0 } }), {
+
+      roles: []
+
+    })
+
+    assert.deepEqual(Meteor.users.findOne(users.joe, { fields: { roles: 1, _id: 0 } }), {
+
+      roles: [{
+
+        _id: 'user',
+
+        scope: null,
+
+        assigned: true
+
+      }, {
+
+        _id: 'user',
+
+        scope: 'foo.bla',
+
+        assigned: true
+
+      }]
+
+    })
+
+
+
+    assert.deepEqual(Meteor.roles.findOne({ _id: 'admin' }), {
+
+      _id: 'admin',
+
+      children: []
+
+    })
+
+    assert.deepEqual(Meteor.roles.findOne({ _id: 'editor' }), {
+
+      _id: 'editor',
+
+      children: []
+
+    })
+
+    assert.deepEqual(Meteor.roles.findOne({ _id: 'user' }), {
+
+      _id: 'user',
+
+      children: []
+
+    })
+
+  })
+
+
+
+  it('migration with global groups (to v3)')
+
+
+
+  it('_addUserToRole', function () {
+
+    Roles.createRole('admin')
+
+
+
+    assert.sameDeepMembers(Roles.getRolesForUser(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [])
+
+
+
+    assert.include(
+
+      Object.keys(Roles._addUserToRole(users.eve, 'admin', { scope: null, ifExists: false })),
+
+      'insertedId'
+
+    )
+
+
+
+    assert.sameDeepMembers(Roles.getRolesForUser(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+      role: { _id: 'admin' },
+
+      scope: null,
+
+      user: { _id: users.eve },
+
+      inheritedRoles: [{ _id: 'admin' }]
+
+    }])
+
+
+
+    assert.notInclude(
+
+      Object.keys(Roles._addUserToRole(users.eve, 'admin', { scope: null, ifExists: false })),
+
+      'insertedId'
+
+    )
+
+
+
+    assert.sameDeepMembers(Roles.getRolesForUser(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+      role: { _id: 'admin' },
+
+      scope: null,
+
+      user: { _id: users.eve },
+
+      inheritedRoles: [{ _id: 'admin' }]
+
+    }])
+
+  })
+
+
+
+  it('_removeUserFromRole', function () {
+
+    Roles.createRole('admin')
+
+
+
+    Roles.addUsersToRoles(users.eve, 'admin')
+
+
+
+    assert.sameDeepMembers(Roles.getRolesForUser(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+      role: { _id: 'admin' },
+
+      scope: null,
+
+      user: { _id: users.eve },
+
+      inheritedRoles: [{ _id: 'admin' }]
+
+    }])
+
+
+
+    Roles._removeUserFromRole(users.eve, 'admin', { scope: null })
+
+
+
+    assert.sameDeepMembers(Roles.getRolesForUser(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [])
+
+  })
+
+
+
+  it('keep assigned roles', function () {
+
+    Roles.createRole('admin')
+
+    Roles.createRole('user')
+
+    Roles.createRole('ALL_PERMISSIONS')
+
+    Roles.createRole('VIEW_PERMISSION')
+
+    Roles.createRole('EDIT_PERMISSION')
+
+    Roles.createRole('DELETE_PERMISSION')
+
+    Roles.addRolesToParent('ALL_PERMISSIONS', 'user')
+
+    Roles.addRolesToParent('EDIT_PERMISSION', 'ALL_PERMISSIONS')
+
+    Roles.addRolesToParent('VIEW_PERMISSION', 'ALL_PERMISSIONS')
+
+    Roles.addRolesToParent('DELETE_PERMISSION', 'admin')
+
+
+
+    Roles.addUsersToRoles(users.eve, ['user'])
+
+
+
+    assert.isTrue(Roles.userIsInRole(users.eve, 'VIEW_PERMISSION'))
+
+
+
+    assert.sameDeepMembers(Roles.getRolesForUser(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+      role: { _id: 'user' },
+
+      scope: null,
+
+      user: { _id: users.eve },
+
+      inheritedRoles: [
+
+        { _id: 'user' },
+
+        { _id: 'ALL_PERMISSIONS' },
+
+        { _id: 'EDIT_PERMISSION' },
+
+        { _id: 'VIEW_PERMISSION' }
+
+      ]
+
+    }])
+
+
+
+    Roles.addUsersToRoles(users.eve, 'VIEW_PERMISSION')
+
+
+
+    assert.isTrue(Roles.userIsInRole(users.eve, 'VIEW_PERMISSION'))
+
+
+
+    assert.sameDeepMembers(Roles.getRolesForUser(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+      role: { _id: 'user' },
+
+      scope: null,
+
+      user: { _id: users.eve },
+
+      inheritedRoles: [
+
+        { _id: 'user' },
+
+        { _id: 'ALL_PERMISSIONS' },
+
+        { _id: 'EDIT_PERMISSION' },
+
+        { _id: 'VIEW_PERMISSION' }
+
+      ]
+
+    }, {
+
+      role: { _id: 'VIEW_PERMISSION' },
+
+      scope: null,
+
+      user: { _id: users.eve },
+
+      inheritedRoles: [
+
+        { _id: 'VIEW_PERMISSION' }
+
+      ]
+
+    }])
+
+
+
+    Roles.removeUsersFromRoles(users.eve, 'user')
+
+
+
+    assert.isTrue(Roles.userIsInRole(users.eve, 'VIEW_PERMISSION'))
+
+
+
+    assert.sameDeepMembers(Roles.getRolesForUser(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+      role: { _id: 'VIEW_PERMISSION' },
+
+      scope: null,
+
+      user: { _id: users.eve },
+
+      inheritedRoles: [
+
+        { _id: 'VIEW_PERMISSION' }
+
+      ]
+
+    }])
+
+
+
+    Roles.removeUsersFromRoles(users.eve, 'VIEW_PERMISSION')
+
+
+
+    assert.isFalse(Roles.userIsInRole(users.eve, 'VIEW_PERMISSION'))
+
+
+
+    assert.sameDeepMembers(Roles.getRolesForUser(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [])
+
+  })
+
+
+
+  it('adds children of the added role to the assignments', function () {
+
+    Roles.createRole('admin')
+
+    Roles.createRole('ALBUM.ADMIN')
+
+    Roles.createRole('ALBUM.VIEW')
+
+    Roles.createRole('TRACK.ADMIN')
+
+    Roles.createRole('TRACK.VIEW')
+
+
+
+    Roles.addRolesToParent('ALBUM.VIEW', 'ALBUM.ADMIN')
+
+    Roles.addRolesToParent('TRACK.VIEW', 'TRACK.ADMIN')
+
+
+
+    Roles.addRolesToParent('ALBUM.ADMIN', 'admin')
+
+
+
+    Roles.addUsersToRoles(users.eve, ['admin'])
+
+
+
+    assert.isFalse(Roles.userIsInRole(users.eve, 'TRACK.VIEW'))
+
+
+
+    Roles.addRolesToParent('TRACK.ADMIN', 'admin')
+
+
+
+    assert.isTrue(Roles.userIsInRole(users.eve, 'TRACK.VIEW'))
+
+  })
+
+
+
+  it('removes children of the removed role from the assignments', function () {
+
+    Roles.createRole('admin')
+
+    Roles.createRole('ALBUM.ADMIN')
+
+    Roles.createRole('ALBUM.VIEW')
+
+    Roles.createRole('TRACK.ADMIN')
+
+    Roles.createRole('TRACK.VIEW')
+
+
+
+    Roles.addRolesToParent('ALBUM.VIEW', 'ALBUM.ADMIN')
+
+    Roles.addRolesToParent('TRACK.VIEW', 'TRACK.ADMIN')
+
+
+
+    Roles.addRolesToParent('ALBUM.ADMIN', 'admin')
+
+    Roles.addRolesToParent('TRACK.ADMIN', 'admin')
+
+
+
+    Roles.addUsersToRoles(users.eve, ['admin'])
+
+
+
+    assert.isTrue(Roles.userIsInRole(users.eve, 'TRACK.VIEW'))
+
+
+
+    Roles.removeRolesFromParent('TRACK.ADMIN', 'admin')
+
+
+
+    assert.isFalse(Roles.userIsInRole(users.eve, 'TRACK.VIEW'))
+
+  })
+
+
+
+  it('modify assigned hierarchical roles', function () {
+
+    Roles.createRole('admin')
+
+    Roles.createRole('user')
+
+    Roles.createRole('ALL_PERMISSIONS')
+
+    Roles.createRole('VIEW_PERMISSION')
+
+    Roles.createRole('EDIT_PERMISSION')
+
+    Roles.createRole('DELETE_PERMISSION')
+
+    Roles.addRolesToParent('ALL_PERMISSIONS', 'user')
+
+    Roles.addRolesToParent('EDIT_PERMISSION', 'ALL_PERMISSIONS')
+
+    Roles.addRolesToParent('VIEW_PERMISSION', 'ALL_PERMISSIONS')
+
+    Roles.addRolesToParent('DELETE_PERMISSION', 'admin')
+
+
+
+    Roles.addUsersToRoles(users.eve, ['user'])
+
+    Roles.addUsersToRoles(users.eve, ['ALL_PERMISSIONS'], 'scope')
+
+
+
+    assert.isFalse(Roles.userIsInRole(users.eve, 'MODERATE_PERMISSION'))
+
+    assert.isFalse(Roles.userIsInRole(users.eve, 'MODERATE_PERMISSION', 'scope'))
+
+
+
+    assert.sameDeepMembers(Roles.getRolesForUser(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+      role: { _id: 'user' },
+
+      scope: null,
+
+      user: { _id: users.eve },
+
+      inheritedRoles: [
+
+        { _id: 'user' },
+
+        { _id: 'ALL_PERMISSIONS' },
+
+        { _id: 'EDIT_PERMISSION' },
+
+        { _id: 'VIEW_PERMISSION' }
+
+      ]
+
+    }, {
+
+      role: { _id: 'ALL_PERMISSIONS' },
+
+      scope: 'scope',
+
+      user: { _id: users.eve },
+
+      inheritedRoles: [
+
+        { _id: 'ALL_PERMISSIONS' },
+
+        { _id: 'EDIT_PERMISSION' },
+
+        { _id: 'VIEW_PERMISSION' }
+
+      ]
+
+    }])
+
+
+
+    Roles.createRole('MODERATE_PERMISSION')
+
+
+
+    Roles.addRolesToParent('MODERATE_PERMISSION', 'ALL_PERMISSIONS')
+
+
+
+    assert.isTrue(Roles.userIsInRole(users.eve, 'MODERATE_PERMISSION'))
+
+    assert.isTrue(Roles.userIsInRole(users.eve, 'MODERATE_PERMISSION', 'scope'))
+
+
+
+    assert.sameDeepMembers(Roles.getRolesForUser(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+      role: { _id: 'user' },
+
+      scope: null,
+
+      user: { _id: users.eve },
+
+      inheritedRoles: [
+
+        { _id: 'user' },
+
+        { _id: 'ALL_PERMISSIONS' },
+
+        { _id: 'EDIT_PERMISSION' },
+
+        { _id: 'VIEW_PERMISSION' },
+
+        { _id: 'MODERATE_PERMISSION' }
+
+      ]
+
+    }, {
+
+      role: { _id: 'ALL_PERMISSIONS' },
+
+      scope: 'scope',
+
+      user: { _id: users.eve },
+
+      inheritedRoles: [
+
+        { _id: 'ALL_PERMISSIONS' },
+
+        { _id: 'EDIT_PERMISSION' },
+
+        { _id: 'VIEW_PERMISSION' },
+
+        { _id: 'MODERATE_PERMISSION' }
+
+      ]
+
+    }])
+
+
+
+    Roles.addUsersToRoles(users.eve, ['admin'])
+
+
+
+    assert.isTrue(Roles.userIsInRole(users.eve, 'DELETE_PERMISSION'))
+
+    assert.isTrue(Roles.userIsInRole(users.eve, 'DELETE_PERMISSION', 'scope'))
+
+
+
+    assert.sameDeepMembers(Roles.getRolesForUser(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+      role: { _id: 'user' },
+
+      scope: null,
+
+      user: { _id: users.eve },
+
+      inheritedRoles: [
+
+        { _id: 'user' },
+
+        { _id: 'ALL_PERMISSIONS' },
+
+        { _id: 'EDIT_PERMISSION' },
+
+        { _id: 'VIEW_PERMISSION' },
+
+        { _id: 'MODERATE_PERMISSION' }
+
+      ]
+
+    }, {
+
+      role: { _id: 'ALL_PERMISSIONS' },
+
+      scope: 'scope',
+
+      user: { _id: users.eve },
+
+      inheritedRoles: [
+
+        { _id: 'ALL_PERMISSIONS' },
+
+        { _id: 'EDIT_PERMISSION' },
+
+        { _id: 'VIEW_PERMISSION' },
+
+        { _id: 'MODERATE_PERMISSION' }
+
+      ]
+
+    }, {
+
+      role: { _id: 'admin' },
+
+      scope: null,
+
+      user: { _id: users.eve },
+
+      inheritedRoles: [
+
+        { _id: 'admin' },
+
+        { _id: 'DELETE_PERMISSION' }
+
+      ]
+
+    }])
+
+
+
+    Roles.addRolesToParent('DELETE_PERMISSION', 'ALL_PERMISSIONS')
+
+
+
+    assert.isTrue(Roles.userIsInRole(users.eve, 'DELETE_PERMISSION'))
+
+    assert.isTrue(Roles.userIsInRole(users.eve, 'DELETE_PERMISSION', 'scope'))
+
+
+
+    assert.sameDeepMembers(Roles.getRolesForUser(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+      role: { _id: 'user' },
+
+      scope: null,
+
+      user: { _id: users.eve },
+
+      inheritedRoles: [
+
+        { _id: 'user' },
+
+        { _id: 'ALL_PERMISSIONS' },
+
+        { _id: 'EDIT_PERMISSION' },
+
+        { _id: 'VIEW_PERMISSION' },
+
+        { _id: 'MODERATE_PERMISSION' },
+
+        { _id: 'DELETE_PERMISSION' }
+
+      ]
+
+    }, {
+
+      role: { _id: 'ALL_PERMISSIONS' },
+
+      scope: 'scope',
+
+      user: { _id: users.eve },
+
+      inheritedRoles: [
+
+        { _id: 'ALL_PERMISSIONS' },
+
+        { _id: 'EDIT_PERMISSION' },
+
+        { _id: 'VIEW_PERMISSION' },
+
+        { _id: 'MODERATE_PERMISSION' },
+
+        { _id: 'DELETE_PERMISSION' }
+
+      ]
+
+    }, {
+
+      role: { _id: 'admin' },
+
+      scope: null,
+
+      user: { _id: users.eve },
+
+      inheritedRoles: [
+
+        { _id: 'admin' },
+
+        { _id: 'DELETE_PERMISSION' }
+
+      ]
+
+    }])
+
+
+
+    Roles.removeUsersFromRoles(users.eve, ['admin'])
+
+
+
+    assert.isTrue(Roles.userIsInRole(users.eve, 'DELETE_PERMISSION'))
+
+    assert.isTrue(Roles.userIsInRole(users.eve, 'DELETE_PERMISSION', 'scope'))
+
+
+
+    assert.sameDeepMembers(Roles.getRolesForUser(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+      role: { _id: 'user' },
+
+      scope: null,
+
+      user: { _id: users.eve },
+
+      inheritedRoles: [
+
+        { _id: 'user' },
+
+        { _id: 'ALL_PERMISSIONS' },
+
+        { _id: 'EDIT_PERMISSION' },
+
+        { _id: 'VIEW_PERMISSION' },
+
+        { _id: 'MODERATE_PERMISSION' },
+
+        { _id: 'DELETE_PERMISSION' }
+
+      ]
+
+    }, {
+
+      role: { _id: 'ALL_PERMISSIONS' },
+
+      scope: 'scope',
+
+      user: { _id: users.eve },
+
+      inheritedRoles: [
+
+        { _id: 'ALL_PERMISSIONS' },
+
+        { _id: 'EDIT_PERMISSION' },
+
+        { _id: 'VIEW_PERMISSION' },
+
+        { _id: 'MODERATE_PERMISSION' },
+
+        { _id: 'DELETE_PERMISSION' }
+
+      ]
+
+    }])
+
+
+
+    Roles.deleteRole('ALL_PERMISSIONS')
+
+
+
+    assert.isFalse(Roles.userIsInRole(users.eve, 'DELETE_PERMISSION'))
+
+    assert.isFalse(Roles.userIsInRole(users.eve, 'DELETE_PERMISSION', 'scope'))
+
+
+
+    assert.isFalse(Roles.userIsInRole(users.eve, 'MODERATE_PERMISSION'))
+
+    assert.isFalse(Roles.userIsInRole(users.eve, 'MODERATE_PERMISSION', 'scope'))
+
+
+
+    assert.sameDeepMembers(Roles.getRolesForUser(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+      role: { _id: 'user' },
+
+      scope: null,
+
+      user: { _id: users.eve },
+
+      inheritedRoles: [
+
+        { _id: 'user' }
+
+      ]
+
+    }])
+
+  })
+
+
+
+  it('delete role with overlapping hierarchical roles', function () {
+
+    Roles.createRole('role1')
+
+    Roles.createRole('role2')
+
+    Roles.createRole('COMMON_PERMISSION_1')
+
+    Roles.createRole('COMMON_PERMISSION_2')
+
+    Roles.createRole('COMMON_PERMISSION_3')
+
+    Roles.createRole('EXTRA_PERMISSION_ROLE_1')
+
+    Roles.createRole('EXTRA_PERMISSION_ROLE_2')
+
+
+
+    Roles.addRolesToParent('COMMON_PERMISSION_1', 'role1')
+
+    Roles.addRolesToParent('COMMON_PERMISSION_2', 'role1')
+
+    Roles.addRolesToParent('COMMON_PERMISSION_3', 'role1')
+
+    Roles.addRolesToParent('EXTRA_PERMISSION_ROLE_1', 'role1')
+
+
+
+    Roles.addRolesToParent('COMMON_PERMISSION_1', 'role2')
+
+    Roles.addRolesToParent('COMMON_PERMISSION_2', 'role2')
+
+    Roles.addRolesToParent('COMMON_PERMISSION_3', 'role2')
+
+    Roles.addRolesToParent('EXTRA_PERMISSION_ROLE_2', 'role2')
+
+
+
+    Roles.addUsersToRoles(users.eve, 'role1')
+
+    Roles.addUsersToRoles(users.eve, 'role2')
+
+
+
+    assert.isTrue(Roles.userIsInRole(users.eve, 'COMMON_PERMISSION_1'))
+
+    assert.isTrue(Roles.userIsInRole(users.eve, 'EXTRA_PERMISSION_ROLE_1'))
+
+    assert.isTrue(Roles.userIsInRole(users.eve, 'EXTRA_PERMISSION_ROLE_2'))
+
+
+
+    assert.sameDeepMembers(Roles.getRolesForUser(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+      role: { _id: 'role1' },
+
+      scope: null,
+
+      user: { _id: users.eve },
+
+      inheritedRoles: [
+
+        { _id: 'role1' },
+
+        { _id: 'COMMON_PERMISSION_1' },
+
+        { _id: 'COMMON_PERMISSION_2' },
+
+        { _id: 'COMMON_PERMISSION_3' },
+
+        { _id: 'EXTRA_PERMISSION_ROLE_1' }
+
+      ]
+
+    }, {
+
+      role: { _id: 'role2' },
+
+      scope: null,
+
+      user: { _id: users.eve },
+
+      inheritedRoles: [
+
+        { _id: 'role2' },
+
+        { _id: 'COMMON_PERMISSION_1' },
+
+        { _id: 'COMMON_PERMISSION_2' },
+
+        { _id: 'COMMON_PERMISSION_3' },
+
+        { _id: 'EXTRA_PERMISSION_ROLE_2' }
+
+      ]
+
+    }])
+
+
+
+    Roles.removeUsersFromRoles(users.eve, 'role2')
+
+
+
+    assert.isTrue(Roles.userIsInRole(users.eve, 'COMMON_PERMISSION_1'))
+
+    assert.isTrue(Roles.userIsInRole(users.eve, 'EXTRA_PERMISSION_ROLE_1'))
+
+    assert.isFalse(Roles.userIsInRole(users.eve, 'EXTRA_PERMISSION_ROLE_2'))
+
+
+
+    assert.sameDeepMembers(Roles.getRolesForUser(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+      role: { _id: 'role1' },
+
+      scope: null,
+
+      user: { _id: users.eve },
+
+      inheritedRoles: [
+
+        { _id: 'role1' },
+
+        { _id: 'COMMON_PERMISSION_1' },
+
+        { _id: 'COMMON_PERMISSION_2' },
+
+        { _id: 'COMMON_PERMISSION_3' },
+
+        { _id: 'EXTRA_PERMISSION_ROLE_1' }
+
+      ]
+
+    }])
+
+
+
+    Roles.addUsersToRoles(users.eve, 'role2')
+
+
+
+    assert.isTrue(Roles.userIsInRole(users.eve, 'COMMON_PERMISSION_1'))
+
+    assert.isTrue(Roles.userIsInRole(users.eve, 'EXTRA_PERMISSION_ROLE_1'))
+
+    assert.isTrue(Roles.userIsInRole(users.eve, 'EXTRA_PERMISSION_ROLE_2'))
+
+
+
+    assert.sameDeepMembers(Roles.getRolesForUser(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+      role: { _id: 'role1' },
+
+      scope: null,
+
+      user: { _id: users.eve },
+
+      inheritedRoles: [
+
+        { _id: 'role1' },
+
+        { _id: 'COMMON_PERMISSION_1' },
+
+        { _id: 'COMMON_PERMISSION_2' },
+
+        { _id: 'COMMON_PERMISSION_3' },
+
+        { _id: 'EXTRA_PERMISSION_ROLE_1' }
+
+      ]
+
+    }, {
+
+      role: { _id: 'role2' },
+
+      scope: null,
+
+      user: { _id: users.eve },
+
+      inheritedRoles: [
+
+        { _id: 'role2' },
+
+        { _id: 'COMMON_PERMISSION_1' },
+
+        { _id: 'COMMON_PERMISSION_2' },
+
+        { _id: 'COMMON_PERMISSION_3' },
+
+        { _id: 'EXTRA_PERMISSION_ROLE_2' }
+
+      ]
+
+    }])
+
+
+
+    Roles.deleteRole('role2')
+
+
+
+    assert.isTrue(Roles.userIsInRole(users.eve, 'COMMON_PERMISSION_1'))
+
+    assert.isTrue(Roles.userIsInRole(users.eve, 'EXTRA_PERMISSION_ROLE_1'))
+
+    assert.isFalse(Roles.userIsInRole(users.eve, 'EXTRA_PERMISSION_ROLE_2'))
+
+
+
+    assert.sameDeepMembers(Roles.getRolesForUser(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+      role: { _id: 'role1' },
+
+      scope: null,
+
+      user: { _id: users.eve },
+
+      inheritedRoles: [
+
+        { _id: 'role1' },
+
+        { _id: 'COMMON_PERMISSION_1' },
+
+        { _id: 'COMMON_PERMISSION_2' },
+
+        { _id: 'COMMON_PERMISSION_3' },
+
+        { _id: 'EXTRA_PERMISSION_ROLE_1' }
+
+      ]
+
+    }])
+
+  })
+
+
+
+  it('set parent on assigned role', function () {
+
+    Roles.createRole('admin')
+
+    Roles.createRole('EDIT_PERMISSION')
+
+
+
+    Roles.addUsersToRoles(users.eve, 'EDIT_PERMISSION')
+
+
+
+    assert.isTrue(Roles.userIsInRole(users.eve, 'EDIT_PERMISSION'))
+
+    assert.isFalse(Roles.userIsInRole(users.eve, 'admin'))
+
+
+
+    assert.sameDeepMembers(Roles.getRolesForUser(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+      role: { _id: 'EDIT_PERMISSION' },
+
+      scope: null,
+
+      user: { _id: users.eve },
+
+      inheritedRoles: [{ _id: 'EDIT_PERMISSION' }]
+
+    }])
+
+
+
+    Roles.addRolesToParent('EDIT_PERMISSION', 'admin')
+
+
+
+    assert.isTrue(Roles.userIsInRole(users.eve, 'EDIT_PERMISSION'))
+
+    assert.isFalse(Roles.userIsInRole(users.eve, 'admin'))
+
+
+
+    assert.sameDeepMembers(Roles.getRolesForUser(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+      role: { _id: 'EDIT_PERMISSION' },
+
+      scope: null,
+
+      user: { _id: users.eve },
+
+      inheritedRoles: [{ _id: 'EDIT_PERMISSION' }]
+
+    }])
+
+  })
+
+
+
+  it('remove parent on assigned role', function () {
+
+    Roles.createRole('admin')
+
+    Roles.createRole('EDIT_PERMISSION')
+
+
+
+    Roles.addRolesToParent('EDIT_PERMISSION', 'admin')
+
+
+
+    Roles.addUsersToRoles(users.eve, 'EDIT_PERMISSION')
+
+
+
+    assert.isTrue(Roles.userIsInRole(users.eve, 'EDIT_PERMISSION'))
+
+    assert.isFalse(Roles.userIsInRole(users.eve, 'admin'))
+
+
+
+    assert.sameDeepMembers(Roles.getRolesForUser(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+      role: { _id: 'EDIT_PERMISSION' },
+
+      scope: null,
+
+      user: { _id: users.eve },
+
+      inheritedRoles: [{ _id: 'EDIT_PERMISSION' }]
+
+    }])
+
+
+
+    Roles.removeRolesFromParent('EDIT_PERMISSION', 'admin')
+
+
+
+    assert.isTrue(Roles.userIsInRole(users.eve, 'EDIT_PERMISSION'))
+
+    assert.isFalse(Roles.userIsInRole(users.eve, 'admin'))
+
+
+
+    assert.sameDeepMembers(Roles.getRolesForUser(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+      role: { _id: 'EDIT_PERMISSION' },
+
+      scope: null,
+
+      user: { _id: users.eve },
+
+      inheritedRoles: [{ _id: 'EDIT_PERMISSION' }]
+
+    }])
+
+  })
+
+
+
+  it('adding and removing extra role parents', function () {
+
+    Roles.createRole('admin')
+
+    Roles.createRole('user')
+
+    Roles.createRole('EDIT_PERMISSION')
+
+
+
+    Roles.addRolesToParent('EDIT_PERMISSION', 'admin')
+
+
+
+    Roles.addUsersToRoles(users.eve, 'EDIT_PERMISSION')
+
+
+
+    assert.isTrue(Roles.userIsInRole(users.eve, 'EDIT_PERMISSION'))
+
+    assert.isFalse(Roles.userIsInRole(users.eve, 'admin'))
+
+
+
+    assert.sameDeepMembers(Roles.getRolesForUser(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+      role: { _id: 'EDIT_PERMISSION' },
+
+      scope: null,
+
+      user: { _id: users.eve },
+
+      inheritedRoles: [{ _id: 'EDIT_PERMISSION' }]
+
+    }])
+
+
+
+    Roles.addRolesToParent('EDIT_PERMISSION', 'user')
+
+
+
+    assert.isTrue(Roles.userIsInRole(users.eve, 'EDIT_PERMISSION'))
+
+    assert.isFalse(Roles.userIsInRole(users.eve, 'admin'))
+
+
+
+    assert.sameDeepMembers(Roles.getRolesForUser(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+      role: { _id: 'EDIT_PERMISSION' },
+
+      scope: null,
+
+      user: { _id: users.eve },
+
+      inheritedRoles: [{ _id: 'EDIT_PERMISSION' }]
+
+    }])
+
+
+
+    Roles.removeRolesFromParent('EDIT_PERMISSION', 'user')
+
+
+
+    assert.isTrue(Roles.userIsInRole(users.eve, 'EDIT_PERMISSION'))
+
+    assert.isFalse(Roles.userIsInRole(users.eve, 'admin'))
+
+
+
+    assert.sameDeepMembers(Roles.getRolesForUser(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+      role: { _id: 'EDIT_PERMISSION' },
+
+      scope: null,
+
+      user: { _id: users.eve },
+
+      inheritedRoles: [{ _id: 'EDIT_PERMISSION' }]
+
+    }])
+
+  })
+
+
+
+  it('cyclic roles', function () {
+
+    Roles.createRole('admin')
+
+    Roles.createRole('editor')
+
+    Roles.createRole('user')
+
+
+
+    Roles.addRolesToParent('editor', 'admin')
+
+    Roles.addRolesToParent('user', 'editor')
+
+
+
+    assert.throws(function () {
+
+      Roles.addRolesToParent('admin', 'user')
+
+    }, /form a cycle/)
+
+  })
+
+
+
+  it('userIsInRole returns false for unknown roles', function () {
+
+    Roles.createRole('admin')
+
+    Roles.createRole('user')
+
+    Roles.createRole('editor')
+
+    Roles.addUsersToRoles(users.eve, ['admin', 'user'])
+
+    Roles.addUsersToRoles(users.eve, ['editor'])
+
+
+
+    assert.isFalse(Roles.userIsInRole(users.eve, 'unknown'))
+
+    assert.isFalse(Roles.userIsInRole(users.eve, []))
+
+    assert.isFalse(Roles.userIsInRole(users.eve, null))
+
+    assert.isFalse(Roles.userIsInRole(users.eve, undefined))
+
+
+
+    assert.isFalse(Roles.userIsInRole(users.eve, 'unknown', { anyScope: true }))
+
+    assert.isFalse(Roles.userIsInRole(users.eve, [], { anyScope: true }))
+
+    assert.isFalse(Roles.userIsInRole(users.eve, null, { anyScope: true }))
+
+    assert.isFalse(Roles.userIsInRole(users.eve, undefined, { anyScope: true }))
+
+
+
+    assert.isFalse(Roles.userIsInRole(users.eve, ['Role1', 'Role2', undefined], 'GroupName'))
+
+  })
+
+
+
+  it('userIsInRole returns false if user is a function', function () {
+
+    Roles.createRole('admin')
+
+    Roles.addUsersToRoles(users.eve, ['admin'])
+
+
+
+    assert.isFalse(Roles.userIsInRole(() => {}, 'admin'))
+
+  })
+
+
+
+  describe('isParentOf', function () {
+
+    it('returns false for unknown roles', function () {
+
+      Roles.createRole('admin')
+
+
+
+      assert.isFalse(Roles.isParentOf('admin', 'unknown'))
+
+      assert.isFalse(Roles.isParentOf('admin', null))
+
+      assert.isFalse(Roles.isParentOf('admin', undefined))
+
+
+
+      assert.isFalse(Roles.isParentOf('unknown', 'admin'))
+
+      assert.isFalse(Roles.isParentOf(null, 'admin'))
+
+      assert.isFalse(Roles.isParentOf(undefined, 'admin'))
+
+    })
+
+
+
+    it('returns false if role is not parent of', function () {
+
+      Roles.createRole('admin')
+
+      Roles.createRole('editor')
+
+      Roles.createRole('user')
+
+      Roles.addRolesToParent(['editor'], 'admin')
+
+      Roles.addRolesToParent(['user'], 'editor')
+
+
+
+      assert.isFalse(Roles.isParentOf('user', 'admin'))
+
+      assert.isFalse(Roles.isParentOf('editor', 'admin'))
+
+    })
+
+
+
+    it('returns true if role is parent of the demanded role', function () {
+
+      Roles.createRole('admin')
+
+      Roles.createRole('editor')
+
+      Roles.createRole('user')
+
+      Roles.addRolesToParent(['editor'], 'admin')
+
+      Roles.addRolesToParent(['user'], 'editor')
+
+
+
+      assert.isTrue(Roles.isParentOf('admin', 'user'))
+
+      assert.isTrue(Roles.isParentOf('editor', 'user'))
+
+      assert.isTrue(Roles.isParentOf('admin', 'editor'))
+
+
+
+      assert.isTrue(Roles.isParentOf('admin', 'admin'))
+
+      assert.isTrue(Roles.isParentOf('editor', 'editor'))
+
+      assert.isTrue(Roles.isParentOf('user', 'user'))
+
+    })
+
+  })
+","  it('get an empty list of roles for an empty user', async function () {
+
+    assert.sameMembers(await Roles.getRolesForUserAsync(undefined), [])
+
+    assert.sameMembers(await Roles.getRolesForUserAsync(null), [])
+
+    assert.sameMembers(await Roles.getRolesForUserAsync({}), [])
+
+  })
+
+
+
+  it('get an empty list of roles for non-existant user', async function () {
+
+    assert.sameMembers(await Roles.getRolesForUserAsync('1'), [])
+
+    assert.sameMembers(await Roles.getRolesForUserAsync('1', 'scope1'), [])
+
+  })
+
+
+
+  // it('can get all roles for user', function () {
+
+  //   Roles.createRoleAsync('admin')
+
+  //   Roles.createRoleAsync('user')
+
+  //
+
+  //   const userId = users.eve
+
+  //   let userObj
+
+  //
+
+  //   // by userId
+
+  //   assert.sameMembers(await Roles.getRolesForUserAsync(userId), [])
+
+  //
+
+  //   // by user object
+
+  //   userObj = Meteor.users.findOneAsync({ _id: userId })
+
+  //   assert.sameMembers(await Roles.getRolesForUserAsync(userObj), [])
+
+  //
+
+  //   Roles.addUsersToRolesAsync(userId, ['admin', 'user'])
+
+  //
+
+  //   // by userId
+
+  //   assert.sameMembers(await Roles.getRolesForUserAsync(userId), ['admin', 'user'])
+
+  //
+
+  //   // by user object
+
+  //   userObj = Meteor.users.findOneAsync({ _id: userId })
+
+  //   assert.sameMembers(await Roles.getRolesForUserAsync(userObj), ['admin', 'user'])
+
+  //
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(userId, { fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+  //     role: { _id: 'admin' },
+
+  //     scope: null,
+
+  //     user: { _id: userId },
+
+  //     inheritedRoles: [{ _id: 'admin' }]
+
+  //   }, {
+
+  //     role: { _id: 'user' },
+
+  //     scope: null,
+
+  //     user: { _id: userId },
+
+  //     inheritedRoles: [{ _id: 'user' }]
+
+  //   }])
+
+  // })
+
+  //
+
+  // it('can get all roles for user by scope', function () {
+
+  //   Roles.createRoleAsync('admin')
+
+  //   Roles.createRoleAsync('user')
+
+  //
+
+  //   const userId = users.eve
+
+  //   let userObj
+
+  //
+
+  //   // by userId
+
+  //   assert.sameMembers(await Roles.getRolesForUserAsync(userId, 'scope1'), [])
+
+  //
+
+  //   // by user object
+
+  //   userObj = Meteor.users.findOneAsync({ _id: userId })
+
+  //   assert.sameMembers(await Roles.getRolesForUserAsync(userObj, 'scope1'), [])
+
+  //
+
+  //   // add roles
+
+  //   Roles.addUsersToRolesAsync(userId, ['admin', 'user'], 'scope1')
+
+  //   Roles.addUsersToRolesAsync(userId, ['admin'], 'scope2')
+
+  //
+
+  //   // by userId
+
+  //   assert.sameMembers(await Roles.getRolesForUserAsync(userId, 'scope1'), ['admin', 'user'])
+
+  //   assert.sameMembers(await Roles.getRolesForUserAsync(userId, 'scope2'), ['admin'])
+
+  //   assert.sameMembers(await Roles.getRolesForUserAsync(userId), [])
+
+  //
+
+  //   // by user object
+
+  //   userObj = Meteor.users.findOneAsync({ _id: userId })
+
+  //   assert.sameMembers(await Roles.getRolesForUserAsync(userObj, 'scope1'), ['admin', 'user'])
+
+  //   assert.sameMembers(await Roles.getRolesForUserAsync(userObj, 'scope2'), ['admin'])
+
+  //   assert.sameMembers(await Roles.getRolesForUserAsync(userObj), [])
+
+  //
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(userId, { fullObjects: true, scope: 'scope1' }).map(obj => { delete obj._id; return obj }), [{
+
+  //     role: { _id: 'admin' },
+
+  //     scope: 'scope1',
+
+  //     user: { _id: userId },
+
+  //     inheritedRoles: [{ _id: 'admin' }]
+
+  //   }, {
+
+  //     role: { _id: 'user' },
+
+  //     scope: 'scope1',
+
+  //     user: { _id: userId },
+
+  //     inheritedRoles: [{ _id: 'user' }]
+
+  //   }])
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(userId, { fullObjects: true, scope: 'scope2' }).map(obj => { delete obj._id; return obj }), [{
+
+  //     role: { _id: 'admin' },
+
+  //     scope: 'scope2',
+
+  //     user: { _id: userId },
+
+  //     inheritedRoles: [{ _id: 'admin' }]
+
+  //   }])
+
+  //
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(userId, { fullObjects: true, anyScope: true }).map(obj => { delete obj._id; return obj }), [{
+
+  //     role: { _id: 'admin' },
+
+  //     scope: 'scope1',
+
+  //     user: { _id: userId },
+
+  //     inheritedRoles: [{ _id: 'admin' }]
+
+  //   }, {
+
+  //     role: { _id: 'user' },
+
+  //     scope: 'scope1',
+
+  //     user: { _id: userId },
+
+  //     inheritedRoles: [{ _id: 'user' }]
+
+  //   }, {
+
+  //     role: { _id: 'admin' },
+
+  //     scope: 'scope2',
+
+  //     user: { _id: userId },
+
+  //     inheritedRoles: [{ _id: 'admin' }]
+
+  //   }])
+
+  //
+
+  //   Roles.createRoleAsync('PERMISSION')
+
+  //   Roles.addRolesToParent('PERMISSION', 'user')
+
+  //
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(userId, { fullObjects: true, scope: 'scope1' }).map(obj => { delete obj._id; return obj }), [{
+
+  //     role: { _id: 'admin' },
+
+  //     scope: 'scope1',
+
+  //     user: { _id: userId },
+
+  //     inheritedRoles: [{ _id: 'admin' }]
+
+  //   }, {
+
+  //     role: { _id: 'user' },
+
+  //     scope: 'scope1',
+
+  //     user: { _id: userId },
+
+  //     inheritedRoles: [{ _id: 'user' }, { _id: 'PERMISSION' }]
+
+  //   }])
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(userId, { fullObjects: true, scope: 'scope2' }).map(obj => { delete obj._id; return obj }), [{
+
+  //     role: { _id: 'admin' },
+
+  //     scope: 'scope2',
+
+  //     user: { _id: userId },
+
+  //     inheritedRoles: [{ _id: 'admin' }]
+
+  //   }])
+
+  //   assert.sameMembers(await Roles.getRolesForUserAsync(userId, { scope: 'scope1' }), ['admin', 'user', 'PERMISSION'])
+
+  //   assert.sameMembers(await Roles.getRolesForUserAsync(userId, { scope: 'scope2' }), ['admin'])
+
+  //
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(userId, { fullObjects: true, anyScope: true }).map(obj => { delete obj._id; return obj }), [{
+
+  //     role: { _id: 'admin' },
+
+  //     scope: 'scope1',
+
+  //     user: { _id: userId },
+
+  //     inheritedRoles: [{ _id: 'admin' }]
+
+  //   }, {
+
+  //     role: { _id: 'user' },
+
+  //     scope: 'scope1',
+
+  //     user: { _id: userId },
+
+  //     inheritedRoles: [{ _id: 'user' }, { _id: 'PERMISSION' }]
+
+  //   }, {
+
+  //     role: { _id: 'admin' },
+
+  //     scope: 'scope2',
+
+  //     user: { _id: userId },
+
+  //     inheritedRoles: [{ _id: 'admin' }]
+
+  //   }])
+
+  //   assert.sameMembers(await Roles.getRolesForUserAsync(userId, { anyScope: true }), ['admin', 'user', 'PERMISSION'])
+
+  //
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(userId, { fullObjects: true, scope: 'scope1', onlyAssigned: true }).map(obj => { delete obj._id; return obj }), [{
+
+  //     role: { _id: 'admin' },
+
+  //     scope: 'scope1',
+
+  //     user: { _id: userId },
+
+  //     inheritedRoles: [{ _id: 'admin' }]
+
+  //   }, {
+
+  //     role: { _id: 'user' },
+
+  //     scope: 'scope1',
+
+  //     user: { _id: userId },
+
+  //     inheritedRoles: [{ _id: 'user' }, { _id: 'PERMISSION' }]
+
+  //   }])
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(userId, { fullObjects: true, scope: 'scope2', onlyAssigned: true }).map(obj => { delete obj._id; return obj }), [{
+
+  //     role: { _id: 'admin' },
+
+  //     scope: 'scope2',
+
+  //     user: { _id: userId },
+
+  //     inheritedRoles: [{ _id: 'admin' }]
+
+  //   }])
+
+  //   assert.sameMembers(await Roles.getRolesForUserAsync(userId, { scope: 'scope1', onlyAssigned: true }), ['admin', 'user'])
+
+  //   assert.sameMembers(await Roles.getRolesForUserAsync(userId, { scope: 'scope2', onlyAssigned: true }), ['admin'])
+
+  //
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(userId, { fullObjects: true, anyScope: true, onlyAssigned: true }).map(obj => { delete obj._id; return obj }), [{
+
+  //     role: { _id: 'admin' },
+
+  //     scope: 'scope1',
+
+  //     user: { _id: userId },
+
+  //     inheritedRoles: [{ _id: 'admin' }]
+
+  //   }, {
+
+  //     role: { _id: 'user' },
+
+  //     scope: 'scope1',
+
+  //     user: { _id: userId },
+
+  //     inheritedRoles: [{ _id: 'user' }, { _id: 'PERMISSION' }]
+
+  //   }, {
+
+  //     role: { _id: 'admin' },
+
+  //     scope: 'scope2',
+
+  //     user: { _id: userId },
+
+  //     inheritedRoles: [{ _id: 'admin' }]
+
+  //   }])
+
+  //   assert.sameMembers(await Roles.getRolesForUserAsync(userId, { anyScope: true, onlyAssigned: true }), ['admin', 'user'])
+
+  // })
+
+  //
+
+  // it('can get only scoped roles for user', function () {
+
+  //   Roles.createRoleAsync('admin')
+
+  //   Roles.createRoleAsync('user')
+
+  //
+
+  //   const userId = users.eve
+
+  //
+
+  //   // add roles
+
+  //   Roles.addUsersToRolesAsync(userId, ['user'], 'scope1')
+
+  //   Roles.addUsersToRolesAsync(userId, ['admin'])
+
+  //
+
+  //   Roles.createRoleAsync('PERMISSION')
+
+  //   Roles.addRolesToParent('PERMISSION', 'user')
+
+  //
+
+  //   assert.sameMembers(await Roles.getRolesForUserAsync(userId, { onlyScoped: true, scope: 'scope1' }), ['user', 'PERMISSION'])
+
+  //   assert.sameMembers(await Roles.getRolesForUserAsync(userId, { onlyScoped: true, onlyAssigned: true, scope: 'scope1' }), ['user'])
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(userId, { onlyScoped: true, fullObjects: true, scope: 'scope1' }).map(obj => { delete obj._id; return obj }), [{
+
+  //     role: { _id: 'user' },
+
+  //     scope: 'scope1',
+
+  //     user: { _id: userId },
+
+  //     inheritedRoles: [{ _id: 'user' }, { _id: 'PERMISSION' }]
+
+  //   }])
+
+  // })
+
+  //
+
+  // it('can get all roles for user by scope with periods in name', function () {
+
+  //   Roles.createRoleAsync('admin')
+
+  //
+
+  //   Roles.addUsersToRolesAsync(users.joe, ['admin'], 'example.k12.va.us')
+
+  //
+
+  //   assert.sameMembers(await Roles.getRolesForUserAsync(users.joe, 'example.k12.va.us'), ['admin'])
+
+  // })
+
+  //
+
+  // it('can get all roles for user by scope including Roles.GLOBAL_SCOPE', function () {
+
+  //   Roles.createRoleAsync('admin')
+
+  //   Roles.createRoleAsync('user')
+
+  //   Roles.createRoleAsync('editor')
+
+  //
+
+  //   const userId = users.eve
+
+  //
+
+  //   Roles.addUsersToRolesAsync([users.eve], ['editor'], Roles.GLOBAL_SCOPE)
+
+  //   Roles.addUsersToRolesAsync([users.eve], ['admin', 'user'], 'scope1')
+
+  //
+
+  //   // by userId
+
+  //   assert.sameMembers(await Roles.getRolesForUserAsync(userId, 'scope1'), ['editor', 'admin', 'user'])
+
+  //   assert.sameMembers(await Roles.getRolesForUserAsync(userId), ['editor'])
+
+  //
+
+  //   // by user object
+
+  //   const userObj = Meteor.users.findOneAsync({ _id: userId })
+
+  //   assert.sameMembers(await Roles.getRolesForUserAsync(userObj, 'scope1'), ['editor', 'admin', 'user'])
+
+  //   assert.sameMembers(await Roles.getRolesForUserAsync(userObj), ['editor'])
+
+  // })
+
+  //
+
+  // it('getRolesForUser should not return null entries if user has no roles for scope', function () {
+
+  //   Roles.createRoleAsync('editor')
+
+  //
+
+  //   const userId = users.eve
+
+  //   let userObj
+
+  //
+
+  //   // by userId
+
+  //   assert.sameMembers(await Roles.getRolesForUserAsync(userId, 'scope1'), [])
+
+  //   assert.sameMembers(await Roles.getRolesForUserAsync(userId), [])
+
+  //
+
+  //   // by user object
+
+  //   userObj = Meteor.users.findOneAsync({ _id: userId })
+
+  //   assert.sameMembers(await Roles.getRolesForUserAsync(userObj, 'scope1'), [])
+
+  //   assert.sameMembers(await Roles.getRolesForUserAsync(userObj), [])
+
+  //
+
+  //   Roles.addUsersToRolesAsync([users.eve], ['editor'], Roles.GLOBAL_SCOPE)
+
+  //
+
+  //   // by userId
+
+  //   assert.sameMembers(await Roles.getRolesForUserAsync(userId, 'scope1'), ['editor'])
+
+  //   assert.sameMembers(await Roles.getRolesForUserAsync(userId), ['editor'])
+
+  //
+
+  //   // by user object
+
+  //   userObj = Meteor.users.findOneAsync({ _id: userId })
+
+  //   assert.sameMembers(await Roles.getRolesForUserAsync(userObj, 'scope1'), ['editor'])
+
+  //   assert.sameMembers(await Roles.getRolesForUserAsync(userObj), ['editor'])
+
+  // })
+
+  //
+
+  // it('getRolesForUser should not fail during a call of addUsersToRoles', function () {
+
+  //   Roles.createRoleAsync('editor')
+
+  //
+
+  //   const userId = users.eve
+
+  //   const promises = []
+
+  //   const interval = setInterval(() => {
+
+  //     promises.push(Promise.resolve().then(() => { await Roles.getRolesForUserAsync(userId) }))
+
+  //   }, 0)
+
+  //
+
+  //   Roles.addUsersToRolesAsync([users.eve], ['editor'], Roles.GLOBAL_SCOPE)
+
+  //   clearInterval(interval)
+
+  //
+
+  //   return Promise.all(promises)
+
+  // })
+
+  //
+
+  // it('returns an empty list of scopes for null as user-id', function () {
+
+  //   assert.sameMembers(Roles.getScopesForUser(undefined), [])
+
+  //   assert.sameMembers(Roles.getScopesForUser(null), [])
+
+  //   assert.sameMembers(Roles.getScopesForUser('foo'), [])
+
+  //   assert.sameMembers(Roles.getScopesForUser({}), [])
+
+  //   assert.sameMembers(Roles.getScopesForUser({ _id: 'foo' }), [])
+
+  // })
+
+  //
+
+  // it('can get all scopes for user', function () {
+
+  //   Roles.createRoleAsync('admin')
+
+  //   Roles.createRoleAsync('user')
+
+  //   Roles.createRoleAsync('editor')
+
+  //
+
+  //   const userId = users.eve
+
+  //
+
+  //   Roles.addUsersToRolesAsync([users.eve], ['editor'], 'scope1')
+
+  //   Roles.addUsersToRolesAsync([users.eve], ['admin', 'user'], 'scope2')
+
+  //
+
+  //   // by userId
+
+  //   assert.sameMembers(Roles.getScopesForUser(userId), ['scope1', 'scope2'])
+
+  //
+
+  //   // by user object
+
+  //   const userObj = Meteor.users.findOneAsync({ _id: userId })
+
+  //   assert.sameMembers(Roles.getScopesForUser(userObj), ['scope1', 'scope2'])
+
+  // })
+
+  //
+
+  // it('can get all scopes for user by role', function () {
+
+  //   Roles.createRoleAsync('admin')
+
+  //   Roles.createRoleAsync('user')
+
+  //   Roles.createRoleAsync('editor')
+
+  //
+
+  //   const userId = users.eve
+
+  //
+
+  //   Roles.addUsersToRolesAsync([users.eve], ['editor'], 'scope1')
+
+  //   Roles.addUsersToRolesAsync([users.eve], ['editor', 'user'], 'scope2')
+
+  //
+
+  //   // by userId
+
+  //   assert.sameMembers(Roles.getScopesForUser(userId, 'user'), ['scope2'])
+
+  //   assert.sameMembers(Roles.getScopesForUser(userId, 'editor'), ['scope1', 'scope2'])
+
+  //   assert.sameMembers(Roles.getScopesForUser(userId, 'admin'), [])
+
+  //
+
+  //   // by user object
+
+  //   const userObj = Meteor.users.findOneAsync({ _id: userId })
+
+  //   assert.sameMembers(Roles.getScopesForUser(userObj, 'user'), ['scope2'])
+
+  //   assert.sameMembers(Roles.getScopesForUser(userObj, 'editor'), ['scope1', 'scope2'])
+
+  //   assert.sameMembers(Roles.getScopesForUser(userObj, 'admin'), [])
+
+  // })
+
+  //
+
+  // it('getScopesForUser returns [] when not using scopes', function () {
+
+  //   Roles.createRoleAsync('user')
+
+  //   Roles.createRoleAsync('editor')
+
+  //
+
+  //   const userId = users.eve
+
+  //
+
+  //   Roles.addUsersToRolesAsync([users.eve], ['editor', 'user'])
+
+  //
+
+  //   // by userId
+
+  //   assert.sameMembers(Roles.getScopesForUser(userId), [])
+
+  //   assert.sameMembers(Roles.getScopesForUser(userId, 'editor'), [])
+
+  //   assert.sameMembers(Roles.getScopesForUser(userId, ['editor']), [])
+
+  //   assert.sameMembers(Roles.getScopesForUser(userId, ['editor', 'user']), [])
+
+  //
+
+  //   // by user object
+
+  //   const userObj = Meteor.users.findOneAsync({ _id: userId })
+
+  //   assert.sameMembers(Roles.getScopesForUser(userObj), [])
+
+  //   assert.sameMembers(Roles.getScopesForUser(userObj, 'editor'), [])
+
+  //   assert.sameMembers(Roles.getScopesForUser(userObj, ['editor']), [])
+
+  //   assert.sameMembers(Roles.getScopesForUser(userObj, ['editor', 'user']), [])
+
+  // })
+
+  //
+
+  // it('can get all groups for user by role array', function () {
+
+  //   const userId = users.eve
+
+  //
+
+  //   Roles.createRoleAsync('user')
+
+  //   Roles.createRoleAsync('editor')
+
+  //   Roles.createRoleAsync('moderator')
+
+  //   Roles.createRoleAsync('admin')
+
+  //
+
+  //   Roles.addUsersToRolesAsync([users.eve], ['editor'], 'group1')
+
+  //   Roles.addUsersToRolesAsync([users.eve], ['editor', 'user'], 'group2')
+
+  //   Roles.addUsersToRolesAsync([users.eve], ['moderator'], 'group3')
+
+  //
+
+  //   // by userId, one role
+
+  //   assert.sameMembers(Roles.getScopesForUser(userId, ['user']), ['group2'])
+
+  //   assert.sameMembers(Roles.getScopesForUser(userId, ['editor']), ['group1', 'group2'])
+
+  //   assert.sameMembers(Roles.getScopesForUser(userId, ['admin']), [])
+
+  //
+
+  //   // by userId, multiple roles
+
+  //   assert.sameMembers(Roles.getScopesForUser(userId, ['editor', 'user']), ['group1', 'group2'])
+
+  //   assert.sameMembers(Roles.getScopesForUser(userId, ['editor', 'moderator']), ['group1', 'group2', 'group3'])
+
+  //   assert.sameMembers(Roles.getScopesForUser(userId, ['user', 'moderator']), ['group2', 'group3'])
+
+  //
+
+  //   // by user object, one role
+
+  //   const userObj = Meteor.users.findOneAsync({ _id: userId })
+
+  //   assert.sameMembers(Roles.getScopesForUser(userObj, ['user']), ['group2'])
+
+  //   assert.sameMembers(Roles.getScopesForUser(userObj, ['editor']), ['group1', 'group2'])
+
+  //   assert.sameMembers(Roles.getScopesForUser(userObj, ['admin']), [])
+
+  //
+
+  //   // by user object, multiple roles
+
+  //   assert.sameMembers(Roles.getScopesForUser(userObj, ['editor', 'user']), ['group1', 'group2'])
+
+  //   assert.sameMembers(Roles.getScopesForUser(userObj, ['editor', 'moderator']), ['group1', 'group2', 'group3'])
+
+  //   assert.sameMembers(Roles.getScopesForUser(userObj, ['user', 'moderator']), ['group2', 'group3'])
+
+  // })
+
+  //
+
+  // it('getting all scopes for user does not include GLOBAL_SCOPE', function () {
+
+  //   Roles.createRoleAsync('admin')
+
+  //   Roles.createRoleAsync('user')
+
+  //   Roles.createRoleAsync('editor')
+
+  //
+
+  //   const userId = users.eve
+
+  //
+
+  //   Roles.addUsersToRolesAsync([users.eve], ['editor'], 'scope1')
+
+  //   Roles.addUsersToRolesAsync([users.eve], ['editor', 'user'], 'scope2')
+
+  //   Roles.addUsersToRolesAsync([users.eve], ['editor', 'user', 'admin'], Roles.GLOBAL_SCOPE)
+
+  //
+
+  //   // by userId
+
+  //   assert.sameMembers(Roles.getScopesForUser(userId, 'user'), ['scope2'])
+
+  //   assert.sameMembers(Roles.getScopesForUser(userId, 'editor'), ['scope1', 'scope2'])
+
+  //   assert.sameMembers(Roles.getScopesForUser(userId, 'admin'), [])
+
+  //   assert.sameMembers(Roles.getScopesForUser(userId, ['user']), ['scope2'])
+
+  //   assert.sameMembers(Roles.getScopesForUser(userId, ['editor']), ['scope1', 'scope2'])
+
+  //   assert.sameMembers(Roles.getScopesForUser(userId, ['admin']), [])
+
+  //   assert.sameMembers(Roles.getScopesForUser(userId, ['user', 'editor', 'admin']), ['scope1', 'scope2'])
+
+  //
+
+  //   // by user object
+
+  //   const userObj = Meteor.users.findOneAsync({ _id: userId })
+
+  //   assert.sameMembers(Roles.getScopesForUser(userObj, 'user'), ['scope2'])
+
+  //   assert.sameMembers(Roles.getScopesForUser(userObj, 'editor'), ['scope1', 'scope2'])
+
+  //   assert.sameMembers(Roles.getScopesForUser(userObj, 'admin'), [])
+
+  //   assert.sameMembers(Roles.getScopesForUser(userObj, ['user']), ['scope2'])
+
+  //   assert.sameMembers(Roles.getScopesForUser(userObj, ['editor']), ['scope1', 'scope2'])
+
+  //   assert.sameMembers(Roles.getScopesForUser(userObj, ['admin']), [])
+
+  //   assert.sameMembers(Roles.getScopesForUser(userObj, ['user', 'editor', 'admin']), ['scope1', 'scope2'])
+
+  // })
+
+  //
+
+  // it('can get all users in role', function () {
+
+  //   Roles.createRoleAsync('admin')
+
+  //   Roles.createRoleAsync('user')
+
+  //   Roles.createRoleAsync('editor')
+
+  //
+
+  //   Roles.addUsersToRolesAsync([users.eve, users.joe], ['admin', 'user'])
+
+  //   Roles.addUsersToRolesAsync([users.bob, users.joe], ['editor'])
+
+  //
+
+  //   const expected = [users.eve, users.joe]
+
+  //   const actual = Roles.getUsersInRole('admin').fetch().map(r => r._id)
+
+  //
+
+  //   assert.sameMembers(actual, expected)
+
+  // })
+
+  //
+
+  // it('can get all users in role by scope', function () {
+
+  //   Roles.createRoleAsync('admin')
+
+  //   Roles.createRoleAsync('user')
+
+  //
+
+  //   Roles.addUsersToRolesAsync([users.eve, users.joe], ['admin', 'user'], 'scope1')
+
+  //   Roles.addUsersToRolesAsync([users.bob, users.joe], ['admin'], 'scope2')
+
+  //
+
+  //   let expected = [users.eve, users.joe]
+
+  //   let actual = Roles.getUsersInRole('admin', 'scope1').fetch().map(r => r._id)
+
+  //
+
+  //   assert.sameMembers(actual, expected)
+
+  //
+
+  //   expected = [users.eve, users.joe]
+
+  //   actual = Roles.getUsersInRole('admin', { scope: 'scope1' }).fetch().map(r => r._id)
+
+  //   assert.sameMembers(actual, expected)
+
+  //
+
+  //   expected = [users.eve, users.bob, users.joe]
+
+  //   actual = Roles.getUsersInRole('admin', { anyScope: true }).fetch().map(r => r._id)
+
+  //   assert.sameMembers(actual, expected)
+
+  //
+
+  //   actual = Roles.getUsersInRole('admin').fetch().map(r => r._id)
+
+  //   assert.sameMembers(actual, [])
+
+  // })
+
+  //
+
+  // it('can get all users in role by scope including Roles.GLOBAL_SCOPE', function () {
+
+  //   Roles.createRoleAsync('admin')
+
+  //   Roles.createRoleAsync('user')
+
+  //
+
+  //   Roles.addUsersToRolesAsync([users.eve], ['admin', 'user'], Roles.GLOBAL_SCOPE)
+
+  //   Roles.addUsersToRolesAsync([users.bob, users.joe], ['admin'], 'scope2')
+
+  //
+
+  //   let expected = [users.eve]
+
+  //   let actual = Roles.getUsersInRole('admin', 'scope1').fetch().map(r => r._id)
+
+  //
+
+  //   assert.sameMembers(actual, expected)
+
+  //
+
+  //   expected = [users.eve, users.bob, users.joe]
+
+  //   actual = Roles.getUsersInRole('admin', 'scope2').fetch().map(r => r._id)
+
+  //
+
+  //   assert.sameMembers(actual, expected)
+
+  //
+
+  //   expected = [users.eve]
+
+  //   actual = Roles.getUsersInRole('admin').fetch().map(r => r._id)
+
+  //
+
+  //   assert.sameMembers(actual, expected)
+
+  //
+
+  //   expected = [users.eve, users.bob, users.joe]
+
+  //   actual = Roles.getUsersInRole('admin', { anyScope: true }).fetch().map(r => r._id)
+
+  //
+
+  //   assert.sameMembers(actual, expected)
+
+  // })
+
+  //
+
+  // it('can get all users in role by scope excluding Roles.GLOBAL_SCOPE', function () {
+
+  //   Roles.createRoleAsync('admin')
+
+  //
+
+  //   Roles.addUsersToRolesAsync([users.eve], ['admin'], Roles.GLOBAL_SCOPE)
+
+  //   Roles.addUsersToRolesAsync([users.bob], ['admin'], 'scope1')
+
+  //
+
+  //   let expected = [users.eve]
+
+  //   let actual = Roles.getUsersInRole('admin').fetch().map(r => r._id)
+
+  //   assert.sameMembers(actual, expected)
+
+  //
+
+  //   expected = [users.eve, users.bob]
+
+  //   actual = Roles.getUsersInRole('admin', { scope: 'scope1' }).fetch().map(r => r._id)
+
+  //   assert.sameMembers(actual, expected)
+
+  //
+
+  //   expected = [users.bob]
+
+  //   actual = Roles.getUsersInRole('admin', { scope: 'scope1', onlyScoped: true }).fetch().map(r => r._id)
+
+  //   assert.sameMembers(actual, expected)
+
+  // })
+
+
+
+  it('can get all users in role by scope and passes through mongo query arguments', async function () {
+
+    await Roles.createRoleAsync('admin')
+
+    await Roles.createRoleAsync('user')
+
+
+
+    await Roles.addUsersToRolesAsync([users.eve, users.joe], ['admin', 'user'], 'scope1')
+
+    await Roles.addUsersToRolesAsync([users.bob, users.joe], ['admin'], 'scope2')
+
+
+
+    const results = await Roles.getUsersInRole('admin', 'scope1', { fields: { username: 0 }, limit: 1 }).fetch()
+
+  // it('can use Roles.GLOBAL_SCOPE to assign blanket roles', function () {
+
+  //   Roles.createRoleAsync('admin')
+
+  //
+
+  //   Roles.addUsersToRolesAsync([users.joe, users.bob], ['admin'], Roles.GLOBAL_SCOPE)
+
+  //
+
+  //   testUser('eve', [], 'scope1')
+
+  //   testUser('joe', ['admin'], 'scope2')
+
+  //   testUser('joe', ['admin'], 'scope1')
+
+  //   testUser('bob', ['admin'], 'scope2')
+
+  //   testUser('bob', ['admin'], 'scope1')
+
+  //
+
+  //   Roles.removeUsersFromRolesAsync(users.joe, ['admin'], Roles.GLOBAL_SCOPE)
+
+  //
+
+  //   testUser('eve', [], 'scope1')
+
+  //   testUser('joe', [], 'scope2')
+
+  //   testUser('joe', [], 'scope1')
+
+  //   testUser('bob', ['admin'], 'scope2')
+
+  //   testUser('bob', ['admin'], 'scope1')
+
+  // })
+
+  //
+
+  // it('Roles.GLOBAL_SCOPE is independent of other scopes', function () {
+
+  //   Roles.createRoleAsync('admin')
+
+  //
+
+  //   Roles.addUsersToRolesAsync([users.joe, users.bob], ['admin'], 'scope5')
+
+  //   Roles.addUsersToRolesAsync([users.joe, users.bob], ['admin'], Roles.GLOBAL_SCOPE)
+
+  //
+
+  //   testUser('eve', [], 'scope1')
+
+  //   testUser('joe', ['admin'], 'scope5')
+
+  //   testUser('joe', ['admin'], 'scope2')
+
+  //   testUser('joe', ['admin'], 'scope1')
+
+  //   testUser('bob', ['admin'], 'scope5')
+
+  //   testUser('bob', ['admin'], 'scope2')
+
+  //   testUser('bob', ['admin'], 'scope1')
+
+  //
+
+  //   Roles.removeUsersFromRolesAsync(users.joe, ['admin'], Roles.GLOBAL_SCOPE)
+
+  //
+
+  //   testUser('eve', [], 'scope1')
+
+  //   testUser('joe', ['admin'], 'scope5')
+
+  //   testUser('joe', [], 'scope2')
+
+  //   testUser('joe', [], 'scope1')
+
+  //   testUser('bob', ['admin'], 'scope5')
+
+  //   testUser('bob', ['admin'], 'scope2')
+
+  //   testUser('bob', ['admin'], 'scope1')
+
+  // })
+
+  //
+
+  // it('Roles.GLOBAL_SCOPE also checked when scope not specified', function () {
+
+  //   Roles.createRoleAsync('admin')
+
+  //
+
+  //   Roles.addUsersToRolesAsync(users.joe, 'admin', Roles.GLOBAL_SCOPE)
+
+  //
+
+  //   testUser('joe', ['admin'])
+
+  //
+
+  //   Roles.removeUsersFromRolesAsync(users.joe, 'admin', Roles.GLOBAL_SCOPE)
+
+  //
+
+  //   testUser('joe', [])
+
+  // })
+
+  //
+
+  // it('can use \'.\' in scope name', function () {
+
+  //   Roles.createRoleAsync('admin')
+
+  //
+
+  //   Roles.addUsersToRolesAsync(users.joe, ['admin'], 'example.com')
+
+  //   testUser('joe', ['admin'], 'example.com')
+
+  // })
+
+  //
+
+  // it('can use multiple periods in scope name', function () {
+
+  //   Roles.createRoleAsync('admin')
+
+  //
+
+  //   Roles.addUsersToRolesAsync(users.joe, ['admin'], 'example.k12.va.us')
+
+  //   testUser('joe', ['admin'], 'example.k12.va.us')
+
+  // })
+
+  //
+
+  // it('renaming of roles', function () {
+
+  //   Roles.createRoleAsync('admin')
+
+  //   Roles.createRoleAsync('user')
+
+  //   Roles.createRoleAsync('editor')
+
+  //
+
+  //   await Roles.setUserRolesAsync([users.eve, users.bob], ['editor', 'user'], 'scope1')
+
+  //   await Roles.setUserRolesAsync([users.bob, users.joe], ['user', 'admin'], 'scope2')
+
+  //
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.eve, 'editor', 'scope1'))
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.eve, 'editor', 'scope2'))
+
+  //
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.joe, 'admin', 'scope1'))
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.joe, 'admin', 'scope2'))
+
+  //
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.eve, 'user', 'scope1'))
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.bob, 'user', 'scope1'))
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.joe, 'user', 'scope1'))
+
+  //
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.eve, 'user', 'scope2'))
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.bob, 'user', 'scope2'))
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.joe, 'user', 'scope2'))
+
+  //
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.eve, 'user2', 'scope1'))
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.eve, 'user2', 'scope2'))
+
+  //
+
+  //   Roles.renameRole('user', 'user2')
+
+  //
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.eve, 'editor', 'scope1'))
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.eve, 'editor', 'scope2'))
+
+  //
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.joe, 'admin', 'scope1'))
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.joe, 'admin', 'scope2'))
+
+  //
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.eve, 'user2', 'scope1'))
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.bob, 'user2', 'scope1'))
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.joe, 'user2', 'scope1'))
+
+  //
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.eve, 'user2', 'scope2'))
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.bob, 'user2', 'scope2'))
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.joe, 'user2', 'scope2'))
+
+  //
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.eve, 'user', 'scope1'))
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.eve, 'user', 'scope2'))
+
+  // })
+
+  //
+
+  // it('migration without global groups (to v2)', function () {
+
+  //   assert.isOk(Meteor.roles.insert({ name: 'admin' }))
+
+  //   assert.isOk(Meteor.roles.insert({ name: 'editor' }))
+
+  //   assert.isOk(Meteor.roles.insert({ name: 'user' }))
+
+  //
+
+  //   assert.isOk(Meteor.users.update(users.eve, { $set: { roles: ['admin', 'editor'] } }))
+
+  //   assert.isOk(Meteor.users.update(users.bob, { $set: { roles: [] } }))
+
+  //   assert.isOk(Meteor.users.update(users.joe, { $set: { roles: ['user'] } }))
+
+  //
+
+  //   Roles._forwardMigrate()
+
+  //
+
+  //   assert.deepEqual(Meteor.users.findOneAsync(users.eve, { fields: { roles: 1, _id: 0 } }), {
+
+  //     roles: [{
+
+  //       _id: 'admin',
+
+  //       scope: null,
+
+  //       assigned: true
+
+  //     }, {
+
+  //       _id: 'editor',
+
+  //       scope: null,
+
+  //       assigned: true
+
+  //     }]
+
+  //   })
+
+  //   assert.deepEqual(Meteor.users.findOneAsync(users.bob, { fields: { roles: 1, _id: 0 } }), {
+
+  //     roles: []
+
+  //   })
+
+  //   assert.deepEqual(Meteor.users.findOneAsync(users.joe, { fields: { roles: 1, _id: 0 } }), {
+
+  //     roles: [{
+
+  //       _id: 'user',
+
+  //       scope: null,
+
+  //       assigned: true
+
+  //     }]
+
+  //   })
+
+  //
+
+  //   assert.deepEqual(Meteor.roles.findOne({ _id: 'admin' }), {
+
+  //     _id: 'admin',
+
+  //     children: []
+
+  //   })
+
+  //   assert.deepEqual(Meteor.roles.findOne({ _id: 'editor' }), {
+
+  //     _id: 'editor',
+
+  //     children: []
+
+  //   })
+
+  //   assert.deepEqual(Meteor.roles.findOne({ _id: 'user' }), {
+
+  //     _id: 'user',
+
+  //     children: []
+
+  //   })
+
+  //
+
+  //   Roles._backwardMigrate(null, null, false)
+
+  //
+
+  //   assert.deepEqual(Meteor.users.findOneAsync(users.eve, { fields: { roles: 1, _id: 0 } }), {
+
+  //     roles: ['admin', 'editor']
+
+  //   })
+
+  //   assert.deepEqual(Meteor.users.findOneAsync(users.bob, { fields: { roles: 1, _id: 0 } }), {
+
+  //     roles: []
+
+  //   })
+
+  //   assert.deepEqual(Meteor.users.findOneAsync(users.joe, { fields: { roles: 1, _id: 0 } }), {
+
+  //     roles: ['user']
+
+  //   })
+
+  //
+
+  //   assert.deepEqual(Meteor.roles.findOne({ name: 'admin' }, { fields: { _id: 0 } }), {
+
+  //     name: 'admin'
+
+  //   })
+
+  //   assert.deepEqual(Meteor.roles.findOne({ name: 'editor' }, { fields: { _id: 0 } }), {
+
+  //     name: 'editor'
+
+  //   })
+
+  //   assert.deepEqual(Meteor.roles.findOne({ name: 'user' }, { fields: { _id: 0 } }), {
+
+  //     name: 'user'
+
+  //   })
+
+  // })
+
+  //
+
+  // it('migration without global groups (to v3)')
+
+  //
+
+  // it('migration with global groups (to v2)', function () {
+
+  //   assert.isOk(Meteor.roles.insert({ name: 'admin' }))
+
+  //   assert.isOk(Meteor.roles.insert({ name: 'editor' }))
+
+  //   assert.isOk(Meteor.roles.insert({ name: 'user' }))
+
+  //
+
+  //   assert.isOk(Meteor.users.update(users.eve, { $set: { roles: { __global_roles__: ['admin', 'editor'], foo_bla: ['user'] } } }))
+
+  //   assert.isOk(Meteor.users.update(users.bob, { $set: { roles: { } } }))
+
+  //   assert.isOk(Meteor.users.update(users.joe, { $set: { roles: { __global_roles__: ['user'], foo_bla: ['user'] } } }))
+
+  //
+
+  //   Roles._forwardMigrate(null, null, false)
+
+  //
+
+  //   assert.deepEqual(Meteor.users.findOneAsync(users.eve, { fields: { roles: 1, _id: 0 } }), {
+
+  //     roles: [{
+
+  //       _id: 'admin',
+
+  //       scope: null,
+
+  //       assigned: true
+
+  //     }, {
+
+  //       _id: 'editor',
+
+  //       scope: null,
+
+  //       assigned: true
+
+  //     }, {
+
+  //       _id: 'user',
+
+  //       scope: 'foo_bla',
+
+  //       assigned: true
+
+  //     }]
+
+  //   })
+
+  //   assert.deepEqual(Meteor.users.findOneAsync(users.bob, { fields: { roles: 1, _id: 0 } }), {
+
+  //     roles: []
+
+  //   })
+
+  //   assert.deepEqual(Meteor.users.findOneAsync(users.joe, { fields: { roles: 1, _id: 0 } }), {
+
+  //     roles: [{
+
+  //       _id: 'user',
+
+  //       scope: null,
+
+  //       assigned: true
+
+  //     }, {
+
+  //       _id: 'user',
+
+  //       scope: 'foo_bla',
+
+  //       assigned: true
+
+  //     }]
+
+  //   })
+
+  //
+
+  //   assert.deepEqual(Meteor.roles.findOne({ _id: 'admin' }), {
+
+  //     _id: 'admin',
+
+  //     children: []
+
+  //   })
+
+  //   assert.deepEqual(Meteor.roles.findOne({ _id: 'editor' }), {
+
+  //     _id: 'editor',
+
+  //     children: []
+
+  //   })
+
+  //   assert.deepEqual(Meteor.roles.findOne({ _id: 'user' }), {
+
+  //     _id: 'user',
+
+  //     children: []
+
+  //   })
+
+  //
+
+  //   Roles._backwardMigrate(null, null, true)
+
+  //
+
+  //   assert.deepEqual(Meteor.users.findOneAsync(users.eve, { fields: { roles: 1, _id: 0 } }), {
+
+  //     roles: {
+
+  //       __global_roles__: ['admin', 'editor'],
+
+  //       foo_bla: ['user']
+
+  //     }
+
+  //   })
+
+  //   assert.deepEqual(Meteor.users.findOneAsync(users.bob, { fields: { roles: 1, _id: 0 } }), {
+
+  //     roles: {}
+
+  //   })
+
+  //   assert.deepEqual(Meteor.users.findOneAsync(users.joe, { fields: { roles: 1, _id: 0 } }), {
+
+  //     roles: {
+
+  //       __global_roles__: ['user'],
+
+  //       foo_bla: ['user']
+
+  //     }
+
+  //   })
+
+  //
+
+  //   assert.deepEqual(Meteor.roles.findOne({ name: 'admin' }, { fields: { _id: 0 } }), {
+
+  //     name: 'admin'
+
+  //   })
+
+  //   assert.deepEqual(Meteor.roles.findOne({ name: 'editor' }, { fields: { _id: 0 } }), {
+
+  //     name: 'editor'
+
+  //   })
+
+  //   assert.deepEqual(Meteor.roles.findOne({ name: 'user' }, { fields: { _id: 0 } }), {
+
+  //     name: 'user'
+
+  //   })
+
+  //
+
+  //   Roles._forwardMigrate(null, null, true)
+
+  //
+
+  //   assert.deepEqual(Meteor.users.findOneAsync(users.eve, { fields: { roles: 1, _id: 0 } }), {
+
+  //     roles: [{
+
+  //       _id: 'admin',
+
+  //       scope: null,
+
+  //       assigned: true
+
+  //     }, {
+
+  //       _id: 'editor',
+
+  //       scope: null,
+
+  //       assigned: true
+
+  //     }, {
+
+  //       _id: 'user',
+
+  //       scope: 'foo.bla',
+
+  //       assigned: true
+
+  //     }]
+
+  //   })
+
+  //   assert.deepEqual(Meteor.users.findOneAsync(users.bob, { fields: { roles: 1, _id: 0 } }), {
+
+  //     roles: []
+
+  //   })
+
+  //   assert.deepEqual(Meteor.users.findOneAsync(users.joe, { fields: { roles: 1, _id: 0 } }), {
+
+  //     roles: [{
+
+  //       _id: 'user',
+
+  //       scope: null,
+
+  //       assigned: true
+
+  //     }, {
+
+  //       _id: 'user',
+
+  //       scope: 'foo.bla',
+
+  //       assigned: true
+
+  //     }]
+
+  //   })
+
+  //
+
+  //   assert.deepEqual(Meteor.roles.findOne({ _id: 'admin' }), {
+
+  //     _id: 'admin',
+
+  //     children: []
+
+  //   })
+
+  //   assert.deepEqual(Meteor.roles.findOne({ _id: 'editor' }), {
+
+  //     _id: 'editor',
+
+  //     children: []
+
+  //   })
+
+  //   assert.deepEqual(Meteor.roles.findOne({ _id: 'user' }), {
+
+  //     _id: 'user',
+
+  //     children: []
+
+  //   })
+
+  // })
+
+  //
+
+  // it('migration with global groups (to v3)')
+
+  //
+
+  // it('_addUserToRole', function () {
+
+  //   Roles.createRoleAsync('admin')
+
+  //
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [])
+
+  //
+
+  //   assert.include(
+
+  //     Object.keys(Roles._addUserToRole(users.eve, 'admin', { scope: null, ifExists: false })),
+
+  //     'insertedId'
+
+  //   )
+
+  //
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+  //     role: { _id: 'admin' },
+
+  //     scope: null,
+
+  //     user: { _id: users.eve },
+
+  //     inheritedRoles: [{ _id: 'admin' }]
+
+  //   }])
+
+  //
+
+  //   assert.notInclude(
+
+  //     Object.keys(Roles._addUserToRole(users.eve, 'admin', { scope: null, ifExists: false })),
+
+  //     'insertedId'
+
+  //   )
+
+  //
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+  //     role: { _id: 'admin' },
+
+  //     scope: null,
+
+  //     user: { _id: users.eve },
+
+  //     inheritedRoles: [{ _id: 'admin' }]
+
+  //   }])
+
+  // })
+
+  //
+
+  // it('_removeUserFromRole', function () {
+
+  //   Roles.createRoleAsync('admin')
+
+  //
+
+  //   Roles.addUsersToRolesAsync(users.eve, 'admin')
+
+  //
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+  //     role: { _id: 'admin' },
+
+  //     scope: null,
+
+  //     user: { _id: users.eve },
+
+  //     inheritedRoles: [{ _id: 'admin' }]
+
+  //   }])
+
+  //
+
+  //   Roles._removeUserFromRole(users.eve, 'admin', { scope: null })
+
+  //
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [])
+
+  // })
+
+  //
+
+  // it('keep assigned roles', function () {
+
+  //   Roles.createRoleAsync('admin')
+
+  //   Roles.createRoleAsync('user')
+
+  //   Roles.createRoleAsync('ALL_PERMISSIONS')
+
+  //   Roles.createRoleAsync('VIEW_PERMISSION')
+
+  //   Roles.createRoleAsync('EDIT_PERMISSION')
+
+  //   Roles.createRoleAsync('DELETE_PERMISSION')
+
+  //   Roles.addRolesToParent('ALL_PERMISSIONS', 'user')
+
+  //   Roles.addRolesToParent('EDIT_PERMISSION', 'ALL_PERMISSIONS')
+
+  //   Roles.addRolesToParent('VIEW_PERMISSION', 'ALL_PERMISSIONS')
+
+  //   Roles.addRolesToParent('DELETE_PERMISSION', 'admin')
+
+  //
+
+  //   Roles.addUsersToRolesAsync(users.eve, ['user'])
+
+  //
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.eve, 'VIEW_PERMISSION'))
+
+  //
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+  //     role: { _id: 'user' },
+
+  //     scope: null,
+
+  //     user: { _id: users.eve },
+
+  //     inheritedRoles: [
+
+  //       { _id: 'user' },
+
+  //       { _id: 'ALL_PERMISSIONS' },
+
+  //       { _id: 'EDIT_PERMISSION' },
+
+  //       { _id: 'VIEW_PERMISSION' }
+
+  //     ]
+
+  //   }])
+
+  //
+
+  //   Roles.addUsersToRolesAsync(users.eve, 'VIEW_PERMISSION')
+
+  //
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.eve, 'VIEW_PERMISSION'))
+
+  //
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+  //     role: { _id: 'user' },
+
+  //     scope: null,
+
+  //     user: { _id: users.eve },
+
+  //     inheritedRoles: [
+
+  //       { _id: 'user' },
+
+  //       { _id: 'ALL_PERMISSIONS' },
+
+  //       { _id: 'EDIT_PERMISSION' },
+
+  //       { _id: 'VIEW_PERMISSION' }
+
+  //     ]
+
+  //   }, {
+
+  //     role: { _id: 'VIEW_PERMISSION' },
+
+  //     scope: null,
+
+  //     user: { _id: users.eve },
+
+  //     inheritedRoles: [
+
+  //       { _id: 'VIEW_PERMISSION' }
+
+  //     ]
+
+  //   }])
+
+  //
+
+  //   Roles.removeUsersFromRolesAsync(users.eve, 'user')
+
+  //
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.eve, 'VIEW_PERMISSION'))
+
+  //
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+  //     role: { _id: 'VIEW_PERMISSION' },
+
+  //     scope: null,
+
+  //     user: { _id: users.eve },
+
+  //     inheritedRoles: [
+
+  //       { _id: 'VIEW_PERMISSION' }
+
+  //     ]
+
+  //   }])
+
+  //
+
+  //   Roles.removeUsersFromRolesAsync(users.eve, 'VIEW_PERMISSION')
+
+  //
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.eve, 'VIEW_PERMISSION'))
+
+  //
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [])
+
+  // })
+
+  //
+
+  // it('adds children of the added role to the assignments', function () {
+
+  //   Roles.createRoleAsync('admin')
+
+  //   Roles.createRoleAsync('ALBUM.ADMIN')
+
+  //   Roles.createRoleAsync('ALBUM.VIEW')
+
+  //   Roles.createRoleAsync('TRACK.ADMIN')
+
+  //   Roles.createRoleAsync('TRACK.VIEW')
+
+  //
+
+  //   Roles.addRolesToParent('ALBUM.VIEW', 'ALBUM.ADMIN')
+
+  //   Roles.addRolesToParent('TRACK.VIEW', 'TRACK.ADMIN')
+
+  //
+
+  //   Roles.addRolesToParent('ALBUM.ADMIN', 'admin')
+
+  //
+
+  //   Roles.addUsersToRolesAsync(users.eve, ['admin'])
+
+  //
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.eve, 'TRACK.VIEW'))
+
+  //
+
+  //   Roles.addRolesToParent('TRACK.ADMIN', 'admin')
+
+  //
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.eve, 'TRACK.VIEW'))
+
+  // })
+
+  //
+
+  // it('removes children of the removed role from the assignments', function () {
+
+  //   Roles.createRoleAsync('admin')
+
+  //   Roles.createRoleAsync('ALBUM.ADMIN')
+
+  //   Roles.createRoleAsync('ALBUM.VIEW')
+
+  //   Roles.createRoleAsync('TRACK.ADMIN')
+
+  //   Roles.createRoleAsync('TRACK.VIEW')
+
+  //
+
+  //   Roles.addRolesToParent('ALBUM.VIEW', 'ALBUM.ADMIN')
+
+  //   Roles.addRolesToParent('TRACK.VIEW', 'TRACK.ADMIN')
+
+  //
+
+  //   Roles.addRolesToParent('ALBUM.ADMIN', 'admin')
+
+  //   Roles.addRolesToParent('TRACK.ADMIN', 'admin')
+
+  //
+
+  //   Roles.addUsersToRolesAsync(users.eve, ['admin'])
+
+  //
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.eve, 'TRACK.VIEW'))
+
+  //
+
+  //   Roles.removeRolesFromParent('TRACK.ADMIN', 'admin')
+
+  //
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.eve, 'TRACK.VIEW'))
+
+  // })
+
+  //
+
+  // it('modify assigned hierarchical roles', function () {
+
+  //   Roles.createRoleAsync('admin')
+
+  //   Roles.createRoleAsync('user')
+
+  //   Roles.createRoleAsync('ALL_PERMISSIONS')
+
+  //   Roles.createRoleAsync('VIEW_PERMISSION')
+
+  //   Roles.createRoleAsync('EDIT_PERMISSION')
+
+  //   Roles.createRoleAsync('DELETE_PERMISSION')
+
+  //   Roles.addRolesToParent('ALL_PERMISSIONS', 'user')
+
+  //   Roles.addRolesToParent('EDIT_PERMISSION', 'ALL_PERMISSIONS')
+
+  //   Roles.addRolesToParent('VIEW_PERMISSION', 'ALL_PERMISSIONS')
+
+  //   Roles.addRolesToParent('DELETE_PERMISSION', 'admin')
+
+  //
+
+  //   Roles.addUsersToRolesAsync(users.eve, ['user'])
+
+  //   Roles.addUsersToRolesAsync(users.eve, ['ALL_PERMISSIONS'], 'scope')
+
+  //
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.eve, 'MODERATE_PERMISSION'))
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.eve, 'MODERATE_PERMISSION', 'scope'))
+
+  //
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+  //     role: { _id: 'user' },
+
+  //     scope: null,
+
+  //     user: { _id: users.eve },
+
+  //     inheritedRoles: [
+
+  //       { _id: 'user' },
+
+  //       { _id: 'ALL_PERMISSIONS' },
+
+  //       { _id: 'EDIT_PERMISSION' },
+
+  //       { _id: 'VIEW_PERMISSION' }
+
+  //     ]
+
+  //   }, {
+
+  //     role: { _id: 'ALL_PERMISSIONS' },
+
+  //     scope: 'scope',
+
+  //     user: { _id: users.eve },
+
+  //     inheritedRoles: [
+
+  //       { _id: 'ALL_PERMISSIONS' },
+
+  //       { _id: 'EDIT_PERMISSION' },
+
+  //       { _id: 'VIEW_PERMISSION' }
+
+  //     ]
+
+  //   }])
+
+  //
+
+  //   Roles.createRoleAsync('MODERATE_PERMISSION')
+
+  //
+
+  //   Roles.addRolesToParent('MODERATE_PERMISSION', 'ALL_PERMISSIONS')
+
+  //
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.eve, 'MODERATE_PERMISSION'))
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.eve, 'MODERATE_PERMISSION', 'scope'))
+
+  //
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+  //     role: { _id: 'user' },
+
+  //     scope: null,
+
+  //     user: { _id: users.eve },
+
+  //     inheritedRoles: [
+
+  //       { _id: 'user' },
+
+  //       { _id: 'ALL_PERMISSIONS' },
+
+  //       { _id: 'EDIT_PERMISSION' },
+
+  //       { _id: 'VIEW_PERMISSION' },
+
+  //       { _id: 'MODERATE_PERMISSION' }
+
+  //     ]
+
+  //   }, {
+
+  //     role: { _id: 'ALL_PERMISSIONS' },
+
+  //     scope: 'scope',
+
+  //     user: { _id: users.eve },
+
+  //     inheritedRoles: [
+
+  //       { _id: 'ALL_PERMISSIONS' },
+
+  //       { _id: 'EDIT_PERMISSION' },
+
+  //       { _id: 'VIEW_PERMISSION' },
+
+  //       { _id: 'MODERATE_PERMISSION' }
+
+  //     ]
+
+  //   }])
+
+  //
+
+  //   Roles.addUsersToRolesAsync(users.eve, ['admin'])
+
+  //
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.eve, 'DELETE_PERMISSION'))
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.eve, 'DELETE_PERMISSION', 'scope'))
+
+  //
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+  //     role: { _id: 'user' },
+
+  //     scope: null,
+
+  //     user: { _id: users.eve },
+
+  //     inheritedRoles: [
+
+  //       { _id: 'user' },
+
+  //       { _id: 'ALL_PERMISSIONS' },
+
+  //       { _id: 'EDIT_PERMISSION' },
+
+  //       { _id: 'VIEW_PERMISSION' },
+
+  //       { _id: 'MODERATE_PERMISSION' }
+
+  //     ]
+
+  //   }, {
+
+  //     role: { _id: 'ALL_PERMISSIONS' },
+
+  //     scope: 'scope',
+
+  //     user: { _id: users.eve },
+
+  //     inheritedRoles: [
+
+  //       { _id: 'ALL_PERMISSIONS' },
+
+  //       { _id: 'EDIT_PERMISSION' },
+
+  //       { _id: 'VIEW_PERMISSION' },
+
+  //       { _id: 'MODERATE_PERMISSION' }
+
+  //     ]
+
+  //   }, {
+
+  //     role: { _id: 'admin' },
+
+  //     scope: null,
+
+  //     user: { _id: users.eve },
+
+  //     inheritedRoles: [
+
+  //       { _id: 'admin' },
+
+  //       { _id: 'DELETE_PERMISSION' }
+
+  //     ]
+
+  //   }])
+
+  //
+
+  //   Roles.addRolesToParent('DELETE_PERMISSION', 'ALL_PERMISSIONS')
+
+  //
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.eve, 'DELETE_PERMISSION'))
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.eve, 'DELETE_PERMISSION', 'scope'))
+
+  //
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+  //     role: { _id: 'user' },
+
+  //     scope: null,
+
+  //     user: { _id: users.eve },
+
+  //     inheritedRoles: [
+
+  //       { _id: 'user' },
+
+  //       { _id: 'ALL_PERMISSIONS' },
+
+  //       { _id: 'EDIT_PERMISSION' },
+
+  //       { _id: 'VIEW_PERMISSION' },
+
+  //       { _id: 'MODERATE_PERMISSION' },
+
+  //       { _id: 'DELETE_PERMISSION' }
+
+  //     ]
+
+  //   }, {
+
+  //     role: { _id: 'ALL_PERMISSIONS' },
+
+  //     scope: 'scope',
+
+  //     user: { _id: users.eve },
+
+  //     inheritedRoles: [
+
+  //       { _id: 'ALL_PERMISSIONS' },
+
+  //       { _id: 'EDIT_PERMISSION' },
+
+  //       { _id: 'VIEW_PERMISSION' },
+
+  //       { _id: 'MODERATE_PERMISSION' },
+
+  //       { _id: 'DELETE_PERMISSION' }
+
+  //     ]
+
+  //   }, {
+
+  //     role: { _id: 'admin' },
+
+  //     scope: null,
+
+  //     user: { _id: users.eve },
+
+  //     inheritedRoles: [
+
+  //       { _id: 'admin' },
+
+  //       { _id: 'DELETE_PERMISSION' }
+
+  //     ]
+
+  //   }])
+
+  //
+
+  //   Roles.removeUsersFromRolesAsync(users.eve, ['admin'])
+
+  //
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.eve, 'DELETE_PERMISSION'))
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.eve, 'DELETE_PERMISSION', 'scope'))
+
+  //
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+  //     role: { _id: 'user' },
+
+  //     scope: null,
+
+  //     user: { _id: users.eve },
+
+  //     inheritedRoles: [
+
+  //       { _id: 'user' },
+
+  //       { _id: 'ALL_PERMISSIONS' },
+
+  //       { _id: 'EDIT_PERMISSION' },
+
+  //       { _id: 'VIEW_PERMISSION' },
+
+  //       { _id: 'MODERATE_PERMISSION' },
+
+  //       { _id: 'DELETE_PERMISSION' }
+
+  //     ]
+
+  //   }, {
+
+  //     role: { _id: 'ALL_PERMISSIONS' },
+
+  //     scope: 'scope',
+
+  //     user: { _id: users.eve },
+
+  //     inheritedRoles: [
+
+  //       { _id: 'ALL_PERMISSIONS' },
+
+  //       { _id: 'EDIT_PERMISSION' },
+
+  //       { _id: 'VIEW_PERMISSION' },
+
+  //       { _id: 'MODERATE_PERMISSION' },
+
+  //       { _id: 'DELETE_PERMISSION' }
+
+  //     ]
+
+  //   }])
+
+  //
+
+  //   Roles.deleteRole('ALL_PERMISSIONS')
+
+  //
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.eve, 'DELETE_PERMISSION'))
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.eve, 'DELETE_PERMISSION', 'scope'))
+
+  //
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.eve, 'MODERATE_PERMISSION'))
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.eve, 'MODERATE_PERMISSION', 'scope'))
+
+  //
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+  //     role: { _id: 'user' },
+
+  //     scope: null,
+
+  //     user: { _id: users.eve },
+
+  //     inheritedRoles: [
+
+  //       { _id: 'user' }
+
+  //     ]
+
+  //   }])
+
+  // })
+
+  //
+
+  // it('delete role with overlapping hierarchical roles', function () {
+
+  //   Roles.createRoleAsync('role1')
+
+  //   Roles.createRoleAsync('role2')
+
+  //   Roles.createRoleAsync('COMMON_PERMISSION_1')
+
+  //   Roles.createRoleAsync('COMMON_PERMISSION_2')
+
+  //   Roles.createRoleAsync('COMMON_PERMISSION_3')
+
+  //   Roles.createRoleAsync('EXTRA_PERMISSION_ROLE_1')
+
+  //   Roles.createRoleAsync('EXTRA_PERMISSION_ROLE_2')
+
+  //
+
+  //   Roles.addRolesToParent('COMMON_PERMISSION_1', 'role1')
+
+  //   Roles.addRolesToParent('COMMON_PERMISSION_2', 'role1')
+
+  //   Roles.addRolesToParent('COMMON_PERMISSION_3', 'role1')
+
+  //   Roles.addRolesToParent('EXTRA_PERMISSION_ROLE_1', 'role1')
+
+  //
+
+  //   Roles.addRolesToParent('COMMON_PERMISSION_1', 'role2')
+
+  //   Roles.addRolesToParent('COMMON_PERMISSION_2', 'role2')
+
+  //   Roles.addRolesToParent('COMMON_PERMISSION_3', 'role2')
+
+  //   Roles.addRolesToParent('EXTRA_PERMISSION_ROLE_2', 'role2')
+
+  //
+
+  //   Roles.addUsersToRolesAsync(users.eve, 'role1')
+
+  //   Roles.addUsersToRolesAsync(users.eve, 'role2')
+
+  //
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.eve, 'COMMON_PERMISSION_1'))
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.eve, 'EXTRA_PERMISSION_ROLE_1'))
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.eve, 'EXTRA_PERMISSION_ROLE_2'))
+
+  //
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+  //     role: { _id: 'role1' },
+
+  //     scope: null,
+
+  //     user: { _id: users.eve },
+
+  //     inheritedRoles: [
+
+  //       { _id: 'role1' },
+
+  //       { _id: 'COMMON_PERMISSION_1' },
+
+  //       { _id: 'COMMON_PERMISSION_2' },
+
+  //       { _id: 'COMMON_PERMISSION_3' },
+
+  //       { _id: 'EXTRA_PERMISSION_ROLE_1' }
+
+  //     ]
+
+  //   }, {
+
+  //     role: { _id: 'role2' },
+
+  //     scope: null,
+
+  //     user: { _id: users.eve },
+
+  //     inheritedRoles: [
+
+  //       { _id: 'role2' },
+
+  //       { _id: 'COMMON_PERMISSION_1' },
+
+  //       { _id: 'COMMON_PERMISSION_2' },
+
+  //       { _id: 'COMMON_PERMISSION_3' },
+
+  //       { _id: 'EXTRA_PERMISSION_ROLE_2' }
+
+  //     ]
+
+  //   }])
+
+  //
+
+  //   Roles.removeUsersFromRolesAsync(users.eve, 'role2')
+
+  //
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.eve, 'COMMON_PERMISSION_1'))
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.eve, 'EXTRA_PERMISSION_ROLE_1'))
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.eve, 'EXTRA_PERMISSION_ROLE_2'))
+
+  //
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+  //     role: { _id: 'role1' },
+
+  //     scope: null,
+
+  //     user: { _id: users.eve },
+
+  //     inheritedRoles: [
+
+  //       { _id: 'role1' },
+
+  //       { _id: 'COMMON_PERMISSION_1' },
+
+  //       { _id: 'COMMON_PERMISSION_2' },
+
+  //       { _id: 'COMMON_PERMISSION_3' },
+
+  //       { _id: 'EXTRA_PERMISSION_ROLE_1' }
+
+  //     ]
+
+  //   }])
+
+  //
+
+  //   Roles.addUsersToRolesAsync(users.eve, 'role2')
+
+  //
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.eve, 'COMMON_PERMISSION_1'))
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.eve, 'EXTRA_PERMISSION_ROLE_1'))
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.eve, 'EXTRA_PERMISSION_ROLE_2'))
+
+  //
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+  //     role: { _id: 'role1' },
+
+  //     scope: null,
+
+  //     user: { _id: users.eve },
+
+  //     inheritedRoles: [
+
+  //       { _id: 'role1' },
+
+  //       { _id: 'COMMON_PERMISSION_1' },
+
+  //       { _id: 'COMMON_PERMISSION_2' },
+
+  //       { _id: 'COMMON_PERMISSION_3' },
+
+  //       { _id: 'EXTRA_PERMISSION_ROLE_1' }
+
+  //     ]
+
+  //   }, {
+
+  //     role: { _id: 'role2' },
+
+  //     scope: null,
+
+  //     user: { _id: users.eve },
+
+  //     inheritedRoles: [
+
+  //       { _id: 'role2' },
+
+  //       { _id: 'COMMON_PERMISSION_1' },
+
+  //       { _id: 'COMMON_PERMISSION_2' },
+
+  //       { _id: 'COMMON_PERMISSION_3' },
+
+  //       { _id: 'EXTRA_PERMISSION_ROLE_2' }
+
+  //     ]
+
+  //   }])
+
+  //
+
+  //   Roles.deleteRole('role2')
+
+  //
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.eve, 'COMMON_PERMISSION_1'))
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.eve, 'EXTRA_PERMISSION_ROLE_1'))
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.eve, 'EXTRA_PERMISSION_ROLE_2'))
+
+  //
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+  //     role: { _id: 'role1' },
+
+  //     scope: null,
+
+  //     user: { _id: users.eve },
+
+  //     inheritedRoles: [
+
+  //       { _id: 'role1' },
+
+  //       { _id: 'COMMON_PERMISSION_1' },
+
+  //       { _id: 'COMMON_PERMISSION_2' },
+
+  //       { _id: 'COMMON_PERMISSION_3' },
+
+  //       { _id: 'EXTRA_PERMISSION_ROLE_1' }
+
+  //     ]
+
+  //   }])
+
+  // })
+
+  //
+
+  // it('set parent on assigned role', function () {
+
+  //   Roles.createRoleAsync('admin')
+
+  //   Roles.createRoleAsync('EDIT_PERMISSION')
+
+  //
+
+  //   Roles.addUsersToRolesAsync(users.eve, 'EDIT_PERMISSION')
+
+  //
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.eve, 'EDIT_PERMISSION'))
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.eve, 'admin'))
+
+  //
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+  //     role: { _id: 'EDIT_PERMISSION' },
+
+  //     scope: null,
+
+  //     user: { _id: users.eve },
+
+  //     inheritedRoles: [{ _id: 'EDIT_PERMISSION' }]
+
+  //   }])
+
+  //
+
+  //   Roles.addRolesToParent('EDIT_PERMISSION', 'admin')
+
+  //
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.eve, 'EDIT_PERMISSION'))
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.eve, 'admin'))
+
+  //
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+  //     role: { _id: 'EDIT_PERMISSION' },
+
+  //     scope: null,
+
+  //     user: { _id: users.eve },
+
+  //     inheritedRoles: [{ _id: 'EDIT_PERMISSION' }]
+
+  //   }])
+
+  // })
+
+  //
+
+  // it('remove parent on assigned role', function () {
+
+  //   Roles.createRoleAsync('admin')
+
+  //   Roles.createRoleAsync('EDIT_PERMISSION')
+
+  //
+
+  //   Roles.addRolesToParent('EDIT_PERMISSION', 'admin')
+
+  //
+
+  //   Roles.addUsersToRolesAsync(users.eve, 'EDIT_PERMISSION')
+
+  //
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.eve, 'EDIT_PERMISSION'))
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.eve, 'admin'))
+
+  //
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+  //     role: { _id: 'EDIT_PERMISSION' },
+
+  //     scope: null,
+
+  //     user: { _id: users.eve },
+
+  //     inheritedRoles: [{ _id: 'EDIT_PERMISSION' }]
+
+  //   }])
+
+  //
+
+  //   Roles.removeRolesFromParent('EDIT_PERMISSION', 'admin')
+
+  //
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.eve, 'EDIT_PERMISSION'))
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.eve, 'admin'))
+
+  //
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+  //     role: { _id: 'EDIT_PERMISSION' },
+
+  //     scope: null,
+
+  //     user: { _id: users.eve },
+
+  //     inheritedRoles: [{ _id: 'EDIT_PERMISSION' }]
+
+  //   }])
+
+  // })
+
+  //
+
+  // it('adding and removing extra role parents', function () {
+
+  //   Roles.createRoleAsync('admin')
+
+  //   Roles.createRoleAsync('user')
+
+  //   Roles.createRoleAsync('EDIT_PERMISSION')
+
+  //
+
+  //   Roles.addRolesToParent('EDIT_PERMISSION', 'admin')
+
+  //
+
+  //   Roles.addUsersToRolesAsync(users.eve, 'EDIT_PERMISSION')
+
+  //
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.eve, 'EDIT_PERMISSION'))
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.eve, 'admin'))
+
+  //
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+  //     role: { _id: 'EDIT_PERMISSION' },
+
+  //     scope: null,
+
+  //     user: { _id: users.eve },
+
+  //     inheritedRoles: [{ _id: 'EDIT_PERMISSION' }]
+
+  //   }])
+
+  //
+
+  //   Roles.addRolesToParent('EDIT_PERMISSION', 'user')
+
+  //
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.eve, 'EDIT_PERMISSION'))
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.eve, 'admin'))
+
+  //
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+  //     role: { _id: 'EDIT_PERMISSION' },
+
+  //     scope: null,
+
+  //     user: { _id: users.eve },
+
+  //     inheritedRoles: [{ _id: 'EDIT_PERMISSION' }]
+
+  //   }])
+
+  //
+
+  //   Roles.removeRolesFromParent('EDIT_PERMISSION', 'user')
+
+  //
+
+  //   assert.isTrue(Roles.userIsInRoleAsync(users.eve, 'EDIT_PERMISSION'))
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.eve, 'admin'))
+
+  //
+
+  //   assert.sameDeepMembers(await Roles.getRolesForUserAsync(users.eve, { anyScope: true, fullObjects: true }).map(obj => { delete obj._id; return obj }), [{
+
+  //     role: { _id: 'EDIT_PERMISSION' },
+
+  //     scope: null,
+
+  //     user: { _id: users.eve },
+
+  //     inheritedRoles: [{ _id: 'EDIT_PERMISSION' }]
+
+  //   }])
+
+  // })
+
+  //
+
+  // it('cyclic roles', function () {
+
+  //   Roles.createRoleAsync('admin')
+
+  //   Roles.createRoleAsync('editor')
+
+  //   Roles.createRoleAsync('user')
+
+  //
+
+  //   Roles.addRolesToParent('editor', 'admin')
+
+  //   Roles.addRolesToParent('user', 'editor')
+
+  //
+
+  //   assert.throws(function () {
+
+  //     Roles.addRolesToParent('admin', 'user')
+
+  //   }, /form a cycle/)
+
+  // })
+
+  //
+
+  // it('userIsInRole returns false for unknown roles', function () {
+
+  //   Roles.createRoleAsync('admin')
+
+  //   Roles.createRoleAsync('user')
+
+  //   Roles.createRoleAsync('editor')
+
+  //   Roles.addUsersToRolesAsync(users.eve, ['admin', 'user'])
+
+  //   Roles.addUsersToRolesAsync(users.eve, ['editor'])
+
+  //
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.eve, 'unknown'))
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.eve, []))
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.eve, null))
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.eve, undefined))
+
+  //
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.eve, 'unknown', { anyScope: true }))
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.eve, [], { anyScope: true }))
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.eve, null, { anyScope: true }))
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.eve, undefined, { anyScope: true }))
+
+  //
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(users.eve, ['Role1', 'Role2', undefined], 'GroupName'))
+
+  // })
+
+  //
+
+  // it('userIsInRole returns false if user is a function', function () {
+
+  //   Roles.createRoleAsync('admin')
+
+  //   Roles.addUsersToRolesAsync(users.eve, ['admin'])
+
+  //
+
+  //   assert.isFalse(Roles.userIsInRoleAsync(() => {}, 'admin'))
+
+  // })
+
+  //
+
+  // describe('isParentOf', function () {
+
+  //   it('returns false for unknown roles', function () {
+
+  //     Roles.createRoleAsync('admin')
+
+  //
+
+  //     assert.isFalse(Roles.isParentOf('admin', 'unknown'))
+
+  //     assert.isFalse(Roles.isParentOf('admin', null))
+
+  //     assert.isFalse(Roles.isParentOf('admin', undefined))
+
+  //
+
+  //     assert.isFalse(Roles.isParentOf('unknown', 'admin'))
+
+  //     assert.isFalse(Roles.isParentOf(null, 'admin'))
+
+  //     assert.isFalse(Roles.isParentOf(undefined, 'admin'))
+
+  //   })
+
+  //
+
+  //   it('returns false if role is not parent of', function () {
+
+  //     Roles.createRoleAsync('admin')
+
+  //     Roles.createRoleAsync('editor')
+
+  //     Roles.createRoleAsync('user')
+
+  //     Roles.addRolesToParent(['editor'], 'admin')
+
+  //     Roles.addRolesToParent(['user'], 'editor')
+
+  //
+
+  //     assert.isFalse(Roles.isParentOf('user', 'admin'))
+
+  //     assert.isFalse(Roles.isParentOf('editor', 'admin'))
+
+  //   })
+
+  //
+
+  //   it('returns true if role is parent of the demanded role', function () {
+
+  //     Roles.createRoleAsync('admin')
+
+  //     Roles.createRoleAsync('editor')
+
+  //     Roles.createRoleAsync('user')
+
+  //     Roles.addRolesToParent(['editor'], 'admin')
+
+  //     Roles.addRolesToParent(['user'], 'editor')
+
+  //
+
+  //     assert.isTrue(Roles.isParentOf('admin', 'user'))
+
+  //     assert.isTrue(Roles.isParentOf('editor', 'user'))
+
+  //     assert.isTrue(Roles.isParentOf('admin', 'editor'))
+
+  //
+
+  //     assert.isTrue(Roles.isParentOf('admin', 'admin'))
+
+  //     assert.isTrue(Roles.isParentOf('editor', 'editor'))
+
+  //     assert.isTrue(Roles.isParentOf('user', 'user'))
+
+  //   })
+
+  // })
+",2023-09-24 12:18:19+02:00
+913687cbd2d76c193362fe67ede16bcbc9855e19,Renan Castro,fix: wait for publication handler to resolve before processing next message in queue (except when unblocked explicitily),packages/ddp-server/livedata_server.js,https://github.com/meteor/meteor/commit/913687cbd2d76c193362fe67ede16bcbc9855e19,"    const isThenable =
+
+      Promise.resolve(resultOrThenable).then(
+
+        (...args) => self._publishHandlerResult.bind(self)(...args),
+
+        e => self.error(e)
+
+      );
+
+
+","    const isThenable =  
+
+      try {
+
+        self._publishHandlerResult(await resultOrThenable);
+
+      } catch(e) {
+
+        self.error(e)
+
+      }
+",2024-01-18 11:09:19-03:00
+190bae33d3b10a23e1d4276d814f7a6a71007019,denihs,Use Tracker to make we have a user before calling the callbacks,packages/accounts-password/password_tests.js,https://github.com/meteor/meteor/commit/190bae33d3b10a23e1d4276d814f7a6a71007019,"      // TODO [FIBERS]: this is a big workaround. The Tracker is now receiving promises,
+
+        // so it's finishing before time. Hopefully this PR will fix this behavior
+
+        // https://github.com/meteor/meteor/pull/12294
+
+      let resolve;
+
+      const promise = new Promise(res => resolve = res);
+
+      Meteor.setTimeout(() => {
+
+        test.equal(Meteor.user(), { _id: Meteor.userId() });
+
+        resolve();
+
+      }, 100);
+
+      return promise;
+","      test.equal(await Meteor.userAsync(), { _id: Meteor.userId() });
+",2024-02-23 15:38:42-04:00
+0fd3d09d15da7c50e93a5c04f62445370eb9e296,Nacho Codoñer,fix latest issues with new reset cmd and db option,tools/cli/commands.js,https://github.com/meteor/meteor/commit/0fd3d09d15da7c50e93a5c04f62445370eb9e296,"    return files.rm_recursive_async(
+
+    ).then(() => {
+
+      Console.info(""Project reset."");
+
+    });
+","    await files.rm_recursive_async(
+
+    );
+
+    Console.info(""Project reset."");
+
+    return;
+",2024-05-27 16:00:59+02:00
+0fd3d09d15da7c50e93a5c04f62445370eb9e296,Nacho Codoñer,fix latest issues with new reset cmd and db option,tools/cli/commands.js,https://github.com/meteor/meteor/commit/0fd3d09d15da7c50e93a5c04f62445370eb9e296,"  console.log(""-> allRemovePromises"", allRemovePromises);
+
+
+
+  Promise.all(allRemovePromises).then(() => {
+
+    Console.info(""Project reset."");
+
+  });
+","  await Promise.all(allRemovePromises);
+
+  Console.info(""Project reset."");
+",2024-05-27 16:00:59+02:00
+6804b236b2a3d6c8725360243b8573495df8a0d5,Leonardo Venturini,"Fix Node.js version issue (#13199)
+
+* commit logs
+
+* use the correct tools dir when using meteor warehouse dir env var
+
+* remove logs
+
+* remove logs
+
+* run bin commands after springboarding
+
+* revert change
+
+* revert change
+
+* fix npm command for checkout
+
+* avoid to use unexisting tools path within a sandbox that describe a warehouse
+
+---------
+
+Co-authored-by: Nacho Codoñer <igcogi@gmail.com>",tools/cli/dev-bundle-bin-commands.js,https://github.com/meteor/meteor/commit/6804b236b2a3d6c8725360243b8573495df8a0d5,"var devBundleBinCommand = process.argv[2];
+
+var args = process.argv.slice(3);
+
+function getChildProcess() {
+
+  var helpers = require(""./dev-bundle-bin-helpers.js"");
+
+  return Promise.all([
+
+    helpers.getDevBundle(),
+
+    helpers.getEnv()
+
+  ]).then(function (devBundleAndEnv) {
+
+    var devBundleDir = devBundleAndEnv[0];
+
+    var cmd = helpers.getCommand(devBundleBinCommand, devBundleDir);
+
+    if (! cmd) {
+
+      return null;
+
+    }
+
+    var env = devBundleAndEnv[1];
+
+    var child = require(""child_process"").spawn(cmd, args, {
+
+      stdio: ""inherit"",
+
+      env: env
+
+    });
+
+
+
+    require(""./flush-buffers-on-exit-in-windows.js"");
+
+    child.on(""error"", function (error) {
+
+      console.log(error.stack || error);
+
+    });
+
+    child.on(""exit"", function (exitCode) {
+
+      process.exit(exitCode);
+
+    });
+
+    return child;
+
+module.exports = getChildProcess();
+","const { getDevBundleDir, DEFAULT_DEV_BUNDLE_DIR } = require('./dev-bundle');
+
+const { getEnv } = require('./dev-bundle-bin-helpers');
+
+const devBundleBinCommand = process.argv[2];
+
+const args = process.argv.slice(3);
+
+async function getChildProcess({ isFirstTry }) {
+
+  const helpers = require(""./dev-bundle-bin-helpers"");
+
+  const [devBundleDir, env] = await Promise.all([
+
+    getDevBundleDir(),
+
+    getEnv()
+
+  ]);
+
+  if (isFirstTry && devBundleDir === DEFAULT_DEV_BUNDLE_DIR) {
+
+    return null
+
+  }
+
+  const cmd = helpers.getCommand(devBundleBinCommand, devBundleDir);
+
+  if (!cmd) {
+
+    return null;
+
+  }
+
+  const child = require(""child_process"").spawn(cmd, args, {
+
+    stdio: ""inherit"",
+
+    env: env
+
+  require(""./flush-buffers-on-exit-in-windows"");
+
+  child.on(""error"", function (error) {
+
+    console.log(error.stack || error);
+
+  });
+
+  child.on(""exit"", function (exitCode) {
+
+    process.exit(exitCode);
+
+  });
+
+  return child;
+
+module.exports = {
+
+  getChildProcess
+
+}
+",2024-07-11 09:37:16-03:00
+6804b236b2a3d6c8725360243b8573495df8a0d5,Leonardo Venturini,"Fix Node.js version issue (#13199)
+
+* commit logs
+
+* use the correct tools dir when using meteor warehouse dir env var
+
+* remove logs
+
+* remove logs
+
+* run bin commands after springboarding
+
+* revert change
+
+* revert change
+
+* fix npm command for checkout
+
+* avoid to use unexisting tools path within a sandbox that describe a warehouse
+
+---------
+
+Co-authored-by: Nacho Codoñer <igcogi@gmail.com>",tools/cli/dev-bundle-bin-helpers.js,https://github.com/meteor/meteor/commit/6804b236b2a3d6c8725360243b8573495df8a0d5,"exports.getEnv = function (options) {
+
+  var devBundle = options && options.devBundle;
+
+  var devBundlePromise = typeof devBundle === ""string""
+
+    ? Promise.resolve(convertToOSPath(devBundle))
+
+    : getDevBundle();
+
+  return devBundlePromise.then(function (devBundleDir) {
+
+    var paths = [
+
+      // When npm looks for node, it must find dev_bundle/bin/node.
+
+      path.join(devBundleDir, ""bin""),
+
+      // When npm looks for meteor, it should find dev_bundle/../meteor.
+
+      path.dirname(devBundleDir),
+
+      // Also make available any scripts installed by packages in
+
+      // dev_bundle/lib/node_modules, such as node-gyp.
+
+      path.join(devBundleDir, ""lib"", ""node_modules"", "".bin"")
+
+    ];
+
+    var env = Object.create(process.env);
+
+    // Make sure notifications to update npm aren't presented to the user.
+
+    env.NO_UPDATE_NOTIFIER = true;
+
+    // Make sure `meteor npm install --global ...` installs into
+
+    // dev_bundle/lib/node_modules by default.
+
+    if (! env.NPM_CONFIG_PREFIX) {
+
+      env.NPM_CONFIG_PREFIX = devBundleDir;
+
+    }
+
+    if (env.METEOR_ALLOW_SUPERUSER) {
+
+      // Note that env.METEOR_ALLOW_SUPERUSER could be ""0"" or ""false"", which
+
+      // should propagate falsy semantics to NPM_CONFIG_UNSAFE_PERM.
+
+      env.NPM_CONFIG_UNSAFE_PERM = env.METEOR_ALLOW_SUPERUSER;
+
+    }
+
+    // This allows node-gyp to find Node headers and libraries in
+
+    // dev_bundle/include/node.
+
+    env.NPM_CONFIG_NODEDIR = devBundleDir;
+
+    var PATH = env.PATH || env.Path;
+
+    if (PATH) {
+
+      paths.push(PATH);
+
+    }
+
+    env.PATH = paths.join(path.delimiter);
+
+    if (process.platform === ""win32"") {
+
+      return addWindowsVariables(devBundleDir, env);
+
+    }
+
+    return env;
+
+  });
+
+};
+
+var cachedMSVSVersion;
+","async function getEnv(options) {
+
+  const devBundle = options && options.devBundle;
+
+  /**
+
+   * @type string
+
+   */
+
+  const devBundleDir = typeof devBundle === ""string""
+
+    ? await convertToOSPath(devBundle)
+
+    : await getDevBundleDir();
+
+  const paths = [
+
+    // When npm looks for node, it must find dev_bundle/bin/node.
+
+    path.join(devBundleDir, ""bin""),
+
+    // When npm looks for meteor, it should find dev_bundle/../meteor.
+
+    path.dirname(devBundleDir),
+
+    // Also make available any scripts installed by packages in
+
+    // dev_bundle/lib/node_modules, such as node-gyp.
+
+    path.join(devBundleDir, ""lib"", ""node_modules"", "".bin"")
+
+  ];
+
+  const env = Object.create(process.env);
+
+  env.NO_UPDATE_NOTIFIER = true;
+
+  if (!env.NPM_CONFIG_PREFIX) {
+
+    env.NPM_CONFIG_PREFIX = devBundleDir;
+
+  }
+
+  if (env.METEOR_ALLOW_SUPERUSER) {
+
+    // Note that env.METEOR_ALLOW_SUPERUSER could be ""0"" or ""false"", which
+
+    // should propagate falsy semantics to NPM_CONFIG_UNSAFE_PERM.
+
+    env.NPM_CONFIG_UNSAFE_PERM = env.METEOR_ALLOW_SUPERUSER;
+
+  }
+
+  env.NPM_CONFIG_NODEDIR = devBundleDir;
+
+  const PATH = env.PATH || env.Path;
+
+
+
+  if (PATH) {
+
+    paths.push(PATH);
+
+  }
+
+  env.PATH = paths.join(path.delimiter);
+
+  if (process.platform === ""win32"") {
+
+    return addWindowsVariables(devBundleDir, env);
+
+  }
+
+  return env;
+
+}
+
+let cachedMSVSVersion;
+",2024-07-11 09:37:16-03:00
+6804b236b2a3d6c8725360243b8573495df8a0d5,Leonardo Venturini,"Fix Node.js version issue (#13199)
+
+* commit logs
+
+* use the correct tools dir when using meteor warehouse dir env var
+
+* remove logs
+
+* remove logs
+
+* run bin commands after springboarding
+
+* revert change
+
+* revert change
+
+* fix npm command for checkout
+
+* avoid to use unexisting tools path within a sandbox that describe a warehouse
+
+---------
+
+Co-authored-by: Nacho Codoñer <igcogi@gmail.com>",tools/cli/dev-bundle.js,https://github.com/meteor/meteor/commit/6804b236b2a3d6c8725360243b8573495df8a0d5,"var fs = require(""fs"");
+
+var path = require(""path"");
+
+var links = require(""./dev-bundle-links.js"");
+
+var rootDir = path.resolve(__dirname, "".."", "".."");
+
+var defaultDevBundlePromise =
+
+  Promise.resolve(path.join(rootDir, ""dev_bundle""));
+
+
+
+function getDevBundleDir() {
+
+  var releaseFile = find(
+
+    return defaultDevBundlePromise;
+
+  var localDir = path.join(path.dirname(releaseFile), ""local"");
+
+      return defaultDevBundlePromise;
+
+  var devBundleLink = path.join(localDir, ""dev_bundle"");
+
+  var devBundleStat = statOrNull(devBundleLink);
+
+  var release = fs.readFileSync(
+
+    return defaultDevBundlePromise;
+
+  return Promise.resolve(
+
+    getDevBundleForRelease(release)
+
+  ).then(function (devBundleDir) {
+
+    if (devBundleDir) {
+
+      links.makeLink(devBundleDir, devBundleLink);
+
+      return devBundleDir;
+
+    }
+
+    return defaultDevBundlePromise;
+
+  });
+
+  var parts = release.split(""@"");
+
+  var track = parts[0];
+
+  var version = parts.slice(1).join(""@"");
+
+  var packageMetadataDir = find(
+","const fs = require(""fs"");
+
+const path = require(""path"");
+
+const links = require(""./dev-bundle-links.js"");
+
+const rootDir = path.resolve(__dirname, "".."", "".."");
+
+
+
+const DEFAULT_DEV_BUNDLE_DIR = path.join(rootDir, ""dev_bundle"");
+
+
+
+async function getDevBundleDir() {
+
+  const releaseFile = find(
+
+    return DEFAULT_DEV_BUNDLE_DIR;
+
+  const localDir = path.join(path.dirname(releaseFile), ""local"");
+
+      return DEFAULT_DEV_BUNDLE_DIR;
+
+  const devBundleLink = path.join(localDir, ""dev_bundle"");
+
+  const devBundleStat = statOrNull(devBundleLink);
+
+  const release = fs.readFileSync(
+
+    return DEFAULT_DEV_BUNDLE_DIR;
+
+  const devBundleDir = await getDevBundleForRelease(release);
+
+  if (devBundleDir) {
+
+    links.makeLink(devBundleDir, devBundleLink);
+
+    return devBundleDir;
+
+  }
+
+
+
+  return DEFAULT_DEV_BUNDLE_DIR;
+
+  const parts = release.split(""@"");
+
+  const track = parts[0];
+
+  const version = parts.slice(1).join(""@"");
+
+  const packageMetadataDir = find(
+",2024-07-11 09:37:16-03:00
+4f975fc69603bc961e2db281929b4f0975047be1,Leonardo Venturini,fix subscription stopping too early,packages/ddp-server/livedata_server.js,https://github.com/meteor/meteor/commit/4f975fc69603bc961e2db281929b4f0975047be1,"      this._publishCursorPromise = res._publishCursor(self).then(() => {
+
+        // _publishCursor only returns after the initial added callbacks have run.
+
+        // mark subscription as ready.
+
+        self.ready();
+
+      }).catch((e) => self.error(e));
+","      try {
+
+        await res._publishCursor(self);
+
+      } catch (e) {
+
+        self.error(e);
+
+        return;
+
+      }
+
+      // _publishCursor only returns after the initial added callbacks have run.
+
+      // mark subscription as ready.
+
+      self.ready();
+",2024-07-18 13:04:29-04:00
+4f975fc69603bc961e2db281929b4f0975047be1,Leonardo Venturini,fix subscription stopping too early,packages/ddp-server/livedata_server.js,https://github.com/meteor/meteor/commit/4f975fc69603bc961e2db281929b4f0975047be1,"      this._publishCursorPromise = Promise.all(
+
+        res.map(c => c._publishCursor(self))
+
+      )
+
+        .then(() => {
+
+          self.ready();
+
+        })
+
+        .catch((e) => self.error(e));
+","      try {
+
+        for (const cur of res) {
+
+          await cur._publishCursor(self);
+
+        }
+
+      } catch (e) {
+
+        self.error(e);
+
+        return;
+
+      }
+
+      self.ready();
+",2024-07-18 13:04:29-04:00
+78abdfbbe1c5376ab6b566836ebd2d3e986e06c0,Nacho Codoñer,upgrade mongo driver 5,tools/runners/run-mongo.js,https://github.com/meteor/meteor/commit/78abdfbbe1c5376ab6b566836ebd2d3e986e06c0,"      new Promise((resolve, reject) => {
+
+        object[methodName](...args, (err, res) => {
+
+          err ? reject(err) : resolve(res);
+
+        });
+
+      }),
+","      (async () => {
+
+        try {
+
+          return await object[methodName](...args);
+
+        } catch (e) {
+
+          throw e;
+
+        }
+
+      })(),
+",2024-10-24 17:28:07+02:00

@@ -1,0 +1,828 @@
+commit_hash,author,message,file_path,commit_url,removed_chunk,added_chunk,commit_date
+6ff1d1bd7183e9f4ec75075dccb6410a605de3d6,Mugen87,WebXRManager: Use async/await in setSession().,src/renderers/webxr/WebXRManager.js,https://github.com/mrdoob/three.js/commit/6ff1d1bd7183e9f4ec75075dccb6410a605de3d6,"			session.requestReferenceSpace( referenceSpaceType ).then( onRequestReferenceSpace );
+
+			//
+
+			session.addEventListener( 'inputsourceschange', updateInputSources );
+
+	function updateInputSources( event ) {
+","			referenceSpace = await session.requestReferenceSpace( referenceSpaceType );
+
+
+
+			animation.setContext( session );
+
+			animation.start();
+
+			scope.isPresenting = true;
+
+			scope.dispatchEvent( { type: 'sessionstart' } );
+
+	function onInputSourcesChange( event ) {
+",2020-11-24 16:44:18+01:00
+edb93edd82d340f7a9b97c25665df21de27f38b0,Mr.doob,Updated builds.,build/three.module.js,https://github.com/mrdoob/three.js/commit/edb93edd82d340f7a9b97c25665df21de27f38b0,"			session.requestReferenceSpace( referenceSpaceType ).then( onRequestReferenceSpace );
+
+			//
+
+			session.addEventListener( 'inputsourceschange', updateInputSources );
+
+	function updateInputSources( event ) {
+","			referenceSpace = await session.requestReferenceSpace( referenceSpaceType );
+
+			animation.setContext( session );
+
+			animation.start();
+
+
+
+			scope.isPresenting = true;
+
+			scope.dispatchEvent( { type: 'sessionstart' } );
+
+	function onInputSourcesChange( event ) {
+",2021-01-16 21:37:11+00:00
+3714df0b234c3b509a0e169b0621045eda4af5cf,Gregg Tavares,add sliders to primitives,threejs/lessons/resources/threejs-primitives.js,https://github.com/mrdoob/three.js/commit/3714df0b234c3b509a0e169b0621045eda4af5cf,"    return createLiveImage(base, info, name);
+
+  const whiteLineMaterial = new THREE.LineBasicMaterial({
+
+    color: 0xffffff,
+
+    transparent: true,
+
+    opacity: 0.5,
+
+  });
+
+  const blackLineMaterial = new THREE.LineBasicMaterial({
+
+    color: 0x000000,
+
+    transparent: true,
+
+    opacity: 0.5,
+
+  });
+
+
+
+  function addGeometry(root, info, args = []) {
+
+    return promise.then((geometryInfo) => {
+
+      if (geometryInfo instanceof THREE.BufferGeometry ||
+
+          geometryInfo instanceof THREE.Geometry) {
+
+        const geometry = geometryInfo;
+
+        geometryInfo = {
+
+          geometry,
+
+        };
+
+      }
+
+      const boxGeometry = geometryInfo.geometry || geometryInfo.lineGeometry;
+
+      boxGeometry.computeBoundingBox();
+
+      const centerOffset = new THREE.Vector3();
+
+      boxGeometry.boundingBox.getCenter(centerOffset).multiplyScalar(-1);
+
+      if (geometryInfo.geometry) {
+
+        if (!info.material) {
+
+          const material = new THREE.MeshPhongMaterial({
+
+            flatShading: info.flatShading === false ? false : true,
+
+            side: THREE.DoubleSide,
+
+          });
+
+          material.color.setHSL(Math.random(), .5, .5);
+
+          info.material = material;
+
+        }
+
+        const mesh = new THREE.Mesh(geometryInfo.geometry, info.material);
+
+        mesh.position.copy(centerOffset);
+
+        root.add(mesh);
+
+      }
+
+      if (info.showLines !== false) {
+
+        const lineMesh = new THREE.LineSegments(
+
+          geometryInfo.lineGeometry || geometryInfo.geometry,
+
+          geometryInfo.geometry ? whiteLineMaterial : blackLineMaterial);
+
+        lineMesh.position.copy(centerOffset);
+
+        root.add(lineMesh);
+
+    });
+
+  function updateGeometry(root, info, params) {
+
+    addGeometry(root, info, Object.values(params)).then(() => {
+
+      oldChildren.forEach((child) => {
+
+        root.remove(child);
+
+        child.geometry.dispose();
+
+      });
+
+  function createLiveImage(elem, info, name) {
+","    createLiveImage(base, info, name);
+
+  async function addGeometry(root, info, args = []) {
+
+    let geometryInfo = await promise;
+
+    if (geometryInfo instanceof THREE.BufferGeometry ||
+
+        geometryInfo instanceof THREE.Geometry) {
+
+      const geometry = geometryInfo;
+
+      geometryInfo = {
+
+        geometry,
+
+      };
+
+    }
+
+    const boxGeometry = geometryInfo.geometry || geometryInfo.lineGeometry;
+
+    boxGeometry.computeBoundingBox();
+
+    const centerOffset = new THREE.Vector3();
+
+    boxGeometry.boundingBox.getCenter(centerOffset).multiplyScalar(-1);
+
+    if (geometryInfo.geometry) {
+
+      if (!info.material) {
+
+        const material = new THREE.MeshPhongMaterial({
+
+          flatShading: info.flatShading === false ? false : true,
+
+          side: THREE.DoubleSide,
+
+        });
+
+        material.color.setHSL(Math.random(), .5, .5);
+
+        info.material = material;
+
+      const mesh = new THREE.Mesh(geometryInfo.geometry, info.material);
+
+      mesh.position.copy(centerOffset);
+
+      root.add(mesh);
+
+    }
+
+    if (info.showLines !== false) {
+
+      const lineMesh = new THREE.LineSegments(
+
+        geometryInfo.lineGeometry || geometryInfo.geometry,
+
+        new THREE.LineBasicMaterial({
+
+          color: geometryInfo.geometry ? 0xffffff : colors.lines,
+
+          transparent: true,
+
+          opacity: 0.5,
+
+        }));
+
+      lineMesh.position.copy(centerOffset);
+
+      root.add(lineMesh);
+
+    }
+
+  async function updateGeometry(root, info, params) {
+
+    await addGeometry(root, info, Object.values(params));
+
+    oldChildren.forEach((child) => {
+
+      root.remove(child);
+
+      child.geometry.dispose();
+
+  const primitives = {};
+
+
+
+  async function createLiveImage(elem, info, name) {
+",2020-03-26 18:16:42+09:00
+3714df0b234c3b509a0e169b0621045eda4af5cf,Gregg Tavares,add sliders to primitives,threejs/lessons/resources/threejs-primitives.js,https://github.com/mrdoob/three.js/commit/3714df0b234c3b509a0e169b0621045eda4af5cf,"    addGeometry(root, info).then(() => {
+
+      threejsLessonUtils.addDiagram(elem, {create: () => root});
+
+    });
+","    await addGeometry(root, info);
+
+    threejsLessonUtils.addDiagram(elem, {create: () => root});
+",2020-03-26 18:16:42+09:00
+429b3d3f6e4aa25b528891bb297c1daac726b1c6,Marco Fugaro,"GLTFExporter: add onError parameter to parse (#22774)
+
+* GLTFExporter: add onError parameter to parse
+
+* GLTFExporter: fix syntax error
+
+* GLTFExporter: add documentation and warning about the onError parameter
+
+Co-authored-by: Michael Herzog <michael.herzog@human-interactive.org>",examples/jsm/exporters/GLTFExporter.js,https://github.com/mrdoob/three.js/commit/429b3d3f6e4aa25b528891bb297c1daac726b1c6,"		const writer = this;
+
+
+
+		Promise.all( this.pending ).then( function () {
+
+			const buffers = writer.buffers;
+
+			const json = writer.json;
+
+			const options = writer.options;
+
+			const extensionsUsed = writer.extensionsUsed;
+
+			// Merge buffers.
+
+			const blob = new Blob( buffers, { type: 'application/octet-stream' } );
+
+			// Declare extensions.
+
+			const extensionsUsedList = Object.keys( extensionsUsed );
+
+			if ( extensionsUsedList.length > 0 ) json.extensionsUsed = extensionsUsedList;
+
+			// Update bytelength of the single buffer.
+
+			if ( json.buffers && json.buffers.length > 0 ) json.buffers[ 0 ].byteLength = blob.size;
+
+			if ( options.binary === true ) {
+
+				// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#glb-file-format-specification
+
+				const reader = new window.FileReader();
+
+				reader.readAsArrayBuffer( blob );
+
+				reader.onloadend = function () {
+
+					// Binary chunk.
+
+					const binaryChunk = getPaddedArrayBuffer( reader.result );
+
+					const binaryChunkPrefix = new DataView( new ArrayBuffer( GLB_CHUNK_PREFIX_BYTES ) );
+
+					binaryChunkPrefix.setUint32( 0, binaryChunk.byteLength, true );
+
+					binaryChunkPrefix.setUint32( 4, GLB_CHUNK_TYPE_BIN, true );
+
+
+
+					// JSON chunk.
+
+					const jsonChunk = getPaddedArrayBuffer( stringToArrayBuffer( JSON.stringify( json ) ), 0x20 );
+
+					const jsonChunkPrefix = new DataView( new ArrayBuffer( GLB_CHUNK_PREFIX_BYTES ) );
+
+					jsonChunkPrefix.setUint32( 0, jsonChunk.byteLength, true );
+
+					jsonChunkPrefix.setUint32( 4, GLB_CHUNK_TYPE_JSON, true );
+
+
+
+					// GLB header.
+
+					const header = new ArrayBuffer( GLB_HEADER_BYTES );
+
+					const headerView = new DataView( header );
+
+					headerView.setUint32( 0, GLB_HEADER_MAGIC, true );
+
+					headerView.setUint32( 4, GLB_VERSION, true );
+
+					const totalByteLength = GLB_HEADER_BYTES
+
+						+ jsonChunkPrefix.byteLength + jsonChunk.byteLength
+
+						+ binaryChunkPrefix.byteLength + binaryChunk.byteLength;
+
+					headerView.setUint32( 8, totalByteLength, true );
+
+
+
+					const glbBlob = new Blob( [
+
+						header,
+
+						jsonChunkPrefix,
+
+						jsonChunk,
+
+						binaryChunkPrefix,
+
+						binaryChunk
+
+					], { type: 'application/octet-stream' } );
+
+
+
+					const glbReader = new window.FileReader();
+
+					glbReader.readAsArrayBuffer( glbBlob );
+
+					glbReader.onloadend = function () {
+
+
+
+						onDone( glbReader.result );
+
+
+
+					};
+
+			} else {
+
+				if ( json.buffers && json.buffers.length > 0 ) {
+
+					const reader = new window.FileReader();
+
+					reader.readAsDataURL( blob );
+
+					reader.onloadend = function () {
+
+						const base64data = reader.result;
+
+						json.buffers[ 0 ].uri = base64data;
+
+						onDone( json );
+
+					};
+
+				} else {
+
+					onDone( json );
+
+				}
+
+		} );
+","		await Promise.all( this.pending );
+
+		const writer = this;
+
+		const buffers = writer.buffers;
+
+		const json = writer.json;
+
+		options = writer.options;
+
+		const extensionsUsed = writer.extensionsUsed;
+
+		// Merge buffers.
+
+		const blob = new Blob( buffers, { type: 'application/octet-stream' } );
+
+		// Declare extensions.
+
+		const extensionsUsedList = Object.keys( extensionsUsed );
+
+		if ( extensionsUsedList.length > 0 ) json.extensionsUsed = extensionsUsedList;
+
+		// Update bytelength of the single buffer.
+
+		if ( json.buffers && json.buffers.length > 0 ) json.buffers[ 0 ].byteLength = blob.size;
+
+		if ( options.binary === true ) {
+
+			// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#glb-file-format-specification
+
+			const reader = new window.FileReader();
+
+			reader.readAsArrayBuffer( blob );
+
+			reader.onloadend = function () {
+
+				// Binary chunk.
+
+				const binaryChunk = getPaddedArrayBuffer( reader.result );
+
+				const binaryChunkPrefix = new DataView( new ArrayBuffer( GLB_CHUNK_PREFIX_BYTES ) );
+
+				binaryChunkPrefix.setUint32( 0, binaryChunk.byteLength, true );
+
+				binaryChunkPrefix.setUint32( 4, GLB_CHUNK_TYPE_BIN, true );
+
+
+
+				// JSON chunk.
+
+				const jsonChunk = getPaddedArrayBuffer( stringToArrayBuffer( JSON.stringify( json ) ), 0x20 );
+
+				const jsonChunkPrefix = new DataView( new ArrayBuffer( GLB_CHUNK_PREFIX_BYTES ) );
+
+				jsonChunkPrefix.setUint32( 0, jsonChunk.byteLength, true );
+
+				jsonChunkPrefix.setUint32( 4, GLB_CHUNK_TYPE_JSON, true );
+
+
+
+				// GLB header.
+
+				const header = new ArrayBuffer( GLB_HEADER_BYTES );
+
+				const headerView = new DataView( header );
+
+				headerView.setUint32( 0, GLB_HEADER_MAGIC, true );
+
+				headerView.setUint32( 4, GLB_VERSION, true );
+
+				const totalByteLength = GLB_HEADER_BYTES
+
+					+ jsonChunkPrefix.byteLength + jsonChunk.byteLength
+
+					+ binaryChunkPrefix.byteLength + binaryChunk.byteLength;
+
+				headerView.setUint32( 8, totalByteLength, true );
+
+
+
+				const glbBlob = new Blob( [
+
+					header,
+
+					jsonChunkPrefix,
+
+					jsonChunk,
+
+					binaryChunkPrefix,
+
+					binaryChunk
+
+				], { type: 'application/octet-stream' } );
+
+
+
+				const glbReader = new window.FileReader();
+
+				glbReader.readAsArrayBuffer( glbBlob );
+
+				glbReader.onloadend = function () {
+
+
+
+					onDone( glbReader.result );
+
+			};
+
+		} else {
+
+			if ( json.buffers && json.buffers.length > 0 ) {
+
+				const reader = new window.FileReader();
+
+				reader.readAsDataURL( blob );
+
+				reader.onloadend = function () {
+
+					const base64data = reader.result;
+
+					json.buffers[ 0 ].uri = base64data;
+
+					onDone( json );
+
+				};
+
+			} else {
+
+				onDone( json );
+
+		}
+
+
+",2021-11-11 21:13:28+01:00
+9c57b2e117e7e615cf8c9645fad90e4ad8ce6757,Mr.doob,Updated examples builds.,examples/js/exporters/GLTFExporter.js,https://github.com/mrdoob/three.js/commit/9c57b2e117e7e615cf8c9645fad90e4ad8ce6757,"			Promise.all( this.pending ).then( function () {
+
+
+
+				const buffers = writer.buffers;
+
+				const json = writer.json;
+
+				const options = writer.options;
+
+				const extensionsUsed = writer.extensionsUsed; // Merge buffers.
+
+
+
+				const blob = new Blob( buffers, {
+
+					type: 'application/octet-stream'
+
+				} ); // Declare extensions.
+
+
+
+				const extensionsUsedList = Object.keys( extensionsUsed );
+
+				if ( extensionsUsedList.length > 0 ) json.extensionsUsed = extensionsUsedList; // Update bytelength of the single buffer.
+
+
+
+				if ( json.buffers && json.buffers.length > 0 ) json.buffers[ 0 ].byteLength = blob.size;
+
+
+
+				if ( options.binary === true ) {
+
+
+
+					// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#glb-file-format-specification
+
+					const reader = new window.FileReader();
+
+					reader.readAsArrayBuffer( blob );
+
+					reader.onloadend = function () {
+
+						// Binary chunk.
+
+						const binaryChunk = getPaddedArrayBuffer( reader.result );
+
+						const binaryChunkPrefix = new DataView( new ArrayBuffer( GLB_CHUNK_PREFIX_BYTES ) );
+
+						binaryChunkPrefix.setUint32( 0, binaryChunk.byteLength, true );
+
+						binaryChunkPrefix.setUint32( 4, GLB_CHUNK_TYPE_BIN, true ); // JSON chunk.
+
+						const jsonChunk = getPaddedArrayBuffer( stringToArrayBuffer( JSON.stringify( json ) ), 0x20 );
+
+						const jsonChunkPrefix = new DataView( new ArrayBuffer( GLB_CHUNK_PREFIX_BYTES ) );
+
+						jsonChunkPrefix.setUint32( 0, jsonChunk.byteLength, true );
+
+						jsonChunkPrefix.setUint32( 4, GLB_CHUNK_TYPE_JSON, true ); // GLB header.
+
+						const header = new ArrayBuffer( GLB_HEADER_BYTES );
+
+						const headerView = new DataView( header );
+
+						headerView.setUint32( 0, GLB_HEADER_MAGIC, true );
+
+						headerView.setUint32( 4, GLB_VERSION, true );
+
+						const totalByteLength = GLB_HEADER_BYTES + jsonChunkPrefix.byteLength + jsonChunk.byteLength + binaryChunkPrefix.byteLength + binaryChunk.byteLength;
+
+						headerView.setUint32( 8, totalByteLength, true );
+
+						const glbBlob = new Blob( [ header, jsonChunkPrefix, jsonChunk, binaryChunkPrefix, binaryChunk ], {
+
+							type: 'application/octet-stream'
+
+						} );
+
+						const glbReader = new window.FileReader();
+
+						glbReader.readAsArrayBuffer( glbBlob );
+
+						glbReader.onloadend = function () {
+
+							onDone( glbReader.result );
+
+						};
+
+				} else {
+
+					if ( json.buffers && json.buffers.length > 0 ) {
+
+						const reader = new window.FileReader();
+
+						reader.readAsDataURL( blob );
+
+						reader.onloadend = function () {
+
+							const base64data = reader.result;
+
+							json.buffers[ 0 ].uri = base64data;
+
+							onDone( json );
+
+						};
+
+					} else {
+
+						onDone( json );
+
+					}
+
+			} );
+","			await Promise.all( this.pending );
+
+			const buffers = writer.buffers;
+
+			const json = writer.json;
+
+			options = writer.options;
+
+			const extensionsUsed = writer.extensionsUsed; // Merge buffers.
+
+			const blob = new Blob( buffers, {
+
+				type: 'application/octet-stream'
+
+			} ); // Declare extensions.
+
+			const extensionsUsedList = Object.keys( extensionsUsed );
+
+			if ( extensionsUsedList.length > 0 ) json.extensionsUsed = extensionsUsedList; // Update bytelength of the single buffer.
+
+			if ( json.buffers && json.buffers.length > 0 ) json.buffers[ 0 ].byteLength = blob.size;
+
+			if ( options.binary === true ) {
+
+				// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#glb-file-format-specification
+
+				const reader = new window.FileReader();
+
+				reader.readAsArrayBuffer( blob );
+
+				reader.onloadend = function () {
+
+					// Binary chunk.
+
+					const binaryChunk = getPaddedArrayBuffer( reader.result );
+
+					const binaryChunkPrefix = new DataView( new ArrayBuffer( GLB_CHUNK_PREFIX_BYTES ) );
+
+					binaryChunkPrefix.setUint32( 0, binaryChunk.byteLength, true );
+
+					binaryChunkPrefix.setUint32( 4, GLB_CHUNK_TYPE_BIN, true ); // JSON chunk.
+
+
+
+					const jsonChunk = getPaddedArrayBuffer( stringToArrayBuffer( JSON.stringify( json ) ), 0x20 );
+
+					const jsonChunkPrefix = new DataView( new ArrayBuffer( GLB_CHUNK_PREFIX_BYTES ) );
+
+					jsonChunkPrefix.setUint32( 0, jsonChunk.byteLength, true );
+
+					jsonChunkPrefix.setUint32( 4, GLB_CHUNK_TYPE_JSON, true ); // GLB header.
+
+
+
+					const header = new ArrayBuffer( GLB_HEADER_BYTES );
+
+					const headerView = new DataView( header );
+
+					headerView.setUint32( 0, GLB_HEADER_MAGIC, true );
+
+					headerView.setUint32( 4, GLB_VERSION, true );
+
+					const totalByteLength = GLB_HEADER_BYTES + jsonChunkPrefix.byteLength + jsonChunk.byteLength + binaryChunkPrefix.byteLength + binaryChunk.byteLength;
+
+					headerView.setUint32( 8, totalByteLength, true );
+
+					const glbBlob = new Blob( [ header, jsonChunkPrefix, jsonChunk, binaryChunkPrefix, binaryChunk ], {
+
+						type: 'application/octet-stream'
+
+					} );
+
+					const glbReader = new window.FileReader();
+
+					glbReader.readAsArrayBuffer( glbBlob );
+
+
+
+					glbReader.onloadend = function () {
+
+
+
+						onDone( glbReader.result );
+
+				};
+
+			} else {
+
+				if ( json.buffers && json.buffers.length > 0 ) {
+
+					const reader = new window.FileReader();
+
+					reader.readAsDataURL( blob );
+
+					reader.onloadend = function () {
+
+						const base64data = reader.result;
+
+						json.buffers[ 0 ].uri = base64data;
+
+						onDone( json );
+
+					};
+
+				} else {
+
+					onDone( json );
+
+			}
+",2021-11-15 05:37:14-05:00
+5fb35c77b98b0c3d438100035a1e8dafeca5eb2a,ycw,"WebGPUBackend: Fix Timestamp Query (#30299)
+
+* fix
+
+* await",src/renderers/webgpu/WebGPUBackend.js,https://github.com/mrdoob/three.js/commit/5fb35c77b98b0c3d438100035a1e8dafeca5eb2a,"			resultBuffer.mapAsync( GPUMapMode.READ ).then( () => {
+
+
+
+				const times = new BigUint64Array( resultBuffer.getMappedRange() );
+
+				const duration = Number( times[ 1 ] - times[ 0 ] ) / 1000000;
+
+
+
+				this.renderer.info.updateTimestamp( type, duration );
+
+				resultBuffer.unmap();
+
+			} );
+","			await resultBuffer.mapAsync( GPUMapMode.READ );
+
+			const times = new BigUint64Array( resultBuffer.getMappedRange() );
+
+			const duration = Number( times[ 1 ] - times[ 0 ] ) / 1000000;
+
+			this.renderer.info.updateTimestamp( type, duration );
+
+			resultBuffer.unmap();
+",2025-01-10 15:36:29+08:00
+0a7d33cbfd6c6b913b80d5ddcb15dbb2198606ce,Mugen87,Updated builds.,build/three.webgpu.js,https://github.com/mrdoob/three.js/commit/0a7d33cbfd6c6b913b80d5ddcb15dbb2198606ce,"			resultBuffer.mapAsync( GPUMapMode.READ ).then( () => {
+
+				const times = new BigUint64Array( resultBuffer.getMappedRange() );
+
+				const duration = Number( times[ 1 ] - times[ 0 ] ) / 1000000;
+
+				this.renderer.info.updateTimestamp( type, duration );
+
+				resultBuffer.unmap();
+
+
+
+
+
+			} );
+","			await resultBuffer.mapAsync( GPUMapMode.READ );
+
+			const times = new BigUint64Array( resultBuffer.getMappedRange() );
+
+			const duration = Number( times[ 1 ] - times[ 0 ] ) / 1000000;
+
+			this.renderer.info.updateTimestamp( type, duration );
+
+			resultBuffer.unmap();
+",2025-01-10 12:04:38+01:00
+0a7d33cbfd6c6b913b80d5ddcb15dbb2198606ce,Mugen87,Updated builds.,build/three.webgpu.nodes.js,https://github.com/mrdoob/three.js/commit/0a7d33cbfd6c6b913b80d5ddcb15dbb2198606ce,"			resultBuffer.mapAsync( GPUMapMode.READ ).then( () => {
+
+				const times = new BigUint64Array( resultBuffer.getMappedRange() );
+
+				const duration = Number( times[ 1 ] - times[ 0 ] ) / 1000000;
+
+				this.renderer.info.updateTimestamp( type, duration );
+
+				resultBuffer.unmap();
+
+
+
+
+
+			} );
+","			await resultBuffer.mapAsync( GPUMapMode.READ );
+
+			const times = new BigUint64Array( resultBuffer.getMappedRange() );
+
+			const duration = Number( times[ 1 ] - times[ 0 ] ) / 1000000;
+
+			this.renderer.info.updateTimestamp( type, duration );
+
+			resultBuffer.unmap();
+",2025-01-10 12:04:38+01:00

@@ -2,20 +2,23 @@ import os
 import re
 import csv
 import subprocess
+import requests
 from typing import List
 from pydriller import Repository
 from unidiff import PatchSet
 
-# Expressões regulares principais
-promise_re     = re.compile(r'\bnew\s+Promise\s*\(|\.then\s*\(')
+
+# ========== 2. SCRIPT DE DETECÇÃO ==========
+# Regex
+promise_re = re.compile(r'\bnew\s+Promise\s*\(|\.then\s*\(')
 async_await_re = re.compile(r'\basync\b|\bawait\b')
 comment_start_re = re.compile(r'^\s*/\*')
-comment_end_re   = re.compile(r'.*\*/\s*$')
-line_comment_re  = re.compile(r'^\s*//')
+comment_end_re = re.compile(r'.*\*/\s*$')
+line_comment_re = re.compile(r'^\s*//')
 
 CSV_HEADERS = [
     "commit_hash", "author", "message",
-    "file_path", "commit_url", "removed_chunk", "added_chunk"
+    "file_path", "commit_url", "removed_chunk", "added_chunk", "commit_date"
 ]
 
 def strip_inline_comments(line: str) -> str:
@@ -62,7 +65,6 @@ def has_migration(removed_lines: List[str], added_lines: List[str]) -> bool:
         return found_async  
     return contains_promise_only(removed_lines) and contains_async_only(added_lines)
 
-
 def get_patch(repo_path: str, commit_hash: str) -> str:
     try:
         result = subprocess.run(
@@ -70,7 +72,7 @@ def get_patch(repo_path: str, commit_hash: str) -> str:
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
-            encoding='utf-8',       
+            encoding='utf-8',
             errors='replace'
         )
         return result.stdout if result.returncode == 0 else None
@@ -100,10 +102,10 @@ def clonar_repositorios(repos_file: str, destino: str = "repos") -> List[tuple[s
 
     return lista
 
-def main():
-    repositórios = clonar_repositorios("repositorios.txt")
+def analisar_repositorios():
+    repos = clonar_repositorios("repositorios_star.txt")
 
-    for nome, url, path in repositórios:
+    for nome, url, path in repos:
         print(f"\n🔍 Analisando {nome}")
         out_csv = f"migracoes_{nome}.csv"
 
@@ -123,13 +125,11 @@ def main():
                     try:
                         patch = PatchSet(patch_text)
                     except Exception as e:
-                        print(f"❌ Erro ao parsear patch do commit {commit.hash}: {e}")
+                        print(f"❌ Erro ao parsear patch {commit.hash}: {e}")
                         continue
 
                     for file in patch:
-                        if not file.path.endswith((".js", ".ts")):
-                            continue
-                        if file.path.endswith((".min.js", ".min.ts")):
+                        if not file.path.endswith((".js", ".ts")) or file.path.endswith((".min.js", ".min.ts")):
                             continue
 
                         for hunk in file:
@@ -145,9 +145,11 @@ def main():
                                     "commit_url": f"{url}/commit/{commit.hash}",
                                     "removed_chunk": "\n".join(removed),
                                     "added_chunk": "\n".join(added),
+                                    "commit_date": commit.author_date,
                                 })
             except Exception as e:
                 print(f"⚠️ Erro ao processar {nome}: {e}")
 
+# ========== EXECUÇÃO ==========
 if __name__ == "__main__":
-    main()
+    analisar_repositorios()

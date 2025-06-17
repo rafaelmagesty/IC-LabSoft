@@ -1,0 +1,778 @@
+commit_hash,author,message,file_path,commit_url,removed_chunk,added_chunk,commit_date
+dcfe85ecdbe39f71138469a5faceb1fadf8b0c8f,Richard Harris,improve preprocess tests,test/preprocess/index.js,https://github.com/sveltejs/svelte/commit/dcfe85ecdbe39f71138469a5faceb1fadf8b0c8f,"import { svelte } from '../helpers.js';
+
+describe('preprocess', () => {
+
+	it('preprocesses entire component', () => {
+
+		const source = `
+
+			<h1>Hello __NAME__!</h1>
+
+		`;
+
+		const expected = `
+
+			<h1>Hello world!</h1>
+
+		`;
+
+		return svelte.preprocess(source, {
+
+			markup: ({ content }) => {
+
+				return {
+
+					code: content.replace('__NAME__', 'world')
+
+				};
+
+			}
+
+		}).then(processed => {
+
+			assert.equal(processed.toString(), expected);
+
+		});
+
+	});
+
+
+
+	it('preprocesses style', () => {
+
+		const source = `
+
+			<div class='brand-color'>$brand</div>
+
+
+
+			<style>
+
+				.brand-color {
+
+					color: $brand;
+
+				}
+
+			</style>
+
+		`;
+
+
+
+		const expected = `
+
+			<div class='brand-color'>$brand</div>
+
+
+
+			<style>
+
+				.brand-color {
+
+					color: purple;
+
+				}
+
+			</style>
+
+		`;
+
+
+
+		return svelte.preprocess(source, {
+
+			style: ({ content }) => {
+
+				return {
+
+					code: content.replace('$brand', 'purple')
+
+				};
+
+			}
+
+		}).then(processed => {
+
+			assert.equal(processed.toString(), expected);
+
+		});
+
+	});
+
+
+
+	it('preprocesses style asynchronously', () => {
+
+		const source = `
+
+			<div class='brand-color'>$brand</div>
+
+
+
+			<style>
+
+				.brand-color {
+
+					color: $brand;
+
+				}
+
+			</style>
+
+		`;
+
+
+
+		const expected = `
+
+			<div class='brand-color'>$brand</div>
+
+
+
+			<style>
+
+				.brand-color {
+
+					color: purple;
+
+				}
+
+			</style>
+
+		`;
+
+
+
+		return svelte.preprocess(source, {
+
+			style: ({ content }) => {
+
+				return Promise.resolve({
+
+					code: content.replace('$brand', 'purple')
+
+				});
+
+			}
+
+		}).then(processed => {
+
+			assert.equal(processed.toString(), expected);
+
+		});
+
+	});
+
+
+
+	it('preprocesses script', () => {
+
+		const source = `
+
+			<script>
+
+				console.log(__THE_ANSWER__);
+
+			</script>
+
+		`;
+
+
+
+		const expected = `
+
+			<script>
+
+				console.log(42);
+
+			</script>
+
+		`;
+
+
+
+		return svelte.preprocess(source, {
+
+			script: ({ content }) => {
+
+				return {
+
+					code: content.replace('__THE_ANSWER__', '42')
+
+				};
+
+			}
+
+		}).then(processed => {
+
+			assert.equal(processed.toString(), expected);
+
+		});
+
+	});
+
+
+
+	it('preprocesses multiple matching tags', () => {
+
+		const source = `
+
+			<script>
+
+				REPLACEME
+
+			</script>
+
+			<style>
+
+				SHOULD NOT BE REPLACED
+
+			</style>
+
+			<script>
+
+				REPLACEMETOO
+
+			</script>
+
+		`;
+
+
+
+		const expected = `
+
+			<script>
+
+				replaceme
+
+			</script>
+
+			<style>
+
+				SHOULD NOT BE REPLACED
+
+			</style>
+
+			<script>
+
+				replacemetoo
+
+			</script>
+
+		`;
+
+
+
+		return svelte.preprocess(source, {
+
+			script: ({ content }) => {
+
+				return {
+
+					code: content.toLowerCase()
+
+				};
+
+			}
+
+		}).then(processed => {
+
+			assert.equal(processed.toString(), expected);
+
+		});
+
+	});
+
+
+
+	it('parses attributes', () => {
+
+		const source = `
+
+			<style type='text/scss' data-foo=""bar"" bool></style>
+
+		`;
+
+
+
+		const expected = `
+
+			<style type='text/scss' data-foo=""bar"" bool>PROCESSED</style>
+
+		`;
+
+
+
+		return svelte.preprocess(source, {
+
+			style: ({ attributes }) => {
+
+				assert.deepEqual(attributes, {
+
+					type: 'text/scss',
+
+					'data-foo': 'bar',
+
+					bool: true
+
+				});
+
+				return { code: 'PROCESSED' };
+
+			}
+
+		}).then(processed => {
+
+			assert.equal(processed.toString(), expected);
+
+		});
+
+	});
+
+
+
+	it('provides filename to processing hooks', () => {
+
+		const source = `
+
+			<h1>Hello __MARKUP_FILENAME__!</h1>
+
+			<style>.red { color: __STYLE_FILENAME__; }</style>
+
+			<script>console.log('__SCRIPT_FILENAME__');</script>
+
+		`;
+
+
+
+		const expected = `
+
+			<h1>Hello file.html!</h1>
+
+			<style>.red { color: file.html; }</style>
+
+			<script>console.log('file.html');</script>
+
+		`;
+
+
+
+		return svelte.preprocess(source, {
+
+			filename: 'file.html',
+
+			markup: ({ content, filename }) => {
+
+				return {
+
+					code: content.replace('__MARKUP_FILENAME__', filename)
+
+				};
+
+			},
+
+			style: ({ content, filename }) => {
+
+				return {
+
+					code: content.replace('__STYLE_FILENAME__', filename)
+
+				};
+
+			},
+
+			script: ({ content, filename }) => {
+
+				return {
+
+					code: content.replace('__SCRIPT_FILENAME__', filename)
+
+				};
+
+			}
+
+		}).then(processed => {
+
+			assert.equal(processed.toString(), expected);
+
+		});
+
+	});
+
+	it('ignores null/undefined returned from preprocessor', () => {
+
+		const source = `
+
+			<script>
+
+				console.log('ignore me');
+
+			</script>
+
+		`;
+
+		const expected = `
+
+			<script>
+
+				console.log('ignore me');
+
+			</script>
+
+		`;
+
+		return svelte.preprocess(source, {
+
+			script: () => null
+
+		}).then(processed => {
+
+			assert.equal(processed.toString(), expected);
+","import * as fs from 'fs';
+
+import { loadConfig, svelte } from '../helpers.js';
+
+describe.only('preprocess', () => {
+
+	fs.readdirSync('test/preprocess/samples').forEach(dir => {
+
+		if (dir[0] === '.') return;
+
+		const config = loadConfig(`./preprocess/samples/${dir}/_config.js`);
+
+		if (config.solo && process.env.CI) {
+
+			throw new Error('Forgot to remove `solo: true` from test');
+
+		}
+
+		(config.skip ? it.skip : config.solo ? it.only : it)(dir, async () => {
+
+			const input = fs.readFileSync(`test/preprocess/samples/${dir}/input.html`, 'utf-8');
+
+			const expected = fs.readFileSync(`test/preprocess/samples/${dir}/output.html`, 'utf-8');
+
+			const actual = await svelte.preprocess(input, config.preprocess);
+
+			fs.writeFileSync(`test/preprocess/samples/${dir}/_actual.html`, actual);
+
+			assert.equal(actual, expected);
+",2019-01-13 18:44:10-05:00
+95649da5524c3a8dfd03b54bf85564d06ad52bb7,Richard Harris,swap out nightmare for puppeteer,test/custom-elements/index.js,https://github.com/sveltejs/svelte/commit/95649da5524c3a8dfd03b54bf85564d06ad52bb7,"			})
+
+				.then(bundle => bundle.generate({ format: 'iife', name: 'test' }))
+
+				.then(result => {
+
+					bundle = result.output[0].code;
+
+
+
+					const nightmare = new Nightmare({ show: false });
+
+
+
+					nightmare.on('console', (type, ...args) => {
+
+						console[type](...args);
+
+					});
+
+
+
+					return nightmare
+
+						.goto('http://localhost:6789')
+
+						.evaluate(() => {
+
+							return test(document.querySelector('main'));
+
+						})
+
+						.then(result => {
+
+							if (result) console.log(result);
+
+							return nightmare.end();
+
+						})
+
+						.catch(message => {
+
+							console.log(addLineNumbers(bundle));
+
+							return nightmare.end().then(() => {
+
+								throw new Error(message);
+
+							});
+
+						});
+
+				});
+","			});
+
+
+
+			const result = await bundle.generate({ format: 'iife', name: 'test' });
+
+			code = result.output[0].code;
+
+
+
+			const page = await browser.newPage();
+
+
+
+			page.on('console', (type, ...args) => {
+
+				console[type](...args);
+
+			});
+
+			try {
+
+				await page.goto('http://localhost:6789');
+
+				const result = await page.evaluate(() => test(document.querySelector('main')));
+
+				if (result) console.log(result);
+
+			} catch (err) {
+
+				console.log(addLineNumbers(code));
+
+				throw err;
+
+			}
+",2019-03-10 16:00:37-04:00
+3f02d999cd7b2a746d277dc4defc7b56c0482afc,Richard Harris,use spritesheet for contributors - fixes #2329,site/scripts/get-contributors.js,https://github.com/sveltejs/svelte/commit/3f02d999cd7b2a746d277dc4defc7b56c0482afc,"fetch(`https://api.github.com/repos/sveltejs/svelte/stats/contributors`)
+
+	.then(r => r.json())
+
+	.then(contributors => {
+
+		const munged = contributors
+
+			.sort((a, b) => b.total - a.total)
+
+			.map(({ author }) => ({ name: author.login, src: author.avatar_url }));
+
+		const str = `[\n\t${munged.map(c => `{ name: '${c.name}', src: '${c.src}' }`).join(',\n\t')}\n]`;
+
+		fs.writeFileSync(`../src/routes/_contributors.js`, `export default ${str};`);
+
+	});
+","const Jimp = require('jimp');
+
+const SIZE = 64;
+
+async function main() {
+
+	const res = await fetch(`https://api.github.com/repos/sveltejs/svelte/stats/contributors`);
+
+	const contributors = await res.json();
+
+	const authors = contributors
+
+		.sort((a, b) => b.total - a.total)
+
+		.map(({ author }) => author);
+
+
+
+	const sprite = new Jimp(SIZE * authors.length, SIZE);
+
+
+
+	for (let i = 0; i < authors.length; i += 1) {
+
+		const author = authors[i];
+
+		console.log(`${i + 1} / ${authors.length}: ${author.login}`);
+
+
+
+		const image_data = await fetch(author.avatar_url);
+
+		const buffer = await image_data.arrayBuffer();
+
+
+
+		const image = await Jimp.read(buffer);
+
+		image.resize(SIZE, SIZE);
+
+
+
+		sprite.composite(image, i * SIZE, 0);
+
+	}
+
+
+
+	await sprite.quality(80).write(`../static/contributors.jpg`);
+
+
+
+	const str = `[\n\t${authors.map(a => `'${a.login}'`).join(',\n\t')}\n]`;
+
+
+
+	fs.writeFileSync(`../src/routes/_contributors.js`, `export default ${str};`);
+
+}
+
+
+
+main();
+",2019-04-07 09:56:47-04:00
+783bd9899e16276786d3fb6e96a59083e13efe7f,gtmnayan,"chore: swap mocha with vitest (#8584)
+
+Also swap out the require hook hacks with a less-hacky-but-still-somewhat-hacky loader for the Svelte files
+
+---------
+
+Co-authored-by: Simon Holthausen <simon.holthausen@vercel.com>
+Co-authored-by: Rich Harris <richard.a.harris@gmail.com>",test/runtime/samples/await-then-catch-in-slot/_config.js,https://github.com/sveltejs/svelte/commit/783bd9899e16276786d3fb6e96a59083e13efe7f,"let fulfil;
+
+let thePromise = new Promise((f) => {
+
+	fulfil = f;
+
+});
+
+	props: {
+
+		thePromise
+
+	test({ assert, component, target }) {
+
+		fulfil(42);
+
+
+
+		return thePromise
+
+			.then(() => {
+
+				assert.htmlEqual(
+
+					target.innerHTML,
+
+					`
+
+					<p>the value is 42</p>
+
+				`
+
+				);
+
+
+
+				let reject;
+
+
+
+				thePromise = new Promise((f, r) => {
+
+					reject = r;
+
+				});
+
+
+
+				component.thePromise = thePromise;
+
+
+
+				assert.htmlEqual(
+
+					target.innerHTML,
+
+					`
+
+					<p>loading...</p>
+
+				`
+
+				);
+
+
+
+				reject(new Error('something broke'));
+
+
+
+				return thePromise.catch(() => {});
+
+			})
+
+			.then(() => {
+
+				assert.htmlEqual(
+
+					target.innerHTML,
+
+					`
+
+					<p>oh no! something broke</p>
+
+				`
+
+				);
+
+			});
+","import { create_deferred } from '../../../helpers.js';
+
+let deferred;
+
+	before_test() {
+
+		deferred = create_deferred();
+
+	},
+
+
+
+	get props() {
+
+		return { thePromise: deferred.promise };
+
+	async test({ assert, component, target }) {
+
+		deferred.resolve(42);
+
+
+
+		await deferred.promise;
+
+		assert.htmlEqual(target.innerHTML, `<p>the value is 42</p>`);
+
+
+
+		deferred = create_deferred();
+
+		component.thePromise = deferred.promise;
+
+		assert.htmlEqual(target.innerHTML, `<p>loading...</p>`);
+
+
+
+		deferred.reject(new Error('something broke'));
+
+
+
+		try {
+
+			await deferred.promise;
+
+		} catch {}
+
+
+
+		assert.htmlEqual(target.innerHTML, `<p>oh no! something broke</p>`);
+",2023-05-18 00:45:20+05:45

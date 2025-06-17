@@ -1,0 +1,965 @@
+commit_hash,author,message,file_path,commit_url,removed_chunk,added_chunk,commit_date
+98ec2c4512014649e2c82d18b4f9e4163a0c1784,fisker Cheung,Style: use async functions (#6935),src/common/create-ignorer.js,https://github.com/prettier/prettier/commit/98ec2c4512014649e2c82d18b4f9e4163a0c1784,"function createIgnorer(ignorePath, withNodeModules) {
+
+  return (!ignorePath
+
+    ? Promise.resolve(null)
+
+    : getFileContentOrNull(path.resolve(ignorePath))
+
+  ).then(ignoreContent => _createIgnorer(ignoreContent, withNodeModules));
+","async function createIgnorer(ignorePath, withNodeModules) {
+
+  const ignoreContent = ignorePath
+
+    ? await getFileContentOrNull(path.resolve(ignorePath))
+
+    : null;
+
+
+
+  return _createIgnorer(ignoreContent, withNodeModules);
+",2019-11-15 01:23:06+08:00
+98ec2c4512014649e2c82d18b4f9e4163a0c1784,fisker Cheung,Style: use async functions (#6935),src/common/get-file-info.js,https://github.com/prettier/prettier/commit/98ec2c4512014649e2c82d18b4f9e4163a0c1784,"function getFileInfo(filePath, opts) {
+
+    return Promise.reject(
+
+      new TypeError(
+
+        `expect \`filePath\` to be a string, got \`${typeof filePath}\``
+
+      )
+
+  return createIgnorer(opts.ignorePath, opts.withNodeModules).then(ignorer =>
+
+    _getFileInfo({
+
+      ignorer,
+
+      filePath: normalizeFilePath(filePath, opts.ignorePath),
+
+      plugins: opts.plugins,
+
+      resolveConfig: opts.resolveConfig,
+
+      sync: false
+
+    })
+
+  );
+","async function getFileInfo(filePath, opts) {
+
+    throw new TypeError(
+
+      `expect \`filePath\` to be a string, got \`${typeof filePath}\``
+
+  const ignorer = await createIgnorer(opts.ignorePath, opts.withNodeModules);
+
+  return _getFileInfo({
+
+    ignorer,
+
+    filePath: normalizeFilePath(filePath, opts.ignorePath),
+
+    plugins: opts.plugins,
+
+    resolveConfig: opts.resolveConfig,
+
+    sync: false
+
+  });
+",2019-11-15 01:23:06+08:00
+98ec2c4512014649e2c82d18b4f9e4163a0c1784,fisker Cheung,Style: use async functions (#6935),src/config/resolve-config.js,https://github.com/prettier/prettier/commit/98ec2c4512014649e2c82d18b4f9e4163a0c1784,"function resolveConfigFile(filePath) {
+
+  return load(filePath).then(result => {
+
+    return result ? result.filepath : null;
+
+  });
+","async function resolveConfigFile(filePath) {
+
+  const result = await load(filePath);
+
+  return result ? result.filepath : null;
+",2019-11-15 01:23:06+08:00
+c493bdef8d1d7816e18627f2afd8a1952037c6a6,fisker Cheung,"Update `mem` to v6 (#7260)
+
+* Style: use async for `editorconfigAsyncNoCache`
+
+* Update `mem` to v6
+
+* Fix usage of `mem`
+
+* Fix: add `await`
+
+* Use JSON.stringify",src/config/resolve-config-editorconfig.js,https://github.com/prettier/prettier/commit/c493bdef8d1d7816e18627f2afd8a1952037c6a6,"const editorconfigAsyncNoCache = (filePath, config) => {
+
+  return Promise.resolve(maybeParse(filePath, config, editorconfig.parse)).then(
+
+    editorConfigToPrettier
+
+  );
+
+const editorconfigAsyncWithCache = mem(editorconfigAsyncNoCache);
+
+const editorconfigSyncWithCache = mem(editorconfigSyncNoCache);
+","const editorconfigAsyncNoCache = async (filePath, config) => {
+
+  const editorConfig = await maybeParse(filePath, config, editorconfig.parse);
+
+  return editorConfigToPrettier(editorConfig);
+
+const editorconfigAsyncWithCache = jsonStringifyMem(editorconfigAsyncNoCache);
+
+const editorconfigSyncWithCache = jsonStringifyMem(editorconfigSyncNoCache);
+",2020-01-29 01:10:01+08:00
+b3ea6799589d863972d858e24b4341530aa1df2e,Sibiraj,"Fix encoding in postcss-parser build (#8534)
+
+Co-authored-by: Georgii Dolzhykov <thorn.mailbox@gmail.com>
+Co-authored-by: fisker <lionkay@gmail.com>",scripts/build/build.js,https://github.com/prettier/prettier/commit/b3ea6799589d863972d858e24b4341530aa1df2e,"  const { output } = bundleConfig;
+
+  return bundler(bundleConfig, cache)
+
+    .catch((error) => {
+
+      console.log(FAIL + ""\n"");
+
+      handleError(error);
+
+    })
+
+    .then((result) => {
+
+      if (result.cached) {
+
+        console.log(CACHED);
+
+      } else {
+
+        console.log(OK);
+
+    });
+","  const { output, target } = bundleConfig;
+
+  try {
+
+    const { cached } = await bundler(bundleConfig, cache);
+
+
+
+    if (cached) {
+
+      console.log(CACHED);
+
+      return;
+
+    }
+
+
+
+    // Files including U+FFEE can't load in Chrome Extension
+
+    // `prettier-chrome-extension` https://github.com/prettier/prettier-chrome-extension
+
+    // details https://github.com/prettier/prettier/pull/8534
+
+    if (target === ""universal"") {
+
+      const file = path.join(""dist"", output);
+
+      const content = fs.readFileSync(file, ""utf8"");
+
+      if (content.includes(""\ufffe"")) {
+
+        throw new Error(""Bundled umd file should not have U+FFFE character."");
+
+    }
+
+
+
+    console.log(OK);
+
+  } catch (error) {
+
+    console.log(FAIL + ""\n"");
+
+    handleError(error);
+
+  }
+",2020-06-12 06:42:42+05:30
+916693c066f0d215342d174eea870cd3fb887654,fisker Cheung,"Update release script (#9418)
+
+* Update release dependencies
+
+* Remove `version` field
+
+* Run install before any require
+
+* Update scripts/release/utils.js
+
+Co-authored-by: Sosuke Suzuki <aosukeke@gmail.com>
+
+* Fix update schedule
+
+* Update deps
+
+* Fix
+
+Co-authored-by: Sosuke Suzuki <aosukeke@gmail.com>",scripts/release/utils.js,https://github.com/prettier/prettier/commit/916693c066f0d215342d174eea870cd3fb887654,"function logPromise(name, promise) {
+
+  return promise
+
+    .then((result) => {
+
+      process.stdout.write(`${OK}\n`);
+
+      return result;
+
+    })
+
+    .catch((err) => {
+
+      process.stdout.write(`${FAIL}\n`);
+
+      throw err;
+
+    });
+
+function runYarn(script) {
+
+  return execa(""yarn"", [
+
+    ""--silent"",
+
+    ...(Array.isArray(script) ? script : [script]),
+
+  ]).catch((error) => {
+
+    throw new Error(`\`yarn ${script}\` failed\n${error.stdout}`);
+
+  });
+","async function logPromise(name, promiseOrAsyncFunction) {
+
+  const promise =
+
+    typeof promiseOrAsyncFunction === ""function""
+
+      ? promiseOrAsyncFunction()
+
+      : promiseOrAsyncFunction;
+
+
+
+  try {
+
+    const result = await promise;
+
+    process.stdout.write(`${OK}\n`);
+
+    return result;
+
+  } catch (error) {
+
+    process.stdout.write(`${FAIL}\n`);
+
+    throw error;
+
+  }
+
+async function runYarn(args, options) {
+
+  args = Array.isArray(args) ? args : [args];
+
+
+
+  try {
+
+    return await execa(""yarn"", [""--silent"", ...args], options);
+
+  } catch (error) {
+
+    throw new Error(`\`yarn ${args.join("" "")}\` failed\n${error.stdout}`);
+
+  }
+
+}
+
+
+
+function runGit(args, options) {
+
+  args = Array.isArray(args) ? args : [args];
+
+  return execa(""git"", args, options);
+",2021-04-21 22:15:12+08:00
+6e71422548dd99522d86de9c2a25930e469ce5e4,fisker Cheung,"Use async APIs in CLI (#10841)
+
+* Use async API in CLI
+
+* Remove `synchronous-promise`",src/cli/format.js,https://github.com/prettier/prettier/commit/6e71422548dd99522d86de9c2a25930e469ce5e4,"function formatStdin(context) {
+
+  const ignorer = createIgnorerFromContextOrDie(context);
+
+  getStdin()
+
+    .then((input) => {
+
+      if (
+
+        relativeFilepath &&
+
+        ignorer.ignores(fixWindowsSlashes(relativeFilepath))
+
+      ) {
+
+        writeOutput(context, { formatted: input });
+
+        return;
+
+      }
+
+      const options = getOptionsForFile(context, filepath);
+
+      if (listDifferent(context, input, options, ""(stdin)"")) {
+
+        return;
+
+      }
+
+      writeOutput(context, format(context, input, options), options);
+
+    })
+
+    .catch((error) => {
+
+      handleError(context, relativeFilepath || ""stdin"", error);
+
+    });
+
+function formatFiles(context) {
+
+  const ignorer = createIgnorerFromContextOrDie(context);
+","async function formatStdin(context) {
+
+  const ignorer = await createIgnorerFromContextOrDie(context);
+
+  try {
+
+    const input = await getStdin();
+
+
+
+    if (
+
+      relativeFilepath &&
+
+      ignorer.ignores(fixWindowsSlashes(relativeFilepath))
+
+    ) {
+
+      writeOutput(context, { formatted: input });
+
+      return;
+
+    }
+
+    const options = await getOptionsForFile(context, filepath);
+
+    if (listDifferent(context, input, options, ""(stdin)"")) {
+
+      return;
+
+    }
+
+    writeOutput(context, await format(context, input, options), options);
+
+  } catch (error) {
+
+    handleError(context, relativeFilepath || ""stdin"", error);
+
+  }
+
+async function formatFiles(context) {
+
+  const ignorer = await createIgnorerFromContextOrDie(context);
+",2021-05-11 06:50:50+08:00
+90ea7e4a4f24adeb320dea79413fbdac402b1253,fisker Cheung,Use fsPromise in `getFileContentOrNull` (#10859),src/utils/get-file-content-or-null.js,https://github.com/prettier/prettier/commit/90ea7e4a4f24adeb320dea79413fbdac402b1253,"function getFileContentOrNull(filename) {
+
+  return new Promise((resolve, reject) => {
+
+    fs.readFile(filename, ""utf8"", (error, data) => {
+
+      if (error && error.code !== ""ENOENT"") {
+
+        reject(createError(filename, error));
+
+      } else {
+
+        resolve(error ? null : data);
+
+      }
+
+    });
+
+  });
+","const fsAsync = fs.promises;
+
+async function getFileContentOrNull(filename) {
+
+  try {
+
+    return await fsAsync.readFile(filename, ""utf8"");
+
+  } catch (error) {
+
+    return handleError(filename, error);
+
+  }
+",2021-05-16 12:42:15+08:00
+c6d6b258331cca8fa739514557bd5b1aac67199d,fisker Cheung,"`prettier.{format,formatWithCursor,check}()` are now async (#12574)",website/playground/PrettierFormat.js,https://github.com/prettier/prettier/commit/c6d6b258331cca8fa739514557bd5b1aac67199d,"    worker
+
+      .format(code, options, { ast, doc, comments, reformat })
+
+      .then((result) => this.setState(result));
+","    const result = await worker.format(code, options, {
+
+      ast,
+
+      doc,
+
+      comments,
+
+      reformat,
+
+    });
+
+    this.setState(result);
+",2022-04-29 14:22:24+08:00
+c6d6b258331cca8fa739514557bd5b1aac67199d,fisker Cheung,"`prettier.{format,formatWithCursor,check}()` are now async (#12574)",website/playground/index.js,https://github.com/prettier/prettier/commit/c6d6b258331cca8fa739514557bd5b1aac67199d,"  componentDidMount() {
+
+    this.worker.getMetadata().then(({ supportInfo, version }) => {
+
+      this.setState({
+
+        loaded: true,
+
+        availableOptions: supportInfo.options.map(augmentOption),
+
+        version: fixPrettierVersion(version),
+
+      });
+","  async componentDidMount() {
+
+    const { supportInfo, version } = await this.worker.getMetadata();
+
+
+
+    this.setState({
+
+      loaded: true,
+
+      availableOptions: supportInfo.options.map(augmentOption),
+
+      version: fixPrettierVersion(version),
+",2022-04-29 14:22:24+08:00
+34fadbe67d13df908023fb9a047eee1e90734aec,fisker Cheung,"Remove `{resolveConfig,resolveConfigFile,getFileInfo}.sync` (#12788)",src/common/get-file-info.js,https://github.com/prettier/prettier/commit/34fadbe67d13df908023fb9a047eee1e90734aec,"    if (sync) {
+
+      resolvedConfig = config.resolveConfig.sync(filePath);
+
+    } else {
+
+      return config.resolveConfig(filePath).then((resolvedConfig) => {
+
+        fileInfo.inferredParser = getFileParser(
+
+          resolvedConfig,
+
+          filePath,
+
+          plugins
+
+        );
+
+        return fileInfo;
+
+      });
+
+    }
+","    const resolvedConfig = await config.resolveConfig(filePath);
+
+    fileInfo.inferredParser = getFileParser(resolvedConfig, filePath, plugins);
+
+    return fileInfo;
+",2022-05-05 19:15:08+08:00
+34fadbe67d13df908023fb9a047eee1e90734aec,fisker Cheung,"Remove `{resolveConfig,resolveConfigFile,getFileInfo}.sync` (#12788)",src/config/resolve-config.js,https://github.com/prettier/prettier/commit/34fadbe67d13df908023fb9a047eee1e90734aec," * @template {Options} Opts
+
+ * @param {Opts} opts
+
+ * @return {Opts[""sync""] extends true ? SyncExplorer : Explorer}
+
+function getExplorer(opts) {
+
+  // Normalize opts before passing to a memoized function
+
+  opts = { sync: false, cache: false, ...opts };
+
+  return getExplorerMemoized(opts);
+
+function _resolveConfig(filePath, opts, sync) {
+
+    sync: Boolean(sync),
+
+  /** @type {[any, any]} */
+
+  const arr = [
+
+  ];
+
+
+
+  const unwrapAndMerge = ([result, editorConfigured]) => {
+
+    const merged = {
+
+      ...editorConfigured,
+
+      ...mergeOverrides(result, filePath),
+
+    };
+
+
+
+    for (const optionName of [""plugins"", ""pluginSearchDirs""]) {
+
+      if (Array.isArray(merged[optionName])) {
+
+        merged[optionName] = merged[optionName].map((value) =>
+
+          typeof value === ""string"" && value.startsWith(""."") // relative path
+
+            ? path.resolve(path.dirname(result.filepath), value)
+
+            : value
+
+        );
+
+      }
+
+    }
+
+
+
+    if (!result && !editorConfigured) {
+
+      return null;
+
+    }
+
+    // We are not using this option
+
+    delete merged.insertFinalNewline;
+
+    return merged;
+
+  if (loadOpts.sync) {
+
+    return unwrapAndMerge(arr);
+
+  return Promise.all(arr).then(unwrapAndMerge);
+
+}
+
+
+
+const resolveConfig = (filePath, opts) => _resolveConfig(filePath, opts, false);
+
+resolveConfig.sync = (filePath, opts) => _resolveConfig(filePath, opts, true);
+"," * @param {Options} [options]
+
+ * @return {Explorer}
+
+function getExplorer(options) {
+
+  return getExplorerMemoized(
+
+    // Normalize opts before passing to a memoized function
+
+    { cache: false, ...options }
+
+  );
+
+async function resolveConfig(filePath, opts) {
+
+
+
+  const [result, editorConfigured] = await Promise.all([
+
+  ]);
+
+  const merged = {
+
+    ...editorConfigured,
+
+    ...mergeOverrides(result, filePath),
+
+  for (const optionName of [""plugins"", ""pluginSearchDirs""]) {
+
+    if (Array.isArray(merged[optionName])) {
+
+      merged[optionName] = merged[optionName].map((value) =>
+
+        typeof value === ""string"" && value.startsWith(""."") // relative path
+
+          ? path.resolve(path.dirname(result.filepath), value)
+
+          : value
+
+      );
+
+    }
+
+  if (!result && !editorConfigured) {
+
+    return null;
+
+  }
+
+  // We are not using this option
+
+  delete merged.insertFinalNewline;
+
+  return merged;
+
+}
+",2022-05-05 19:15:08+08:00
+34fadbe67d13df908023fb9a047eee1e90734aec,fisker Cheung,"Remove `{resolveConfig,resolveConfigFile,getFileInfo}.sync` (#12788)",tests/integration/__tests__/config-resolution.js,https://github.com/prettier/prettier/commit/34fadbe67d13df908023fb9a047eee1e90734aec,"test(""API resolveConfig with no args"", () =>
+
+  prettier.resolveConfig().then((result) => {
+
+    expect(result).toEqual({});
+
+  }));
+
+
+
+test(""API resolveConfig.sync with no args"", () => {
+
+  expect(prettier.resolveConfig.sync()).toEqual({});
+
+});
+
+
+
+test(""API resolveConfig with file arg"", () => {
+
+  const file = path.resolve(path.join(__dirname, ""../cli/config/js/file.js""));
+
+  return prettier.resolveConfig(file).then((result) => {
+
+    expect(result).toMatchObject({
+
+      tabWidth: 8,
+
+    });
+
+  });
+
+test(""API resolveConfig.sync with file arg"", () => {
+
+  expect(prettier.resolveConfig.sync(file)).toMatchObject({
+
+test(""API resolveConfig with file arg and extension override"", () => {
+
+  const file = path.resolve(
+
+    path.join(__dirname, ""../cli/config/no-config/file.ts"")
+
+  );
+
+  return prettier.resolveConfig(file).then((result) => {
+
+    expect(result).toMatchObject({
+
+      semi: true,
+
+    });
+
+  });
+
+});
+
+
+
+test(""API resolveConfig.sync with file arg and extension override"", () => {
+
+  expect(prettier.resolveConfig.sync(file)).toMatchObject({
+
+test(""API resolveConfig with file arg and .editorconfig"", () => {
+
+  const file = path.resolve(
+
+    path.join(__dirname, ""../cli/config/editorconfig/file.js"")
+
+  );
+
+  return prettier.resolveConfig(file, { editorconfig: true }).then((result) => {
+
+    expect(result).toMatchObject({
+
+      useTabs: true,
+
+      tabWidth: 8,
+
+      printWidth: 100,
+
+    });
+
+  });
+
+});
+
+
+
+test(""API resolveConfig.sync with file arg and .editorconfig"", () => {
+
+  expect(prettier.resolveConfig.sync(file)).toMatchObject({
+
+  expect(
+
+    prettier.resolveConfig.sync(file, { editorconfig: true })
+
+  ).toMatchObject({
+
+test(""API resolveConfig.sync with file arg and .editorconfig (key = unset)"", () => {
+
+  expect(
+
+    prettier.resolveConfig.sync(file, { editorconfig: true })
+
+  ).not.toMatchObject({ tabWidth: ""unset"" });
+
+});
+
+
+
+test(""API resolveConfig with nested file arg and .editorconfig"", () => {
+
+  const file = path.resolve(
+
+    path.join(__dirname, ""../cli/config/editorconfig/lib/file.js"")
+
+  );
+
+  return prettier.resolveConfig(file, { editorconfig: true }).then((result) => {
+
+    expect(result).toMatchObject({
+
+      useTabs: false,
+
+      tabWidth: 2,
+
+      printWidth: 100,
+
+    });
+
+  });
+
+test(""API resolveConfig.sync with nested file arg and .editorconfig"", () => {
+
+  expect(prettier.resolveConfig.sync(file)).toMatchObject({
+
+  expect(
+
+    prettier.resolveConfig.sync(file, { editorconfig: true })
+
+  ).toMatchObject({
+
+test(""API resolveConfig with nested file arg and .editorconfig and indent_size = tab"", () => {
+
+  const file = path.resolve(
+
+    path.join(__dirname, ""../cli/config/editorconfig/lib/indent_size=tab.js"")
+
+  );
+
+  return prettier.resolveConfig(file, { editorconfig: true }).then((result) => {
+
+    expect(result).toMatchObject({
+
+      useTabs: false,
+
+      tabWidth: 8,
+
+      printWidth: 100,
+
+    });
+
+  });
+
+});
+
+
+
+test(""API resolveConfig.sync with nested file arg and .editorconfig and indent_size = tab"", () => {
+
+  expect(prettier.resolveConfig.sync(file)).toMatchObject({
+
+  expect(
+
+    prettier.resolveConfig.sync(file, { editorconfig: true })
+
+  ).toMatchObject({
+","test(""API resolveConfig with no args"", async () => {
+
+  await expect(prettier.resolveConfig()).resolves.toEqual({});
+
+test(""API resolveConfig with file arg"", async () => {
+
+  await expect(prettier.resolveConfig(file)).resolves.toMatchObject({
+
+test(""API resolveConfig with file arg and extension override"", async () => {
+
+  await expect(prettier.resolveConfig(file)).resolves.toMatchObject({
+
+test(""API resolveConfig with file arg and .editorconfig"", async () => {
+
+  await expect(prettier.resolveConfig(file)).resolves.toMatchObject({
+
+  await expect(
+
+    prettier.resolveConfig(file, { editorconfig: true })
+
+  ).resolves.toMatchObject({
+
+test(""API resolveConfig with file arg and .editorconfig (key = unset)"", async () => {
+
+  await expect(
+
+    prettier.resolveConfig(file, { editorconfig: true })
+
+  ).resolves.not.toMatchObject({ tabWidth: ""unset"" });
+
+test(""API resolveConfig with nested file arg and .editorconfig"", async () => {
+
+  await expect(prettier.resolveConfig(file)).resolves.toMatchObject({
+
+  await expect(
+
+    prettier.resolveConfig(file, { editorconfig: true })
+
+  ).resolves.toMatchObject({
+
+test(""API resolveConfig with nested file arg and .editorconfig and indent_size = tab"", async () => {
+
+  await expect(prettier.resolveConfig(file)).resolves.toMatchObject({
+
+  await expect(
+
+    prettier.resolveConfig(file, { editorconfig: true })
+
+  ).resolves.toMatchObject({
+",2022-05-05 19:15:08+08:00
+34fadbe67d13df908023fb9a047eee1e90734aec,fisker Cheung,"Remove `{resolveConfig,resolveConfigFile,getFileInfo}.sync` (#12788)",tests/integration/__tests__/config-resolution.js,https://github.com/prettier/prettier/commit/34fadbe67d13df908023fb9a047eee1e90734aec,"  expect(prettier.resolveConfig.sync(doubleQuote)).toMatchObject({
+
+test(""API resolveConfig removes $schema option"", () => {
+
+  return prettier.resolveConfig(file).then((result) => {
+
+    expect(result).toEqual({
+
+      tabWidth: 42,
+
+    });
+
+  });
+
+});
+
+
+
+test(""API resolveConfig.sync removes $schema option"", () => {
+
+  const file = path.resolve(
+
+    path.join(__dirname, ""../cli/config/$schema/index.js"")
+
+  );
+
+  expect(prettier.resolveConfig.sync(file)).toEqual({
+
+test(""API resolveConfig resolves relative path values based on config filepath"", () => {
+
+  expect(prettier.resolveConfig.sync(`${currentDir}/index.js`)).toMatchObject({
+
+  expect(
+
+    prettier.resolveConfig.sync(
+
+  ).toMatchObject({
+
+test(""API resolveConfig de-references to an external module"", () => {
+
+  expect(prettier.resolveConfig.sync(`${currentDir}/index.js`)).toEqual({
+","  await expect(prettier.resolveConfig(doubleQuote)).resolves.toMatchObject({
+
+test(""API resolveConfig removes $schema option"", async () => {
+
+  await expect(prettier.resolveConfig(file)).resolves.toEqual({
+
+test(""API resolveConfig resolves relative path values based on config filepath"", async () => {
+
+  await expect(
+
+    prettier.resolveConfig(`${currentDir}/index.js`)
+
+  ).resolves.toMatchObject({
+
+  await expect(
+
+    prettier.resolveConfig(
+
+  ).resolves.toMatchObject({
+
+test(""API resolveConfig de-references to an external module"", async () => {
+
+  await expect(
+
+    prettier.resolveConfig(`${currentDir}/index.js`)
+
+  ).resolves.toEqual({
+",2022-05-05 19:15:08+08:00
+08a51db63f34895c58471857cd55740a8f85d8ab,Sosuke Suzuki,"Update dependencies (#14052)
+
+Co-authored-by: fisker <lionkay@gmail.com>",vendors/tempy.js,https://github.com/prettier/prettier/commit/08a51db63f34895c58471857cd55740a8f85d8ab,"var require_async5 = __commonJS({
+
+    var stream_1 = require_stream3();
+
+        this._reader = new stream_1.default(this._settings);
+
+      read(task) {
+
+        const entries = [];
+
+        return new Promise((resolve, reject) => {
+
+          const stream2 = this.api(root, task, options);
+
+          stream2.once(""error"", reject);
+
+          stream2.on(""data"", (entry) => entries.push(options.transform(entry)));
+
+          stream2.once(""end"", () => resolve(entries));
+
+        });
+","var require_async6 = __commonJS({
+
+    var async_1 = require_async5();
+
+        this._reader = new async_1.default(this._settings);
+
+      async read(task) {
+
+        const entries = await this.api(root, task, options);
+
+        return entries.map((entry) => options.transform(entry));
+",2022-12-23 22:45:45+09:00

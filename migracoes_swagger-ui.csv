@@ -1,0 +1,136 @@
+commit_hash,author,message,file_path,commit_url,removed_chunk,added_chunk,commit_date
+ba1603a7e2caf4ab2b6ab6e9e98f78e17d2248ce,kyle,"improve: lazy resolver (#4253)
+
+* default to empty `ImmutableMap` when grabbing op metadata
+* pass `errors` into JsonSchema components
+* Account for Immutable data structure in JavaScriptonSchema...
+...and create empty Lists instead of Maps by default.
+* Pass ImmutableList through to JsonSchema child components
+* Add lazy resolving spec state extensions
+* TEMPORARY: disable conventional resolved spec
+* WIP
+* Use resolveSubtree in Operation display
+* Freebie: short-circuit Markdown component if it is given plaintext
+* NEW DEFAULT BEHAVIOR: `defaultModelsExpandDepth: 1` does not expand individual models
+* Render faked Model expander to trigger resolution
+* Baseline support for Editor lifecycles
+* Display operation summaries before the operation is resolved
+* Test migrations
+* WIP
+* Swagger2 TIO Body params
+* a bit of cleanup
+* Debounce string param inputs
+* Reach into unresolved operation for deprecated flag, if available
+* Fire subtree request outside of render
+* Remove debugging flags
+* Fix logical errors in spec statePlugins
+* TODOs become TODONEs!
+* Migrate deeplinking feature to non-resolved spec action
+* ESLint fixes
+* Reduce action dispatch volume; run resolver on next tick
+* Batch resolver requests; use batch progressive results in later iterations
+* Add loading states to Model and Operation views
+* Preserve object order; remove dupl. import; add warning for action
+* LINTER!
+* Use require to load SVG
+       Works around Webpack weirdness",src/core/plugins/spec/actions.js,https://github.com/swagger-api/swagger-ui/commit/ba1603a7e2caf4ab2b6ab6e9e98f78e17d2248ce,"export const requestResolvedSubtree = path => system => {
+
+  const {
+
+    errActions,
+
+    fn: {
+
+      resolveSubtree,
+
+      AST: { getLineNumberForPath }
+
+    },
+
+    specSelectors,
+
+    specActions,
+
+  } = system
+
+  const specStr = specSelectors.specStr()
+
+  const currentValue = specSelectors.specResolvedSubtree(path)
+
+  if(currentValue) {
+
+    return
+
+  }
+
+  return resolveSubtree(specSelectors.specJson().toJS(), path)
+
+    .then(({ spec, errors }) => {
+
+      errActions.clear({
+
+        type: ""thrown""
+
+      })
+
+            console.error(err)
+","let requestBatch = []
+
+const debResolveSubtrees = debounce(async () => {
+
+  const system = requestBatch.system // Just a reference to the ""latest"" system
+
+
+
+  if(!system) {
+
+    console.error(""debResolveSubtrees: don't have a system to operate on, aborting."")
+
+    return
+
+  }
+
+    const {
+
+      errActions,
+
+      errSelectors,
+
+      fn: {
+
+        resolveSubtree,
+
+        AST: { getLineNumberForPath }
+
+      },
+
+      specSelectors,
+
+      specActions,
+
+    } = system
+
+  const specStr = specSelectors.specStr()
+
+  try {
+
+    var batchResult = await requestBatch.reduce(async (prev, path) => {
+
+      const { resultMap, specWithCurrentSubtrees } = await prev
+
+
+
+      const { errors, spec } = await resolveSubtree(specWithCurrentSubtrees, path)
+
+
+
+      if(errSelectors.allErrors().size) {
+
+        errActions.clear({
+
+          type: ""thrown""
+
+        })
+
+      }
+",2018-02-23 22:25:28-08:00

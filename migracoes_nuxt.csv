@@ -1,0 +1,344 @@
+commit_hash,author,message,file_path,commit_url,removed_chunk,added_chunk,commit_date
+d441d79c6ca3eb3c0f64bba1217375e6505401c0,Pooya Parsa,refactor: move common logic to server,packages/nitro/src/targets/cli/entry.ts,https://github.com/nuxt/nuxt/commit/d441d79c6ca3eb3c0f64bba1217375e6505401c0,"render(process.argv[2] || '/')
+
+  .then(html => console.log(html))
+
+  .catch((err) => {
+
+    console.error(err)
+
+    process.exit(1)
+
+  })
+","const debug = (label, ...args) => console.debug(`> ${label}:`, ...args)
+
+
+
+async function main () {
+
+  const url = process.argv[2] || '/'
+
+  debug('URL', url)
+
+
+
+  const { html, status, headers } = await render(url)
+
+
+
+  debug('Status', status)
+
+  for (const header in headers) {
+
+    debug(header, headers[header])
+
+  }
+
+
+
+  console.log('\n', html)
+
+}
+
+
+
+main().catch((err) => {
+
+  console.error(err)
+
+  process.exit(1)
+
+})
+",2020-11-03 21:26:27+01:00
+d441d79c6ca3eb3c0f64bba1217375e6505401c0,Pooya Parsa,refactor: move common logic to server,packages/nitro/src/targets/vercel/entry.ts,https://github.com/nuxt/nuxt/commit/d441d79c6ca3eb3c0f64bba1217375e6505401c0,"module.exports = (req, res) => {
+
+  const start = process.hrtime()
+
+  render(req.url).then((html) => {
+
+    const end = process.hrtime(start)
+
+    const time = ((end[0] * 1e9) + end[1]) / 1e6
+
+    // @ts-ignore
+
+    res.setHeader('X-Nuxt-Coldstart', global._coldstart + 'ms')
+
+    res.setHeader('X-Nuxt-Responsetime', time + 'ms')
+
+
+
+  }).catch((err) => {
+
+    console.error(err)
+
+    res.end('Error: ' + err)
+
+  })
+","module.exports = async (req, res) => {
+
+  try {
+
+    const { html, status, headers } = await render(req.url, { req, res })
+
+    for (const header in headers) {
+
+      res.setHeadeer(header, headers[header])
+
+    }
+
+    res.status(status)
+
+  } catch (error) {
+
+    console.error(error)
+
+    res.status(500)
+
+    res.end('Internal Error: ' + error)
+
+  }
+",2020-11-03 21:26:27+01:00
+2db79adfb8a9db269c43042f1c3912a38c0621b3,Daniel Roe,"chore(nuxt3): add more types (#51)
+
+Co-authored-by: Pooya Parsa <pyapar@gmail.com>",packages/nuxt3/src/plugins.ts,https://github.com/nuxt/nuxt/commit/2db79adfb8a9db269c43042f1c3912a38c0621b3,"const getPluginMode = (src) => {
+
+  return mode
+
+export function resolvePlugins (builder: Builder, app: NuxtApp) {
+
+  return resolveFiles(builder, 'plugins/**/*.{js,ts}', app.dir)
+
+    .then(plugins => plugins.map((src) => {
+
+      return {
+
+        src,
+
+        mode: getPluginMode(src)
+
+      }
+
+    }))
+","const getPluginMode = (src: string) => {
+
+  return mode as NuxtPlugin['mode']
+
+export async function resolvePlugins (builder: Builder, app: NuxtApp) {
+
+  const plugins = await resolveFiles(builder, 'plugins/**/*.{js,ts}', app.dir)
+
+
+
+  return plugins.map(src => ({
+
+    src,
+
+    mode: getPluginMode(src)
+
+  })
+
+  )
+",2021-04-04 23:15:34+01:00
+e45a780714c1ba44807ba6dbce3f2b5209ec0339,Daniel Roe,"fix(vite,webpack): disable async entrypoint by default (#3375)
+
+* fix(vite): don't use async entry
+
+* fix: use async entry when built
+
+* refactor: default to sync entry, with option to enable async
+
+* refactor: move to experimental.asyncEntry
+
+* Update packages/webpack/src/presets/base.ts
+
+Co-authored-by: pooya parsa <pyapar@gmail.com>
+
+* Update packages/vite/src/vite.ts
+
+Co-authored-by: pooya parsa <pyapar@gmail.com>
+
+* style: remove double space
+
+Co-authored-by: pooya parsa <pyapar@gmail.com>",packages/nuxt3/src/app/entry.ts,https://github.com/nuxt/nuxt/commit/e45a780714c1ba44807ba6dbce3f2b5209ec0339,"import { CreateOptions } from '#app'
+
+const entry = process.server
+
+  ? (ctx?: CreateOptions['ssrContext']) => import('#app/bootstrap').then(m => m.default(ctx))
+
+  : () => import('#app/bootstrap').then(m => m.default)
+
+  entry()
+
+export default entry
+","import { createSSRApp, createApp, nextTick } from 'vue'
+
+import { createNuxtApp, applyPlugins, normalizePlugins, CreateOptions } from '#app'
+
+import '#build/css'
+
+// @ts-ignore
+
+import _plugins from '#build/plugins'
+
+// @ts-ignore
+
+import RootComponent from '#build/root-component.mjs'
+
+// @ts-ignore
+
+import AppComponent from '#build/app-component.mjs'
+
+let entry: Function
+
+
+
+const plugins = normalizePlugins(_plugins)
+
+
+
+if (process.server) {
+
+  entry = async function createNuxtAppServer (ssrContext: CreateOptions['ssrContext'] = {}) {
+
+    const vueApp = createApp(RootComponent)
+
+    vueApp.component('App', AppComponent)
+
+
+
+    const nuxt = createNuxtApp({ vueApp, ssrContext })
+
+
+
+    await applyPlugins(nuxt, plugins)
+
+
+
+    await nuxt.hooks.callHook('app:created', vueApp)
+
+
+
+    return vueApp
+
+  }
+
+}
+
+  // TODO: temporary webpack 5 HMR fix
+
+  // https://github.com/webpack-contrib/webpack-hot-middleware/issues/390
+
+  // @ts-ignore
+
+  if (process.dev && import.meta.webpackHot) {
+
+    // @ts-ignore
+
+    import.meta.webpackHot.accept()
+
+  }
+
+
+
+  entry = async function initApp () {
+
+    const isSSR = Boolean(window.__NUXT__?.serverRendered)
+
+    const vueApp = isSSR ? createSSRApp(RootComponent) : createApp(RootComponent)
+
+    vueApp.component('App', AppComponent)
+
+
+
+    const nuxt = createNuxtApp({ vueApp })
+
+
+
+    await applyPlugins(nuxt, plugins)
+
+
+
+    await nuxt.hooks.callHook('app:created', vueApp)
+
+    await nuxt.hooks.callHook('app:beforeMount', vueApp)
+
+
+
+    nuxt.hooks.hookOnce('app:suspense:resolve', () => {
+
+      nuxt.isHydrating = false
+
+    })
+
+
+
+    vueApp.mount('#__nuxt')
+
+
+
+    await nuxt.hooks.callHook('app:mounted', vueApp)
+
+    await nextTick()
+
+  }
+
+
+
+  entry().catch((error) => {
+
+    console.error('Error while mounting app:', error) // eslint-disable-line no-console
+
+  })
+
+export default (ctx?: CreateOptions['ssrContext']) => entry(ctx)
+",2022-02-25 12:42:34+00:00
+f73bb1de0a9b22714810cff4999f898c77eafa67,Daniel Roe,fix(nuxt): return `RenderResponse` for redirects (#20496),packages/nuxt/src/app/composables/router.ts,https://github.com/nuxt/nuxt/commit/f73bb1de0a9b22714810cff4999f898c77eafa67,"    if (nuxtApp.ssrContext && nuxtApp.ssrContext.event) {
+
+      const redirectLocation = isExternal ? toPath : joinURL(useRuntimeConfig().app.baseURL, fullPath)
+
+      const redirect = () => nuxtApp.callHook('app:redirected')
+
+        .then(() => sendRedirect(nuxtApp.ssrContext!.event, redirectLocation, options?.redirectCode || 302))
+
+        .then(() => inMiddleware ? /* abort route navigation */ false : undefined)
+
+      // We wait to perform the redirect in case any other middleware will intercept the redirect
+
+      // and redirect further.
+
+        router.beforeEach(final => (final.fullPath === fullPath) ? redirect() : undefined)
+","    if (nuxtApp.ssrContext) {
+
+      const location = isExternal ? toPath : joinURL(useRuntimeConfig().app.baseURL, fullPath)
+
+
+
+      async function redirect () {
+
+        // TODO: consider deprecating in favour of `app:rendered` and removing
+
+        await nuxtApp.callHook('app:redirected')
+
+        const encodedLoc = location.replace(/""/g, '%22')
+
+        nuxtApp.ssrContext!._renderResponse = {
+
+          statusCode: sanitizeStatusCode(options?.redirectCode || 302, 302),
+
+          body: `<!DOCTYPE html><html><head><meta http-equiv=""refresh"" content=""0; url=${encodedLoc}""></head></html>`,
+
+          headers: { location }
+
+        }
+
+        return inMiddleware ? /* abort route navigation */ false : undefined
+
+      }
+
+      // We wait to perform the redirect last in case any other middleware will intercept the redirect
+
+      // and redirect somewhere else instead.
+
+        router.afterEach(final => (final.fullPath === fullPath) ? redirect() : undefined)
+",2023-04-28 11:18:03+01:00

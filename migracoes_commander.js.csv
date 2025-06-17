@@ -1,0 +1,16 @@
+commit_hash,author,message,file_path,commit_url,removed_chunk,added_chunk,commit_date
+59c81532be707170d068b4e4dd93175a19fa8d9a,John Gee,Refactor async support to return (possible) promise directly (#1513),index.js,https://github.com/tj/commander.js/commit/59c81532be707170d068b4e4dd93175a19fa8d9a,"  parseAsync(argv, parseOptions) {
+
+    this.parse(argv, parseOptions);
+
+    return Promise.all(this._actionResults).then(() => this);
+","  async parseAsync(argv, parseOptions) {
+
+    const userArgs = this._prepareUserArgs(argv, parseOptions);
+
+    await this._parseCommand([], userArgs);
+
+
+
+    return this;
+",2021-05-06 18:02:31+12:00

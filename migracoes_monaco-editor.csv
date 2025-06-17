@@ -1,0 +1,1397 @@
+commit_hash,author,message,file_path,commit_url,removed_chunk,added_chunk,commit_date
+e4ab9e4360fc8cd559a6550f329340986fb00135,Alex Dima,Adopt strict checking (fixes microsoft/monaco-editor#1715),src/languageFeatures.ts,https://github.com/microsoft/monaco-editor/commit/e4ab9e4360fc8cd559a6550f329340986fb00135,"	private _doValidate(resource: Uri): void {
+
+		this._worker(resource).then(worker => {
+
+			if (!monaco.editor.getModel(resource)) {
+
+				// model was disposed in the meantime
+
+				return null;
+
+			}
+
+			const promises: Promise<ts.Diagnostic[]>[] = [];
+
+			const { noSyntaxValidation, noSemanticValidation, noSuggestionDiagnostics } = this._defaults.getDiagnosticsOptions();
+
+			if (!noSyntaxValidation) {
+
+				promises.push(worker.getSyntacticDiagnostics(resource.toString()));
+
+			}
+
+			if (!noSemanticValidation) {
+
+				promises.push(worker.getSemanticDiagnostics(resource.toString()));
+
+			}
+
+			if (!noSuggestionDiagnostics) {
+
+				promises.push(worker.getSuggestionDiagnostics(resource.toString()));
+
+			}
+
+			return Promise.all(promises);
+
+		}).then(diagnostics => {
+
+			if (!diagnostics || !monaco.editor.getModel(resource)) {
+
+				// model was disposed in the meantime
+
+				return null;
+
+			}
+
+			const markers = diagnostics
+
+				.reduce((p, c) => c.concat(p), [])
+
+				.filter(d => (this._defaults.getDiagnosticsOptions().diagnosticCodesToIgnore || []).indexOf(d.code) === -1)
+
+				.map(d => this._convertDiagnostics(resource, d));
+
+
+
+			monaco.editor.setModelMarkers(monaco.editor.getModel(resource), this._selector, markers);
+
+		}).then(undefined, err => {
+
+			console.error(err);
+
+		});
+
+	private _convertDiagnostics(resource: Uri, diag: ts.Diagnostic): monaco.editor.IMarkerData {
+
+		const { lineNumber: startLineNumber, column: startColumn } = this._offsetToPosition(resource, diag.start);
+
+		const { lineNumber: endLineNumber, column: endColumn } = this._offsetToPosition(resource, diag.start + diag.length);
+","	private async _doValidate(model: monaco.editor.ITextModel): Promise<void> {
+
+		const worker = await this._worker(model.uri);
+
+
+
+		if (model.isDisposed()) {
+
+			// model was disposed in the meantime
+
+			return;
+
+		}
+
+
+
+		const promises: Promise<ts.Diagnostic[]>[] = [];
+
+		const { noSyntaxValidation, noSemanticValidation, noSuggestionDiagnostics } = this._defaults.getDiagnosticsOptions();
+
+		if (!noSyntaxValidation) {
+
+			promises.push(worker.getSyntacticDiagnostics(model.uri.toString()));
+
+		}
+
+		if (!noSemanticValidation) {
+
+			promises.push(worker.getSemanticDiagnostics(model.uri.toString()));
+
+		}
+
+		if (!noSuggestionDiagnostics) {
+
+			promises.push(worker.getSuggestionDiagnostics(model.uri.toString()));
+
+		}
+
+
+
+		const diagnostics = await Promise.all(promises);
+
+
+
+		if (!diagnostics || model.isDisposed()) {
+
+			// model was disposed in the meantime
+
+			return;
+
+		}
+
+
+
+		const markers = diagnostics
+
+			.reduce((p, c) => c.concat(p), [])
+
+			.filter(d => (this._defaults.getDiagnosticsOptions().diagnosticCodesToIgnore || []).indexOf(d.code) === -1)
+
+			.map(d => this._convertDiagnostics(model, d));
+
+
+
+		monaco.editor.setModelMarkers(model, this._selector, markers);
+
+	private _convertDiagnostics(model: monaco.editor.ITextModel, diag: ts.Diagnostic): monaco.editor.IMarkerData {
+
+		const diagStart = diag.start || 0;
+
+		const diagLength = diag.length || 1;
+
+		const { lineNumber: startLineNumber, column: startColumn } = model.getPositionAt(diagStart);
+
+		const { lineNumber: endLineNumber, column: endColumn } = model.getPositionAt(diagStart + diagLength);
+",2019-12-20 19:47:49+01:00
+e4ab9e4360fc8cd559a6550f329340986fb00135,Alex Dima,Adopt strict checking (fixes microsoft/monaco-editor#1715),src/languageFeatures.ts,https://github.com/microsoft/monaco-editor/commit/e4ab9e4360fc8cd559a6550f329340986fb00135,"	provideCompletionItems(model: monaco.editor.IReadOnlyModel, position: Position, _context: monaco.languages.CompletionContext, token: CancellationToken): Thenable<monaco.languages.CompletionList> {
+
+		const offset = this._positionToOffset(resource, position);
+
+		return this._worker(resource).then(worker => {
+
+			return worker.getCompletionsAtPosition(resource.toString(), offset);
+
+		}).then(info => {
+
+			if (!info) {
+
+				return;
+
+			}
+
+			let suggestions: MyCompletionItem[] = info.entries.map(entry => {
+
+				let range = wordRange;
+
+				if (entry.replacementSpan) {
+
+					const p1 = model.getPositionAt(entry.replacementSpan.start);
+
+					const p2 = model.getPositionAt(entry.replacementSpan.start + entry.replacementSpan.length);
+
+					range = new Range(p1.lineNumber, p1.column, p2.lineNumber, p2.column);
+
+				}
+
+				return {
+
+					uri: resource,
+
+					position: position,
+
+					range: range,
+
+					label: entry.name,
+
+					insertText: entry.name,
+
+					sortText: entry.sortText,
+
+					kind: SuggestAdapter.convertKind(entry.kind)
+
+				};
+
+			});
+
+				suggestions
+
+	resolveCompletionItem(_model: monaco.editor.IReadOnlyModel, _position: Position, item: monaco.languages.CompletionItem, token: CancellationToken): Thenable<monaco.languages.CompletionItem> {
+
+		let myItem = <MyCompletionItem>item;
+
+		return this._worker(resource).then(worker => {
+
+			return worker.getCompletionEntryDetails(resource.toString(),
+
+				this._positionToOffset(resource, position),
+
+				myItem.label);
+
+
+
+		}).then(details => {
+
+			if (!details) {
+
+				return myItem;
+
+			return <MyCompletionItem>{
+
+				uri: resource,
+
+				position: position,
+
+				label: details.name,
+
+				kind: SuggestAdapter.convertKind(details.kind),
+
+				detail: displayPartsToString(details.displayParts),
+
+				documentation: {
+
+					value: displayPartsToString(details.documentation)
+
+				}
+
+			};
+
+		});
+","	public async provideCompletionItems(model: monaco.editor.ITextModel, position: Position, _context: monaco.languages.CompletionContext, token: CancellationToken): Promise<monaco.languages.CompletionList | undefined> {
+
+		const offset = model.getOffsetAt(position);
+
+		const worker = await this._worker(resource);
+
+		const info = await worker.getCompletionsAtPosition(resource.toString(), offset);
+
+		if (!info || model.isDisposed()) {
+
+			return;
+
+		}
+
+
+
+		const suggestions: MyCompletionItem[] = info.entries.map(entry => {
+
+			let range = wordRange;
+
+			if (entry.replacementSpan) {
+
+				const p1 = model.getPositionAt(entry.replacementSpan.start);
+
+				const p2 = model.getPositionAt(entry.replacementSpan.start + entry.replacementSpan.length);
+
+				range = new Range(p1.lineNumber, p1.column, p2.lineNumber, p2.column);
+
+			}
+
+				uri: resource,
+
+				position: position,
+
+				range: range,
+
+				label: entry.name,
+
+				insertText: entry.name,
+
+				sortText: entry.sortText,
+
+				kind: SuggestAdapter.convertKind(entry.kind)
+
+
+
+		return {
+
+			suggestions
+
+		};
+
+	public async resolveCompletionItem(model: monaco.editor.ITextModel, _position: Position, item: monaco.languages.CompletionItem, token: CancellationToken): Promise<monaco.languages.CompletionItem> {
+
+		const myItem = <MyCompletionItem>item;
+
+		const offset = model.getOffsetAt(position);
+
+		const worker = await this._worker(resource);
+
+		const details = await worker.getCompletionEntryDetails(resource.toString(), offset, myItem.label);
+
+		if (!details || model.isDisposed()) {
+
+			return myItem;
+
+		}
+
+		return <MyCompletionItem>{
+
+			uri: resource,
+
+			position: position,
+
+			label: details.name,
+
+			kind: SuggestAdapter.convertKind(details.kind),
+
+			detail: displayPartsToString(details.displayParts),
+
+			documentation: {
+
+				value: displayPartsToString(details.documentation)
+
+		};
+",2019-12-20 19:47:49+01:00
+e4ab9e4360fc8cd559a6550f329340986fb00135,Alex Dima,Adopt strict checking (fixes microsoft/monaco-editor#1715),src/languageFeatures.ts,https://github.com/microsoft/monaco-editor/commit/e4ab9e4360fc8cd559a6550f329340986fb00135,"	provideSignatureHelp(model: monaco.editor.IReadOnlyModel, position: Position, token: CancellationToken): Thenable<monaco.languages.SignatureHelpResult> {
+
+		let resource = model.uri;
+
+		return this._worker(resource).then(worker => worker.getSignatureHelpItems(resource.toString(), this._positionToOffset(resource, position))).then(info => {
+
+			if (!info) {
+
+				return;
+
+			}
+
+			let ret: monaco.languages.SignatureHelp = {
+
+				activeSignature: info.selectedItemIndex,
+
+				activeParameter: info.argumentIndex,
+
+				signatures: []
+
+			};
+
+			info.items.forEach(item => {
+
+				let signature: monaco.languages.SignatureInformation = {
+
+					label: '',
+
+					parameters: []
+
+				};
+
+				signature.documentation = displayPartsToString(item.documentation);
+
+				signature.label += displayPartsToString(item.prefixDisplayParts);
+
+				item.parameters.forEach((p, i, a) => {
+
+					let label = displayPartsToString(p.displayParts);
+
+					let parameter: monaco.languages.ParameterInformation = {
+
+						label: label,
+
+						documentation: displayPartsToString(p.documentation)
+
+					};
+
+					signature.label += label;
+
+					signature.parameters.push(parameter);
+
+					if (i < a.length - 1) {
+
+						signature.label += displayPartsToString(item.separatorDisplayParts);
+
+					}
+
+				});
+
+				signature.label += displayPartsToString(item.suffixDisplayParts);
+
+				ret.signatures.push(signature);
+
+
+
+			return {
+
+				value: ret,
+
+				dispose() { }
+
+			};
+","	public async provideSignatureHelp(model: monaco.editor.ITextModel, position: Position, token: CancellationToken): Promise<monaco.languages.SignatureHelpResult | undefined> {
+
+		const resource = model.uri;
+
+		const offset = model.getOffsetAt(position);
+
+		const worker = await this._worker(resource);
+
+		const info = await worker.getSignatureHelpItems(resource.toString(), offset);
+
+		if (!info || model.isDisposed()) {
+
+			return;
+
+		}
+
+		const ret: monaco.languages.SignatureHelp = {
+
+			activeSignature: info.selectedItemIndex,
+
+			activeParameter: info.argumentIndex,
+
+			signatures: []
+
+		};
+
+		info.items.forEach(item => {
+
+			const signature: monaco.languages.SignatureInformation = {
+
+				label: '',
+
+				parameters: []
+
+			};
+
+			signature.documentation = displayPartsToString(item.documentation);
+
+			signature.label += displayPartsToString(item.prefixDisplayParts);
+
+			item.parameters.forEach((p, i, a) => {
+
+				const label = displayPartsToString(p.displayParts);
+
+				const parameter: monaco.languages.ParameterInformation = {
+
+					label: label,
+
+					documentation: displayPartsToString(p.documentation)
+
+				};
+
+				signature.label += label;
+
+				signature.parameters.push(parameter);
+
+				if (i < a.length - 1) {
+
+					signature.label += displayPartsToString(item.separatorDisplayParts);
+
+				}
+
+			signature.label += displayPartsToString(item.suffixDisplayParts);
+
+			ret.signatures.push(signature);
+
+
+
+		return {
+
+			value: ret,
+
+			dispose() { }
+
+		};
+",2019-12-20 19:47:49+01:00
+e4ab9e4360fc8cd559a6550f329340986fb00135,Alex Dima,Adopt strict checking (fixes microsoft/monaco-editor#1715),src/languageFeatures.ts,https://github.com/microsoft/monaco-editor/commit/e4ab9e4360fc8cd559a6550f329340986fb00135,"	provideHover(model: monaco.editor.IReadOnlyModel, position: Position, token: CancellationToken): Thenable<monaco.languages.Hover> {
+
+		let resource = model.uri;
+
+		return this._worker(resource).then(worker => {
+
+			return worker.getQuickInfoAtPosition(resource.toString(), this._positionToOffset(resource, position));
+
+		}).then(info => {
+
+			if (!info) {
+
+				return;
+
+			let documentation = displayPartsToString(info.documentation);
+
+			let tags = info.tags ? info.tags.map(tag => {
+
+				const label = `*@${tag.name}*`;
+
+				if (!tag.text) {
+
+					return label;
+
+				}
+
+				return label + (tag.text.match(/\r\n|\n/g) ? ' \n' + tag.text : ` - ${tag.text}`);
+
+			})
+
+				.join('  \n\n') : '';
+
+			let contents = displayPartsToString(info.displayParts);
+
+			return {
+
+				range: this._textSpanToRange(resource, info.textSpan),
+
+				contents: [{
+
+					value: '```js\n' + contents + '\n```\n'
+
+				}, {
+
+					value: documentation + (tags ? '\n\n' + tags : '')
+
+				}]
+
+			};
+
+		});
+","	public async provideHover(model: monaco.editor.ITextModel, position: Position, token: CancellationToken): Promise<monaco.languages.Hover | undefined> {
+
+		const resource = model.uri;
+
+		const offset = model.getOffsetAt(position);
+
+		const worker = await this._worker(resource);
+
+		const info = await worker.getQuickInfoAtPosition(resource.toString(), offset);
+
+		if (!info || model.isDisposed()) {
+
+			return;
+
+		}
+
+
+
+		const documentation = displayPartsToString(info.documentation);
+
+		const tags = info.tags ? info.tags.map(tag => {
+
+			const label = `*@${tag.name}*`;
+
+			if (!tag.text) {
+
+				return label;
+
+			return label + (tag.text.match(/\r\n|\n/g) ? ' \n' + tag.text : ` - ${tag.text}`);
+
+		}).join('  \n\n') : '';
+
+		const contents = displayPartsToString(info.displayParts);
+
+		return {
+
+			range: this._textSpanToRange(model, info.textSpan),
+
+			contents: [{
+
+				value: '```js\n' + contents + '\n```\n'
+
+			}, {
+
+				value: documentation + (tags ? '\n\n' + tags : '')
+
+			}]
+
+		};
+",2019-12-20 19:47:49+01:00
+e4ab9e4360fc8cd559a6550f329340986fb00135,Alex Dima,Adopt strict checking (fixes microsoft/monaco-editor#1715),src/languageFeatures.ts,https://github.com/microsoft/monaco-editor/commit/e4ab9e4360fc8cd559a6550f329340986fb00135,"	public provideDocumentHighlights(model: monaco.editor.IReadOnlyModel, position: Position, token: CancellationToken): Thenable<monaco.languages.DocumentHighlight[]> {
+
+		return this._worker(resource).then(worker => {
+
+			return worker.getOccurrencesAtPosition(resource.toString(), this._positionToOffset(resource, position));
+
+		}).then(entries => {
+
+			if (!entries) {
+
+				return;
+
+			}
+
+			return entries.map(entry => {
+
+				return <monaco.languages.DocumentHighlight>{
+
+					range: this._textSpanToRange(resource, entry.textSpan),
+
+					kind: entry.isWriteAccess ? monaco.languages.DocumentHighlightKind.Write : monaco.languages.DocumentHighlightKind.Text
+
+				};
+
+			});
+","	public async provideDocumentHighlights(model: monaco.editor.ITextModel, position: Position, token: CancellationToken): Promise<monaco.languages.DocumentHighlight[] | undefined> {
+
+		const offset = model.getOffsetAt(position)
+
+		const worker = await this._worker(resource);
+
+		const entries = await worker.getOccurrencesAtPosition(resource.toString(), offset);
+
+		if (!entries || model.isDisposed()) {
+
+			return;
+
+		}
+
+
+
+		return entries.map(entry => {
+
+			return <monaco.languages.DocumentHighlight>{
+
+				range: this._textSpanToRange(model, entry.textSpan),
+
+				kind: entry.isWriteAccess ? monaco.languages.DocumentHighlightKind.Write : monaco.languages.DocumentHighlightKind.Text
+
+			};
+",2019-12-20 19:47:49+01:00
+e4ab9e4360fc8cd559a6550f329340986fb00135,Alex Dima,Adopt strict checking (fixes microsoft/monaco-editor#1715),src/languageFeatures.ts,https://github.com/microsoft/monaco-editor/commit/e4ab9e4360fc8cd559a6550f329340986fb00135,"	public provideDefinition(model: monaco.editor.IReadOnlyModel, position: Position, token: CancellationToken): Thenable<monaco.languages.Definition> {
+
+		return this._worker(resource).then(worker => {
+
+			return worker.getDefinitionAtPosition(resource.toString(), this._positionToOffset(resource, position));
+
+		}).then(entries => {
+
+			if (!entries) {
+
+				return;
+
+			}
+
+			const result: monaco.languages.Location[] = [];
+
+			for (let entry of entries) {
+
+				const uri = Uri.parse(entry.fileName);
+
+				if (monaco.editor.getModel(uri)) {
+
+					result.push({
+
+						uri: uri,
+
+						range: this._textSpanToRange(uri, entry.textSpan)
+
+					});
+
+				}
+
+			return result;
+
+		});
+","	public async provideDefinition(model: monaco.editor.ITextModel, position: Position, token: CancellationToken): Promise<monaco.languages.Definition | undefined> {
+
+		const offset = model.getOffsetAt(position);
+
+		const worker = await this._worker(resource);
+
+		const entries = await worker.getDefinitionAtPosition(resource.toString(), offset);
+
+		if (!entries || model.isDisposed()) {
+
+			return;
+
+		}
+
+
+
+		const result: monaco.languages.Location[] = [];
+
+		for (let entry of entries) {
+
+			const uri = Uri.parse(entry.fileName);
+
+			const refModel = monaco.editor.getModel(uri);
+
+			if (refModel) {
+
+				result.push({
+
+					uri: uri,
+
+					range: this._textSpanToRange(refModel, entry.textSpan)
+
+				});
+
+		}
+
+		return result;
+",2019-12-20 19:47:49+01:00
+e4ab9e4360fc8cd559a6550f329340986fb00135,Alex Dima,Adopt strict checking (fixes microsoft/monaco-editor#1715),src/languageFeatures.ts,https://github.com/microsoft/monaco-editor/commit/e4ab9e4360fc8cd559a6550f329340986fb00135,"	provideReferences(model: monaco.editor.IReadOnlyModel, position: Position, context: monaco.languages.ReferenceContext, token: CancellationToken): Thenable<monaco.languages.Location[]> {
+
+		return this._worker(resource).then(worker => {
+
+			return worker.getReferencesAtPosition(resource.toString(), this._positionToOffset(resource, position));
+
+		}).then(entries => {
+
+			if (!entries) {
+
+				return;
+
+			}
+
+			const result: monaco.languages.Location[] = [];
+
+			for (let entry of entries) {
+
+				const uri = Uri.parse(entry.fileName);
+
+				if (monaco.editor.getModel(uri)) {
+
+					result.push({
+
+						uri: uri,
+
+						range: this._textSpanToRange(uri, entry.textSpan)
+
+					});
+
+				}
+
+			return result;
+
+		});
+","	public async provideReferences(model: monaco.editor.ITextModel, position: Position, context: monaco.languages.ReferenceContext, token: CancellationToken): Promise<monaco.languages.Location[] | undefined> {
+
+		const offset = model.getOffsetAt(position);
+
+		const worker = await this._worker(resource);
+
+		const entries = await worker.getReferencesAtPosition(resource.toString(), offset);
+
+		if (!entries || model.isDisposed()) {
+
+			return;
+
+		}
+
+
+
+		const result: monaco.languages.Location[] = [];
+
+		for (let entry of entries) {
+
+			const uri = Uri.parse(entry.fileName);
+
+			const refModel = monaco.editor.getModel(uri);
+
+			if (refModel) {
+
+				result.push({
+
+					uri: uri,
+
+					range: this._textSpanToRange(refModel, entry.textSpan)
+
+				});
+
+		}
+
+		return result;
+",2019-12-20 19:47:49+01:00
+e4ab9e4360fc8cd559a6550f329340986fb00135,Alex Dima,Adopt strict checking (fixes microsoft/monaco-editor#1715),src/languageFeatures.ts,https://github.com/microsoft/monaco-editor/commit/e4ab9e4360fc8cd559a6550f329340986fb00135,"	public provideDocumentSymbols(model: monaco.editor.IReadOnlyModel, token: CancellationToken): Thenable<monaco.languages.DocumentSymbol[]> {
+
+		return this._worker(resource).then(worker => worker.getNavigationBarItems(resource.toString())).then(items => {
+
+			if (!items) {
+
+				return;
+
+			}
+
+			const convert = (bucket: monaco.languages.DocumentSymbol[], item: ts.NavigationBarItem, containerLabel?: string): void => {
+
+				let result: monaco.languages.DocumentSymbol = {
+
+					name: item.text,
+
+					detail: '',
+
+					kind: <monaco.languages.SymbolKind>(outlineTypeTable[item.kind] || monaco.languages.SymbolKind.Variable),
+
+					range: this._textSpanToRange(resource, item.spans[0]),
+
+					selectionRange: this._textSpanToRange(resource, item.spans[0]),
+
+					tags: [],
+
+					containerName: containerLabel
+
+				};
+
+				if (item.childItems && item.childItems.length > 0) {
+
+					for (let child of item.childItems) {
+
+						convert(bucket, child, result.name);
+
+					}
+
+
+
+				bucket.push(result);
+
+			let result: monaco.languages.DocumentSymbol[] = [];
+
+			items.forEach(item => convert(result, item));
+
+			return result;
+
+		});
+","	public async provideDocumentSymbols(model: monaco.editor.ITextModel, token: CancellationToken): Promise<monaco.languages.DocumentSymbol[] | undefined> {
+
+		const worker = await this._worker(resource);
+
+		const items = await worker.getNavigationBarItems(resource.toString());
+
+		if (!items || model.isDisposed()) {
+
+			return;
+
+		}
+
+		const convert = (bucket: monaco.languages.DocumentSymbol[], item: ts.NavigationBarItem, containerLabel?: string): void => {
+
+			let result: monaco.languages.DocumentSymbol = {
+
+				name: item.text,
+
+				detail: '',
+
+				kind: <monaco.languages.SymbolKind>(outlineTypeTable[item.kind] || monaco.languages.SymbolKind.Variable),
+
+				range: this._textSpanToRange(model, item.spans[0]),
+
+				selectionRange: this._textSpanToRange(model, item.spans[0]),
+
+				tags: [],
+
+				containerName: containerLabel
+
+			};
+
+			if (item.childItems && item.childItems.length > 0) {
+
+				for (let child of item.childItems) {
+
+					convert(bucket, child, result.name);
+
+			bucket.push(result);
+
+		}
+
+
+
+		let result: monaco.languages.DocumentSymbol[] = [];
+
+		items.forEach(item => convert(result, item));
+
+		return result;
+",2019-12-20 19:47:49+01:00
+e4ab9e4360fc8cd559a6550f329340986fb00135,Alex Dima,Adopt strict checking (fixes microsoft/monaco-editor#1715),src/languageFeatures.ts,https://github.com/microsoft/monaco-editor/commit/e4ab9e4360fc8cd559a6550f329340986fb00135,"	protected _convertTextChanges(uri: Uri, change: ts.TextChange): monaco.editor.ISingleEditOperation {
+
+		return <monaco.editor.ISingleEditOperation>{
+
+			range: this._textSpanToRange(uri, change.span)
+
+	provideDocumentRangeFormattingEdits(model: monaco.editor.IReadOnlyModel, range: Range, options: monaco.languages.FormattingOptions, token: CancellationToken): Thenable<monaco.editor.ISingleEditOperation[]> {
+
+		return this._worker(resource).then(worker => {
+
+			return worker.getFormattingEditsForRange(resource.toString(),
+
+				this._positionToOffset(resource, { lineNumber: range.startLineNumber, column: range.startColumn }),
+
+				this._positionToOffset(resource, { lineNumber: range.endLineNumber, column: range.endColumn }),
+
+				FormatHelper._convertOptions(options));
+
+		}).then(edits => {
+
+			if (edits) {
+
+				return edits.map(edit => this._convertTextChanges(resource, edit));
+
+			}
+
+		});
+","	protected _convertTextChanges(model: monaco.editor.ITextModel, change: ts.TextChange): monaco.languages.TextEdit {
+
+		return {
+
+			range: this._textSpanToRange(model, change.span)
+
+	public async provideDocumentRangeFormattingEdits(model: monaco.editor.ITextModel, range: Range, options: monaco.languages.FormattingOptions, token: CancellationToken): Promise<monaco.languages.TextEdit[] | undefined> {
+
+		const startOffset = model.getOffsetAt({ lineNumber: range.startLineNumber, column: range.startColumn });
+
+		const endOffset = model.getOffsetAt({ lineNumber: range.endLineNumber, column: range.endColumn });
+
+		const worker = await this._worker(resource);
+
+		const edits = await worker.getFormattingEditsForRange(resource.toString(), startOffset, endOffset, FormatHelper._convertOptions(options));
+
+		if (!edits || model.isDisposed()) {
+
+			return;
+
+		}
+
+
+
+		return edits.map(edit => this._convertTextChanges(model, edit));
+",2019-12-20 19:47:49+01:00
+e4ab9e4360fc8cd559a6550f329340986fb00135,Alex Dima,Adopt strict checking (fixes microsoft/monaco-editor#1715),src/languageFeatures.ts,https://github.com/microsoft/monaco-editor/commit/e4ab9e4360fc8cd559a6550f329340986fb00135,"	provideOnTypeFormattingEdits(model: monaco.editor.IReadOnlyModel, position: Position, ch: string, options: monaco.languages.FormattingOptions, token: CancellationToken): Thenable<monaco.editor.ISingleEditOperation[]> {
+
+		return this._worker(resource).then(worker => {
+
+			return worker.getFormattingEditsAfterKeystroke(resource.toString(),
+
+				this._positionToOffset(resource, position),
+
+				ch, FormatHelper._convertOptions(options));
+
+		}).then(edits => {
+
+			if (edits) {
+
+				return edits.map(edit => this._convertTextChanges(resource, edit));
+
+			}
+
+		});
+","	public async provideOnTypeFormattingEdits(model: monaco.editor.ITextModel, position: Position, ch: string, options: monaco.languages.FormattingOptions, token: CancellationToken): Promise<monaco.languages.TextEdit[] | undefined> {
+
+		const offset = model.getOffsetAt(position);
+
+		const worker = await this._worker(resource);
+
+		const edits = await worker.getFormattingEditsAfterKeystroke(resource.toString(), offset, ch, FormatHelper._convertOptions(options));
+
+		if (!edits || model.isDisposed()) {
+
+			return;
+
+		}
+
+
+
+		return edits.map(edit => this._convertTextChanges(model, edit));
+",2019-12-20 19:47:49+01:00
+e4ab9e4360fc8cd559a6550f329340986fb00135,Alex Dima,Adopt strict checking (fixes microsoft/monaco-editor#1715),src/languageFeatures.ts,https://github.com/microsoft/monaco-editor/commit/e4ab9e4360fc8cd559a6550f329340986fb00135,"	public provideCodeActions(model: monaco.editor.ITextModel, range: Range, context: monaco.languages.CodeActionContext, token: CancellationToken): Promise<monaco.languages.CodeActionList> {
+
+		return this._worker(resource).then(worker => {
+
+			const start = this._positionToOffset(resource, { lineNumber: range.startLineNumber, column: range.startColumn });
+
+			const end = this._positionToOffset(resource, { lineNumber: range.endLineNumber, column: range.endColumn });
+
+
+
+			const formatOptions = FormatHelper._convertOptions(model.getOptions());
+
+			const errorCodes = context.markers.filter(m => m.code).map(m => m.code).map(Number);
+
+
+
+			return worker.getCodeFixesAtPosition(resource.toString(), start, end, errorCodes, formatOptions);
+
+
+
+		}).then(codeFixes => {
+
+			return codeFixes.filter(fix => {
+
+				// Removes any 'make a new file'-type code fix
+
+				return fix.changes.filter(change => change.isNewFile).length === 0;
+
+			}).map(fix => {
+
+				return this._tsCodeFixActionToMonacoCodeAction(model, context, fix);
+
+			})
+
+		}).then(result => {
+
+			return {
+
+				actions: result,
+
+				dispose: () => { }
+
+			};
+","	public async provideCodeActions(model: monaco.editor.ITextModel, range: Range, context: monaco.languages.CodeActionContext, token: CancellationToken): Promise<monaco.languages.CodeActionList | undefined> {
+
+		const start = model.getOffsetAt({ lineNumber: range.startLineNumber, column: range.startColumn });
+
+		const end = model.getOffsetAt({ lineNumber: range.endLineNumber, column: range.endColumn });
+
+		const formatOptions = FormatHelper._convertOptions(model.getOptions());
+
+		const errorCodes = context.markers.filter(m => m.code).map(m => m.code).map(Number);
+
+		const worker = await this._worker(resource);
+
+		const codeFixes = await worker.getCodeFixesAtPosition(resource.toString(), start, end, errorCodes, formatOptions);
+
+		if (!codeFixes || model.isDisposed()) {
+
+			return;
+
+		}
+
+		const actions = codeFixes.filter(fix => {
+
+			// Removes any 'make a new file'-type code fix
+
+			return fix.changes.filter(change => change.isNewFile).length === 0;
+
+		}).map(fix => {
+
+			return this._tsCodeFixActionToMonacoCodeAction(model, context, fix);
+
+
+
+		return {
+
+			actions: actions,
+
+			dispose: () => { }
+
+		};
+",2019-12-20 19:47:49+01:00
+28d4512f33c7a661a0e95d38058047f8c334ec9d,Alex Dima,Use the global `monaco` only in the AMD case (see https://github.com/microsoft/monaco-editor/issues/1974),src/jsonWorker.ts,https://github.com/microsoft/monaco-editor/commit/28d4512f33c7a661a0e95d38058047f8c334ec9d,"'use strict';
+
+
+
+import Thenable = monaco.Thenable;
+
+import IWorkerContext = monaco.worker.IWorkerContext;
+
+class PromiseAdapter<T> implements jsonService.Thenable<T> {
+
+	private wrapped: Promise<T>;
+
+
+
+	constructor(executor: (resolve: (value?: T | jsonService.Thenable<T>) => void, reject: (reason?: any) => void) => void) {
+
+		this.wrapped = new Promise<T>(executor);
+
+	}
+
+	public then<TResult>(onfulfilled?: (value: T) => TResult | jsonService.Thenable<TResult>, onrejected?: (reason: any) => void): jsonService.Thenable<TResult> {
+
+		let thenable: jsonService.Thenable<T> = this.wrapped;
+
+		return thenable.then(onfulfilled, onrejected);
+
+	}
+
+	public getWrapped(): monaco.Thenable<T> {
+
+		return this.wrapped;
+
+	}
+
+	public static resolve<T>(v: T | Thenable<T>): jsonService.Thenable<T> {
+
+		return <monaco.Thenable<T>>Promise.resolve(v);
+
+	}
+
+	public static reject<T>(v: T): jsonService.Thenable<T> {
+
+		return Promise.reject(<any>v);
+
+	}
+
+	public static all<T>(values: jsonService.Thenable<T>[]): jsonService.Thenable<T[]> {
+
+		return Promise.all(values);
+
+	}
+
+}
+
+
+
+	private _ctx: IWorkerContext;
+
+	constructor(ctx: IWorkerContext, createData: ICreateData) {
+
+			schemaRequestService: createData.enableSchemaRequest && defaultSchemaRequestService,
+
+			promiseConstructor: PromiseAdapter
+
+	doValidation(uri: string): Thenable<jsonService.Diagnostic[]> {
+","import type { worker } from './fillers/monaco-editor-core'
+
+	private _ctx: worker.IWorkerContext;
+
+	constructor(ctx: worker.IWorkerContext, createData: ICreateData) {
+
+			schemaRequestService: createData.enableSchemaRequest && defaultSchemaRequestService
+
+	async doValidation(uri: string): Promise<jsonService.Diagnostic[]> {
+",2020-09-07 12:24:21+02:00
+3e32a8c0206dfa2cbdcc38268e7035296caa1731,Martin Aeschlimann,API to register additional HTML services,src/monaco.contribution.ts,https://github.com/microsoft/monaco-editor/commit/3e32a8c0206dfa2cbdcc38268e7035296caa1731,"languages.onLanguage(htmlLanguageId, () => {
+
+	getMode().then((mode) => mode.setupMode(htmlDefaults));
+
+});
+
+languages.onLanguage(handlebarsLanguageId, () => {
+
+	getMode().then((mode) => mode.setupMode(handlebarDefaults));
+
+});
+
+languages.onLanguage(razorLanguageId, () => {
+
+	getMode().then((mode) => mode.setupMode(razorDefaults));
+
+});
+","export interface LanguageServiceRegistration extends IDisposable {
+
+	readonly defaults: LanguageServiceDefaults;
+
+}
+
+
+
+/**
+
+ * Registers a new HTML language service for the languageId.
+
+ * Note: 'html', 'handlebar' and 'razor' are registered by default.
+
+ *
+
+ * Use this method to register additional language ids with a HTML service.
+
+ * The language server has to be registered before an editor model is opened.
+
+ */
+
+export function registerHTMLLanguageService(
+
+	languageId: string,
+
+	options: Options,
+
+	modeConfiguration: ModeConfiguration
+
+): LanguageServiceRegistration {
+
+	const defaults = new LanguageServiceDefaultsImpl(languageId, options, modeConfiguration);
+
+	let mode: IDisposable | undefined;
+
+
+
+	// delay the initalization of the mode until the language is accessed the first time
+
+	const onLanguageListener = languages.onLanguage(languageId, async () => {
+
+		mode = (await getMode()).setupMode(defaults);
+
+	});
+
+	return {
+
+		defaults,
+
+		dispose() {
+
+			onLanguageListener.dispose();
+
+			mode?.dispose();
+
+			mode = undefined;
+
+		}
+
+	};
+
+}
+",2021-06-10 15:49:49+02:00
+c75289c39d5a4a025ddba8a1eb1e186b5432e0a2,Alex Dima,update deps,src/test/testRunner.ts,https://github.com/microsoft/monaco-editor/commit/c75289c39d5a4a025ddba8a1eb1e186b5432e0a2,"	test(mainLanguage + ' tokenization', (t: test.Test) => {
+
+		Promise.all(languages.map((l) => loadLanguage(l)))
+
+			.then(() => {
+
+				// clean stack
+
+				setTimeout(() => {
+
+					runTests(t, mainLanguage, tests);
+
+					t.end();
+
+				});
+
+			})
+
+			.then(null, () => t.end());
+","	test(mainLanguage + ' tokenization', async (t: test.Test) => {
+
+		await Promise.all(languages.map((l) => loadLanguage(l)));
+
+		await timeout(0);
+
+		runTests(t, mainLanguage, tests);
+",2021-10-08 17:47:57+02:00
+3a58c2a6ba2ffa1f3f34ed52204bc53c8b522afc,Alex Dima,Adopt latest `monaco-editor-core`,src/basic-languages/_.contribution.ts,https://github.com/microsoft/monaco-editor/commit/3a58c2a6ba2ffa1f3f34ed52204bc53c8b522afc,"	languages.setMonarchTokensProvider(
+
+		languageId,
+
+		lazyLanguageLoader.whenLoaded().then((mod) => mod.language)
+
+	);
+
+	languages.onLanguage(languageId, () => {
+
+		lazyLanguageLoader.load().then((mod) => {
+
+			languages.setLanguageConfiguration(languageId, mod.conf);
+
+		});
+","	languages.registerTokensProviderFactory(languageId, {
+
+		create: async (): Promise<languages.IMonarchLanguage> => {
+
+			const mod = await lazyLanguageLoader.load();
+
+			return mod.language;
+
+		}
+
+	});
+
+	languages.onLanguage(languageId, async () => {
+
+		const mod = await lazyLanguageLoader.load();
+
+		languages.setLanguageConfiguration(languageId, mod.conf);
+",2021-12-29 01:08:27+01:00
+4c5552d6a5580b50b17f51157dd45299a84f609e,Henning Dieterichs,Refactors workerManager,src/language/typescript/workerManager.ts,https://github.com/microsoft/monaco-editor/commit/4c5552d6a5580b50b17f51157dd45299a84f609e,"			this._worker = editor.createWebWorker<TypeScriptWorker>({
+
+				// module that exports the create() method and returns a `TypeScriptWorker` instance
+
+				moduleId: 'vs/language/typescript/tsWorker',
+
+
+
+				label: this._modeId,
+
+				keepIdleModels: true,
+
+
+
+				// passed in to the create() method
+
+				createData: {
+
+					compilerOptions: this._defaults.getCompilerOptions(),
+
+					extraLibs: this._defaults.getExtraLibs(),
+
+					customWorkerPath: this._defaults.workerOptions.customWorkerPath,
+
+					inlayHintsOptions: this._defaults.inlayHintsOptions
+
+				}
+
+			});
+
+			let p = <Promise<TypeScriptWorker>>this._worker.getProxy();
+
+			if (this._defaults.getEagerModelSync()) {
+
+				p = p.then((worker) => {
+
+					if (this._worker) {
+
+						return this._worker.withSyncedResources(
+
+							editor
+
+								.getModels()
+
+								.filter((model) => model.getLanguageId() === this._modeId)
+
+								.map((model) => model.uri)
+
+						);
+
+					return worker;
+
+			}
+
+			this._client = p;
+
+	getLanguageServiceWorker(...resources: Uri[]): Promise<TypeScriptWorker> {
+
+		let _client: TypeScriptWorker;
+
+		return this._getClient()
+
+			.then((client) => {
+
+				_client = client;
+
+			})
+
+			.then((_) => {
+
+				if (this._worker) {
+
+					return this._worker.withSyncedResources(resources);
+
+				}
+
+			})
+
+			.then((_) => _client);
+","			this._client = (async () => {
+
+				this._worker = editor.createWebWorker<TypeScriptWorker>({
+
+					// module that exports the create() method and returns a `TypeScriptWorker` instance
+
+					moduleId: 'vs/language/typescript/tsWorker',
+
+					label: this._modeId,
+
+					keepIdleModels: true,
+
+					// passed in to the create() method
+
+					createData: {
+
+						compilerOptions: this._defaults.getCompilerOptions(),
+
+						extraLibs: this._defaults.getExtraLibs(),
+
+						customWorkerPath: this._defaults.workerOptions.customWorkerPath,
+
+						inlayHintsOptions: this._defaults.inlayHintsOptions
+
+				if (this._defaults.getEagerModelSync()) {
+
+					return await this._worker.withSyncedResources(
+
+						editor
+
+							.getModels()
+
+							.filter((model) => model.getLanguageId() === this._modeId)
+
+							.map((model) => model.uri)
+
+					);
+
+				}
+
+
+
+				return await this._worker.getProxy();
+
+			})();
+
+	async getLanguageServiceWorker(...resources: Uri[]): Promise<TypeScriptWorker> {
+
+		const client = await this._getClient();
+
+		if (this._worker) {
+
+			await this._worker.withSyncedResources(resources);
+
+		}
+
+		return client;
+",2022-08-03 17:34:31+02:00

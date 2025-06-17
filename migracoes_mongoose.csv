@@ -1,0 +1,3326 @@
+commit_hash,author,message,file_path,commit_url,removed_chunk,added_chunk,commit_date
+9de7aa3c86626278479518e70c6d9784bf702aad,Valeri Karpov,refactor; ES6-style promises in model,lib/model.js,https://github.com/automattic/mongoose/commit/9de7aa3c86626278479518e70c6d9784bf702aad,"  var self = this;
+
+  var finalPromise = new Promise(fn);
+
+
+
+  // Jank to be able to use mpromise.prototype.all()
+
+  var p0 = new Promise;
+
+  p0.fulfill();
+
+
+
+  // Call save hooks on subdocs
+
+  var p1 = p0.all(function () {
+
+    var subDocs = self.$__getAllSubdocs();
+
+    return subDocs.map(function (d) {return d.save();});
+
+  });
+
+
+
+  // Handle save and resaults
+
+  p1
+
+    .then(this.$__handleSave.bind(this, options))
+
+    .then(function (result) {
+
+      self.$__reset();
+
+      self.$__storeShard();
+
+
+
+      var numAffected = 0;
+
+      if (result) {
+
+        if (Array.isArray(result)) {
+
+          numAffected = result.length;
+
+        } else if (result.result && result.result.n !== undefined) {
+
+          numAffected = result.result.n;
+
+        } else if (result.result && result.result.nModified !== undefined) {
+
+          numAffected = result.result.nModified;
+
+        } else {
+
+          numAffected = result;
+
+      }
+
+
+
+      // was this an update that required a version bump?
+
+      if (self.$__.version && !self.$__.inserting) {
+
+        var doIncrement = VERSION_INC === (VERSION_INC & self.$__.version);
+
+        self.$__.version = undefined;
+
+        if (numAffected <= 0) {
+
+          // the update failed. pass an error back
+
+          return finalPromise.reject(new VersionError);
+
+        // increment version if was successful
+
+        if (doIncrement) {
+
+          var key = self.schema.options.versionKey;
+
+          var version = self.getValue(key) | 0;
+
+          self.setValue(key, version + 1);
+
+        }
+
+      }
+
+      self.emit('save', self, numAffected);
+
+      return finalPromise.fulfill(self, numAffected);
+
+    }
+
+    , function (err) {
+
+      // If the initial insert fails provide a second chance.
+
+      // (If we did this all the time we would break updates)
+
+      if (self.$__.inserting) {
+
+        self.isNew = true;
+
+        self.emit('isNew', true);
+
+      }
+
+      finalPromise.reject(err);
+
+    })
+
+    .end();
+
+  return finalPromise;
+","  var _this = this;
+
+  var promise = new Promise.ES6(function(resolve, reject) {
+
+    async.each(
+
+      _this.$__getAllSubdocs(),
+
+      function(subdoc, cb) {
+
+        subdoc.save(cb);
+
+      },
+
+      function(error) {
+
+        if (error) {
+
+          reject(error);
+
+          return;
+
+        resolve();
+
+      });
+
+  });
+
+  return promise.
+
+    then(this.$__handleSave.bind(this, options)).
+
+    then(
+
+      function(result) {
+
+        _this.$__reset();
+
+        _this.$__storeShard();
+
+
+
+        var numAffected = 0;
+
+        if (result) {
+
+          if (Array.isArray(result)) {
+
+            numAffected = result.length;
+
+          } else if (result.result && result.result.n !== undefined) {
+
+            numAffected = result.result.n;
+
+          } else if (result.result && result.result.nModified !== undefined) {
+
+            numAffected = result.result.nModified;
+
+          } else {
+
+            numAffected = result;
+
+          }
+
+        return new Promise.ES6(function(resolve, reject) {
+
+          // was this an update that required a version bump?
+
+          if (_this.$__.version && !_this.$__.inserting) {
+
+            var doIncrement = VERSION_INC === (VERSION_INC & _this.$__.version);
+
+            _this.$__.version = undefined;
+
+
+
+            if (numAffected <= 0) {
+
+              // the update failed. pass an error back
+
+              var err = new VersionError();
+
+              fn && fn(err);
+
+              reject(err);
+
+              return;
+
+            }
+
+            // increment version if was successful
+
+            if (doIncrement) {
+
+              var key = _this.schema.options.versionKey;
+
+              var version = _this.getValue(key) | 0;
+
+              _this.setValue(key, version + 1);
+
+            }
+
+          }
+
+          _this.emit('save', _this, numAffected);
+
+          fn && fn(null, _this, numAffected);
+
+          resolve(_this, numAffected);
+
+        });
+
+      },
+
+      function(err) {
+
+        fn && fn(err);
+
+        return new Promise.ES6(function(resolve, reject) {
+
+          reject(err);
+
+        });
+
+      });
+",2015-07-18 15:19:30-04:00
+9bff7817f4a410b076590a4549e5c58624885160,Valeri Karpov,"docs(document): explain DocumentNotFoundError in save() docs
+
+Fix #7580",lib/model.js,https://github.com/automattic/mongoose/commit/9bff7817f4a410b076590a4549e5c58624885160," *     product.save(function (err, product) {
+
+ *       if (err) ..
+
+ *     })
+
+ * The callback will receive two parameters
+
+ * 1. `err` if an error occurred
+
+ * 2. `product` which is the saved `product`
+
+ *
+
+ * As an extra measure of flow control, save will return a Promise.
+
+ *     product.save().then(function(product) {
+
+ *        ...
+
+ *     });
+"," *     product = await product.save();
+
+ * If save is successful, the returned promise will fulfill with the document
+
+ * saved.
+
+ *
+
+ *     const newProduct = await product.save();
+
+ *     newProduct === product; // true
+
+ * @param {Session} [options.session=null] the [session](https://docs.mongodb.com/manual/reference/server-sessions/) associated with this save operation. If not specified, defaults to the [document's associated session](api.html#document_Document-$session).
+",2019-03-16 19:55:56-04:00
+da39639a9490c47615974f7c118757963bea4f36,Shihab Mridha,Merge from parent,lib/model.js,https://github.com/automattic/mongoose/commit/da39639a9490c47615974f7c118757963bea4f36," *     product.save(function (err, product) {
+
+ *       if (err) ..
+
+ *     })
+
+ *
+
+ * The callback will receive two parameters
+
+ * 1. `err` if an error occurred
+
+ * 2. `product` which is the saved `product`
+
+ * As an extra measure of flow control, save will return a Promise.
+
+ *     product.save().then(function(product) {
+
+ *        ...
+
+ *     });
+"," *     product = await product.save();
+
+ * If save is successful, the returned promise will fulfill with the document
+
+ * saved.
+
+ *
+
+ *     const newProduct = await product.save();
+
+ *     newProduct === product; // true
+
+ * @param {Session} [options.session=null] the [session](https://docs.mongodb.com/manual/reference/server-sessions/) associated with this save operation. If not specified, defaults to the [document's associated session](api.html#document_Document-$session).
+",2019-04-04 16:24:33+06:00
+fd1a6513acadc40b778a60b7444423ffd4fd94ea,Hafez,docs(document): copy Model#save to Document#save,lib/document.js,https://github.com/automattic/mongoose/commit/fd1a6513acadc40b778a60b7444423ffd4fd94ea," *     product.save(function (err, product) {
+
+ *       if (err) ..
+
+ *     })
+
+ *
+
+ * The callback will receive two parameters
+
+ * 1. `err` if an error occurred
+
+ * 2. `product` which is the saved `product`
+
+ * As an extra measure of flow control, save will return a Promise.
+
+ *     product.save().then(function(product) {
+
+ *        ...
+
+ *     });
+
+ * @param {Object} [options.safe] (DEPRECATED) overrides [schema's safe option](http://mongoosejs.com//docs/guide.html#safe)
+"," *     product = await product.save();
+
+ * If save is successful, the returned promise will fulfill with the document
+
+ * saved.
+
+ *
+
+ *     const newProduct = await product.save();
+
+ *     newProduct === product; // true
+
+ * @param {Session} [options.session=null] the [session](https://docs.mongodb.com/manual/reference/server-sessions/) associated with this save operation. If not specified, defaults to the [document's associated session](api.html#document_Document-$session).
+
+ * @param {Object} [options.safe] (DEPRECATED) overrides [schema's safe option](http://mongoosejs.com//docs/guide.html#safe). Use the `w` option instead.
+
+ * @param {Number|String} [options.w] set the [write concern](https://docs.mongodb.com/manual/reference/write-concern/#w-option). Overrides the [schema-level `writeConcern` option](/docs/guide.html#writeConcern)
+
+ * @param {Boolean} [options.j] set to true for MongoDB to wait until this `save()` has been [journaled before resolving the returned promise](https://docs.mongodb.com/manual/reference/write-concern/#j-option). Overrides the [schema-level `writeConcern` option](/docs/guide.html#writeConcern)
+
+ * @param {Number} [options.wtimeout] sets a [timeout for the write concern](https://docs.mongodb.com/manual/reference/write-concern/#wtimeout). Overrides the [schema-level `writeConcern` option](/docs/guide.html#writeConcern).
+
+ * @param {Boolean} [options.checkKeys=true] the MongoDB driver prevents you from saving keys that start with '$' or contain '.' by default. Set this option to `false` to skip that check. See [restrictions on field names](https://docs.mongodb.com/manual/reference/limits/#Restrictions-on-Field-Names)
+
+ * @param {Boolean} [options.timestamps=true] if `false` and [timestamps](./guide.html#timestamps) are enabled, skip timestamps for this `save()`.
+
+ * @throws {DocumentNotFoundError} if this [save updates an existing document](api.html#document_Document-isNew) but the document doesn't exist in the database. For example, you will get this error if the document is [deleted between when you retrieved the document and when you saved it](documents.html#updating).
+",2020-05-08 23:31:53+02:00
+14a4fb843ea0b914f3e34ab6bc316c292b60b73c,Valeri Karpov,"BREAKING CHANGE: throw error by default if populating a path that isn't in the schema
+
+Re: #5124",lib/model.js,https://github.com/automattic/mongoose/commit/14a4fb843ea0b914f3e34ab6bc316c292b60b73c," *     // populates a single object
+
+ *     User.findById(id, function (err, user) {
+
+ *       var opts = [
+
+ *         { path: 'company', match: { x: 1 }, select: 'name' },
+
+ *         { path: 'notes', options: { limit: 10 }, model: 'override' }
+
+ *       ];
+
+ *
+
+ *       User.populate(user, opts, function (err, user) {
+
+ *         console.log(user);
+
+ *       });
+
+ *     });
+
+ *     // populates an array of objects
+
+ *     User.find(match, function (err, users) {
+
+ *       var opts = [{ path: 'company', match: { x: 1 }, select: 'name' }];
+
+ *
+
+ *       var promise = User.populate(users, opts);
+
+ *       promise.then(console.log).end();
+
+ *     })
+
+ *
+
+ *     // imagine a Weapon model exists with two saved documents:
+
+ *     //   { _id: 389, name: 'whip' }
+
+ *     //   { _id: 8921, name: 'boomerang' }
+
+ *     // and this schema:
+
+ *     // new Schema({
+
+ *     //   name: String,
+
+ *     //   weapon: { type: ObjectId, ref: 'Weapon' }
+
+ *     // });
+
+ *
+
+ *     var user = { name: 'Indiana Jones', weapon: 389 };
+
+ *     Weapon.populate(user, { path: 'weapon', model: 'Weapon' }, function (err, user) {
+
+ *       console.log(user.weapon.name); // whip
+
+ *     })
+
+ *     var users = [{ name: 'Indiana Jones', weapon: 389 }]
+
+ *     users.push({ name: 'Batman', weapon: 8921 })
+
+ *     Weapon.populate(users, { path: 'weapon' }, function (err, users) {
+
+ *       users.forEach(function (user) {
+
+ *         console.log('%s uses a %s', users.name, user.weapon.name)
+
+ *         // Indiana Jones uses a whip
+
+ *         // Batman uses a boomerang
+
+ *       });
+
+ *     });
+
+ *     // Note that we didn't need to specify the Weapon model because
+
+ *     // it is in the schema's ref
+"," * - strictPopulate: optional boolean, set to `false` to allow populating paths that aren't in the schema.
+
+ *     const Dog = mongoose.model('Dog', new Schema({ name: String, breed: String }));
+
+ *     const Person = mongoose.model('Person', new Schema({
+
+ *       name: String,
+
+ *       pet: { type: mongoose.ObjectId, ref: 'Dog' }
+
+ *     }));
+
+ *     const pets = await Pet.create([
+
+ *       { name: 'Daisy', breed: 'Beagle' },
+
+ *       { name: 'Einstein', breed: 'Catalan Sheepdog' }
+
+ *     ]);
+
+ *     const users = [
+
+ *       { name: 'John Wick', dog: pets[0]._id },
+
+ *       { name: 'Doc Brown', dog: pets[1]._id }
+
+ *     ];
+
+ *     await User.populate(users, { path: 'dog', select: 'name' });
+
+ *     users[0].dog.name; // 'Daisy'
+
+ *     users[0].dog.breed; // undefined because of `select`
+",2020-06-17 10:51:26-04:00
+ffdfe887abe213fd15ecce102016cb91db675c78,Valeri Karpov,"docs(model): make `create()` docs use async/await, and add another warning about how `create()` with options requires array syntax
+
+Fix #9280",lib/model.js,https://github.com/automattic/mongoose/commit/ffdfe887abe213fd15ecce102016cb91db675c78," *     // pass a spread of docs and a callback
+
+ *     Candy.create({ type: 'jelly bean' }, { type: 'snickers' }, function (err, jellybean, snickers) {
+
+ *       if (err) // ...
+
+ *     });
+
+ *
+
+ *     // pass an array of docs
+
+ *     var array = [{ type: 'jelly bean' }, { type: 'snickers' }];
+
+ *     Candy.create(array, function (err, candies) {
+
+ *       if (err) // ...
+
+ *
+
+ *       var jellybean = candies[0];
+
+ *       var snickers = candies[1];
+
+ *       // ...
+
+ *     });
+
+ *
+
+ *     // callback is optional; use the returned promise if you like:
+
+ *     var promise = Candy.create({ type: 'jawbreaker' });
+
+ *     promise.then(function (jawbreaker) {
+
+ *       // ...
+
+ *     })
+"," *     // Insert one new `Character` document
+
+ *     await Character.create({ name: 'Jean-Luc Picard' });
+
+ * 
+
+ *     // Insert multiple new `Character` documents
+
+ *     await Character.create([{ name: 'Will Riker' }, { name: 'Geordi LaForge' }]);
+
+ * 
+
+ *     // Create a new character within a transaction. Note that you **must**
+
+ *     // pass an array as the first parameter to `create()` if you want to
+
+ *     // specify options.
+
+ *     await Character.create([{ name: 'Jean-Luc Picard' }], { session });
+",2020-07-26 17:27:30-04:00
+0fffe252c00a3239ee757d8e7b52312165ed68c1,Valeri Karpov,"docs(model+query): clarify that `deleteOne` and `deleteMany` trigger middleware
+
+Fix #9504",lib/query.js,https://github.com/automattic/mongoose/commit/0fffe252c00a3239ee757d8e7b52312165ed68c1," * This function does not trigger any middleware.
+
+ *     Character.deleteOne({ name: 'Eddard Stark' }).then(next);
+"," * This function triggers `deleteOne` middleware.
+
+ *     await Character.deleteOne({ name: 'Eddard Stark' });
+
+ *
+
+ *     // Using callbacks:
+",2020-10-30 10:17:50-04:00
+0fffe252c00a3239ee757d8e7b52312165ed68c1,Valeri Karpov,"docs(model+query): clarify that `deleteOne` and `deleteMany` trigger middleware
+
+Fix #9504",lib/query.js,https://github.com/automattic/mongoose/commit/0fffe252c00a3239ee757d8e7b52312165ed68c1," * This function does not trigger any middleware
+
+ *     Character.deleteMany({ name: /Stark/, age: { $gte: 18 } }, callback)
+
+ *     Character.deleteMany({ name: /Stark/, age: { $gte: 18 } }).then(next)
+"," * This function triggers `deleteMany` middleware.
+
+ *     await Character.deleteMany({ name: /Stark/, age: { $gte: 18 } });
+
+ *
+
+ *     // Using callbacks:
+
+ *     Character.deleteMany({ name: /Stark/, age: { $gte: 18 } }, callback);
+",2020-10-30 10:17:50-04:00
+308934210593f11b950528350c8fe82560224d48,Hafez,refactor more tests to async/await,test/query.cursor.test.js,https://github.com/automattic/mongoose/commit/308934210593f11b950528350c8fe82560224d48,"  it('eachAsync() with parallel > numDocs (gh-8422)', function() {
+
+    return co(function*() {
+
+      yield Movie.deleteMany({});
+
+      yield Movie.create([
+
+        { name: 'Kickboxer' },
+
+        { name: 'Ip Man' },
+
+        { name: 'Enter the Dragon' }
+
+      ]);
+
+      let numDone = 0;
+
+      const test = co.wrap(function*() {
+
+        yield new Promise((resolve) => setTimeout(resolve, 100));
+
+        ++numDone;
+
+      });
+
+      yield Movie.find().cursor().eachAsync(test, { parallel: 4 });
+
+      assert.equal(numDone, 3);
+
+    });
+
+  it('eachAsync() with sort, parallel, and sync function (gh-8557)', function() {
+
+    return co(function*() {
+
+      yield User.create([{ order: 1 }, { order: 2 }, { order: 3 }]);
+
+      const cursor = User.aggregate([{ $sort: { order: 1 } }]).
+
+        cursor();
+
+      const docs = [];
+
+      yield cursor.eachAsync((doc) => docs.push(doc), { parallel: 3 });
+
+      assert.deepEqual(docs.map(d => d.order), [1, 2, 3]);
+
+    });
+","  it('eachAsync() with parallel > numDocs (gh-8422)', async function() {
+
+    await Movie.deleteMany({});
+
+    await Movie.create([
+
+      { name: 'Kickboxer' },
+
+      { name: 'Ip Man' },
+
+      { name: 'Enter the Dragon' }
+
+    ]);
+
+    let numDone = 0;
+
+    await delay(100);
+
+    ++numDone;
+
+    await Movie.find().cursor().eachAsync(test, { parallel: 4 });
+
+    assert.equal(numDone, 3);
+
+  it('eachAsync() with sort, parallel, and sync function (gh-8557)', async function() {
+
+    await User.create([{ order: 1 }, { order: 2 }, { order: 3 }]);
+
+    const cursor = User.aggregate([{ $sort: { order: 1 } }]).
+
+      cursor();
+
+    const docs = [];
+
+    await cursor.eachAsync((doc) => docs.push(doc), { parallel: 3 });
+
+    assert.deepEqual(docs.map(d => d.order), [1, 2, 3]);
+",2021-08-29 23:23:24+02:00
+bb7c0210775c845acb9498ea10f39e6d0a39e89a,Valeri Karpov,"docs(defaults): clarify that `setDefaultsOnInsert` is `true` by default in 6.x
+
+Fix #10643",test/docs/defaults.test.js,https://github.com/automattic/mongoose/commit/bb7c0210775c845acb9498ea10f39e6d0a39e89a,"    return Movie.findOneAndUpdate(query, update, options).then(doc => {
+
+      doc.genre; // 'Action', Mongoose set a default value.
+
+      // acquit:ignore:start
+
+      assert.equal(doc.title, 'The Terminator');
+
+      assert.equal(doc.genre, 'Action');
+
+      // acquit:ignore:end
+
+      return doc;
+
+    });
+","    let doc = await Movie.findOneAndUpdate(query, update, options).lean();
+
+    doc.genre; // 'Action', Mongoose set a default value.
+
+    // acquit:ignore:start
+
+    assert.equal(doc.title, 'The Terminator');
+
+    assert.equal(doc.genre, 'Action');
+
+    // acquit:ignore:end
+
+
+
+    await Movie.deleteMany({});
+
+
+
+    doc = await Movie.findOneAndUpdate(query, update, { ...options, setDefaultsOnInsert: false }).lean();
+
+    doc.genre; // undefined, Mongoose did not set a default value
+
+    // acquit:ignore:start
+
+    assert.equal(doc.title, 'The Terminator');
+
+    assert.equal(doc.genre, void 0);
+
+    // acquit:ignore:end
+",2021-09-01 16:25:31-04:00
+e205858f88a3ee36dd477949f639fac0b19d4e0f,Hafez,refactor more tests to use async/await instead of of callbacks,test/es-next/transactions.test.es6.js,https://github.com/automattic/mongoose/commit/e205858f88a3ee36dd477949f639fac0b19d4e0f,"  before(function() {
+
+    return db.asPromise().
+
+      then(() => {
+
+        // Skip if not a repl set
+
+        if (db.client.topology.constructor.name !== 'ReplSet' &&
+
+            !db.client.topology.s.description.type.includes('ReplicaSet')) {
+
+          _skipped = true;
+
+          this.skip();
+
+          throw new Error('skip');
+
+        }
+
+      }).
+
+      then(() => new Promise((resolve, reject) => {
+
+        start.mongodVersion(function(err, version) {
+
+          if (err) {
+
+            return reject(err);
+
+          }
+
+          resolve(version);
+
+        });
+
+      })).
+
+      then(version => {
+
+        if (version[0] < 4) {
+
+          _skipped = true;
+
+          this.skip();
+
+        }
+
+      }).
+
+      catch(() => {
+
+      });
+","  before(async function() {
+
+    try {
+
+      await db.asPromise();
+
+      // Skip if not a repl set
+
+      const isNotAReplicaSet = db.client.topology.constructor.name !== 'ReplSet' &&
+
+                               !db.client.topology.s.description.type.includes('ReplicaSet');
+
+      if (isNotAReplicaSet) {
+
+        _skipped = true;
+
+        this.skip();
+
+        throw new Error('Skip');
+
+      }
+
+      const version = await start.promisifiedMongodVersion();
+
+      if (version[0] < 4) {
+
+      }
+
+    } catch (err) {
+
+      _skipped = true;
+
+      this.skip();
+
+    }
+",2021-09-09 02:41:38+02:00
+9030c12037c2294a6ec17c94b23a7139b60b169c,Hafez,refactor more tests to async/await,test/docs/transactions.test.js,https://github.com/automattic/mongoose/commit/9030c12037c2294a6ec17c94b23a7139b60b169c,"  before(function() {
+
+
+
+    return db.asPromise().
+
+      then(() => {
+
+        // Skip if not a repl set
+
+        if (db.client.topology.constructor.name !== 'ReplSet' &&
+
+            !db.client.topology.s.description.type.includes('ReplicaSet')) {
+
+          _skipped = true;
+
+          this.skip();
+
+          throw new Error('skip');
+
+        }
+
+      }).
+
+      then(() => new Promise((resolve, reject) => {
+
+        start.mongodVersion(function(err, version) {
+
+          if (err) {
+
+            return reject(err);
+
+          }
+
+          resolve(version);
+
+        });
+
+      })).
+
+      then(version => {
+
+        if (version[0] < 4) {
+
+          _skipped = true;
+
+          this.skip();
+
+        }
+
+      }).
+
+      catch(() => {
+
+      });
+","  before(async function() {
+
+    try {
+
+      await db.asPromise();
+
+      // Skip if not a repl set
+
+      if (db.client.topology.constructor.name !== 'ReplSet' &&
+
+      !db.client.topology.s.description.type.includes('ReplicaSet')) {
+
+        _skipped = true;
+
+        this.skip();
+
+        throw new Error('skip');
+
+      }
+
+
+
+      const version = await start.promisifiedMongodVersion();
+
+
+
+      if (version[0] < 4) {
+
+      }
+
+    } catch (err) {
+
+      _skipped = true;
+
+      this.skip();
+
+    }
+",2021-09-09 02:53:17+02:00
+15b57ec7d6a022961629e350313af5b258140bce,Hafez,refactor tests to async/await,test/connection.test.js,https://github.com/automattic/mongoose/commit/15b57ec7d6a022961629e350313af5b258140bce,"      bootMongo.promise.then(function(_conn) {
+
+        assert.equal(_conn, conn);
+
+        done();
+
+      }).catch(done);
+","      const _conn = await bootMongo.promise;
+
+      assert.equal(_conn, conn);
+",2021-09-16 02:26:01+02:00
+13a75af96e3c311bbda0925d7afb1d245374ced1,Hafez,refactor more tests to async/await,test/model.mapreduce.test.js,https://github.com/automattic/mongoose/commit/13a75af96e3c311bbda0925d7afb1d245374ced1,"    MR.mapReduce(o).then(function(results, stats) {
+
+      assert.equal(typeof stats, 'undefined');
+
+      done();
+
+    });
+","    const { stats } = await MR.mapReduce(o);
+
+    assert.equal(typeof stats, 'undefined');
+",2021-09-16 04:28:35+02:00
+8b6d9adbd8fa9d06ea6c1f8331df14bba444c4d5,Hafez,refactor mroe tests to async/await,test/model.aggregate.test.js,https://github.com/automattic/mongoose/commit/8b6d9adbd8fa9d06ea6c1f8331df14bba444c4d5,"    it('when return promise', function(done) {
+
+      A.aggregate([group, project]).then(function(res) {
+
+        assert.ok(res);
+
+        assert.equal(1, res.length);
+
+        assert.ok('maxAge' in res[0]);
+
+        assert.equal(maxAge, res[0].maxAge);
+
+        done();
+
+      });
+
+    it('with arrays', function(done) {
+
+      A.aggregate([group, project], function(err, res) {
+
+        assert.ifError(err);
+
+        assert.ok(res);
+
+        assert.equal(res.length, 1);
+
+        assert.ok('maxAge' in res[0]);
+
+        assert.equal(res[0].maxAge, maxAge);
+
+        done();
+
+      });
+
+    it('with Aggregate syntax', function(done) {
+
+      A.aggregate()
+
+        .exec(function(err, res) {
+
+          assert.ifError(err);
+
+          assert.ok(res);
+
+          assert.equal(res.length, 1);
+
+          assert.ok('maxAge' in res[0]);
+
+          assert.equal(res[0].maxAge, maxAge);
+
+          done();
+
+        });
+
+    it('with Aggregate syntax if callback not provided', function(done) {
+
+      promise.then(function(res) {
+
+        assert.ok(promise instanceof mongoose.Promise);
+
+        assert.ok(res);
+
+        assert.equal(res.length, 1);
+
+        assert.ok('maxAge' in res[0]);
+
+        assert.equal(maxAge, res[0].maxAge);
+
+        done();
+
+      });
+","    it('when return promise', async function() {
+
+      const res = await A.aggregate([group, project]);
+
+
+
+      assert.ok(res);
+
+      assert.equal(1, res.length);
+
+      assert.ok('maxAge' in res[0]);
+
+      assert.equal(maxAge, res[0].maxAge);
+
+    it('with arrays', async function() {
+
+      const res = await A.aggregate([group, project]);
+
+
+
+      assert.ok(res);
+
+      assert.equal(res.length, 1);
+
+      assert.ok('maxAge' in res[0]);
+
+      assert.equal(res[0].maxAge, maxAge);
+
+    it('with Aggregate syntax', async function() {
+
+      const res = await A.aggregate()
+
+        .exec();
+
+
+
+      assert.ok(res);
+
+      assert.equal(res.length, 1);
+
+      assert.ok('maxAge' in res[0]);
+
+      assert.equal(res[0].maxAge, maxAge);
+
+    it('with Aggregate syntax if callback not provided', async function() {
+
+      const res = await promise;
+
+
+
+      assert.ok(promise instanceof mongoose.Promise);
+
+      assert.ok(res);
+
+      assert.equal(res.length, 1);
+
+      assert.ok('maxAge' in res[0]);
+
+      assert.equal(maxAge, res[0].maxAge);
+",2021-09-16 04:49:59+02:00
+997f9f598651d31f273e1215d7e303445b0c254b,Hafez,refactor tests to async/await,test/model.indexes.test.js,https://github.com/automattic/mongoose/commit/997f9f598651d31f273e1215d7e303445b0c254b,"      return Promise.all([
+
+      ]).then(() => Base.listIndexes()).
+
+        then(indexes => indexes.find(i => i.key.other)).
+
+        then(index => {
+
+          assert.deepEqual(index.key, { other: 1 });
+
+          assert.deepEqual(index.partialFilterExpression, { kind: 'Device' });
+
+        });
+","      await Promise.all([
+
+      ]);
+
+      const indexes = await Base.listIndexes();
+
+      const index = indexes.find(i => i.key.other);
+
+      assert.deepEqual(index.key, { other: 1 });
+
+      assert.deepEqual(index.partialFilterExpression, { kind: 'Device' });
+",2022-01-21 11:14:32+02:00
+a92a4d2b62ba77a8125f464098fcae44accec0bc,uzlopak,improve typings of connection,test/types/connection.test.ts,https://github.com/automattic/mongoose/commit/a92a4d2b62ba77a8125f464098fcae44accec0bc,"import { createConnection, Schema, Connection } from 'mongoose';
+
+conn.model('Test', new Schema({ name: { type: String } }));
+
+conn.openUri('mongodb://localhost:27017/test').then(() => console.log('Connected!'));
+
+createConnection('mongodb://localhost:27017/test').asPromise().then((conn: Connection) => {
+
+  conn.host;
+
+});
+
+createConnection('mongodb://localhost:27017/test').close();
+
+conn.db.collection('Test').findOne({ name: String }).then(doc => console.log(doc));
+
+conn.collection('Test').findOne({ name: String }).then(doc => console.log(doc));
+
+conn.syncIndexes({ continueOnError: true }).then(result => {
+
+  result['User'].forEach((index) => {
+
+    index.includes('name');
+
+  });
+
+  result['Order'].message;
+
+  result['Order'].code;
+
+});
+
+conn.syncIndexes({ continueOnError: false, background: true }).then().catch(err => {
+
+  err.errors['Order'].code;
+
+});
+","import { createConnection, Schema, Collection, Connection, ConnectionSyncIndexesResult, Model } from 'mongoose';
+
+import * as mongodb from 'mongodb';
+
+import { expectError, expectType } from 'tsd';
+
+
+
+expectType<Connection>(createConnection());
+
+expectType<Connection>(createConnection('mongodb://localhost:27017/test'));
+
+expectType<Connection>(createConnection('mongodb://localhost:27017/test', { appName: 'mongoose' }));
+
+expectType<void>(createConnection('mongodb://localhost:27017/test', { appName: 'mongoose' }, (err, res) => (expectType<Connection>(res))));
+
+expectType<Model<{ name: string }, any, any, any>>(conn.model('Test', new Schema<{ name: string }>({ name: { type: String } })));
+
+expectType<Model<{ name: string }>>(conn.model<{ name: string }>('Test', new Schema({ name: { type: String } })));
+
+
+
+expectType<Promise<Connection>>(conn.openUri('mongodb://localhost:27017/test'));
+
+expectType<Promise<Connection>>(conn.openUri('mongodb://localhost:27017/test', { bufferCommands: true }));
+
+expectType<Connection>(conn.openUri('mongodb://localhost:27017/test', { bufferCommands: true }, (err, value) => { expectType<Connection>(value); }));
+
+
+
+conn.readyState === 0;
+
+conn.readyState === 99;
+
+
+
+expectError(conn.readyState = 0);
+
+
+
+expectType<Connection>(new Connection());
+
+expectType<Promise<Connection>>(new Connection().asPromise());
+
+
+
+expectType<Promise<mongodb.Collection<{ [key: string]: any }>>>(conn.createCollection('some'));
+
+expectType<void>(conn.createCollection('some', (err, res) => {
+
+  expectType<mongodb.Collection<{ [key: string]: any }>>(res);
+
+}));
+
+
+
+expectType<Promise<void>>(conn.dropCollection('some'));
+
+expectType<void>(conn.dropCollection('some', () => {
+
+  // do nothing
+
+}));
+
+
+
+expectError(conn.deleteModel());
+
+expectType<Connection>(conn.deleteModel('something'));
+
+
+
+expectType<Array<string>>(conn.modelNames());
+
+
+
+expectType<Promise<void>>(createConnection('mongodb://localhost:27017/test').close());
+
+expectType<Promise<void>>(createConnection('mongodb://localhost:27017/test').close(true));
+
+expectType<void>(createConnection('mongodb://localhost:27017/test').close(() => {
+
+  // do nothing.
+
+}));
+
+expectType<void>(createConnection('mongodb://localhost:27017/test').close(true, () => {
+
+  // do nothing.
+
+}));
+
+expectType<void>(createConnection('mongodb://localhost:27017/test').close(false, () => {
+
+  // do nothing.
+
+}));
+
+
+
+expectType<mongodb.Db>(conn.db);
+
+
+
+expectType<mongodb.MongoClient>(conn.getClient());
+
+expectType<Connection>(conn.setClient(new mongodb.MongoClient('mongodb://localhost:27017/test')));
+
+
+
+expectType<Promise<string>>(conn.transaction<string>(async(res) => {
+
+  expectType<mongodb.ClientSession>(res);
+
+  return 'a';
+
+}));
+
+
+
+expectError(conn.user = 'invalid');
+
+expectError(conn.pass = 'invalid');
+
+expectError(conn.host = 'invalid');
+
+expectError(conn.port = 'invalid');
+
+
+
+expectType<Collection>(conn.collection('test'));
+
+expectType<mongodb.Collection>(conn.db.collection('test'));
+
+expectType<Promise<mongodb.ClientSession>>(conn.startSession());
+
+expectType<Promise<mongodb.ClientSession>>(conn.startSession({ causalConsistency: true }));
+
+expectType<void>(conn.startSession((err, res) => { expectType<mongodb.ClientSession>(res); }));
+
+expectType<void>(conn.startSession(undefined, (err, res) => { expectType<mongodb.ClientSession>(res); }));
+
+expectType<void>(conn.startSession(null, (err, res) => { expectType<mongodb.ClientSession>(res); }));
+
+expectType<void>(conn.startSession({}, (err, res) => { expectType<mongodb.ClientSession>(res); }));
+
+expectType<Promise<ConnectionSyncIndexesResult>>(conn.syncIndexes());
+
+expectType<Promise<ConnectionSyncIndexesResult>>(conn.syncIndexes({ continueOnError: true }));
+
+expectType<Promise<ConnectionSyncIndexesResult>>(conn.syncIndexes({ background: true }));
+
+expectType<void>(conn.syncIndexes(undefined, (err, value) => { expectType<ConnectionSyncIndexesResult>(value); }));
+
+expectType<void>(conn.syncIndexes(null, (err, value) => { expectType<ConnectionSyncIndexesResult>(value); }));
+
+expectType<void>(conn.syncIndexes({ continueOnError: true }, (err, value) => { expectType<ConnectionSyncIndexesResult>(value); }));
+
+expectType<void>(conn.syncIndexes({ background: true }, (err, value) => { expectType<ConnectionSyncIndexesResult>(value); }));
+
+expectType<Connection>(conn.useDb('test'));
+
+expectType<Connection>(conn.useDb('test', {}));
+
+expectType<Connection>(conn.useDb('test', { noListener: true }));
+
+expectType<Connection>(conn.useDb('test', { useCache: true }));
+",2022-02-17 18:50:30+01:00
+3dd7b52211ab7066fe845e689143ee728e735335,hasezoey,"style(model): update example for ""Model.prototype.remove"" to use await",lib/model.js,https://github.com/automattic/mongoose/commit/3dd7b52211ab7066fe845e689143ee728e735335," *     product.remove(function (err, product) {
+
+ *       if (err) return handleError(err);
+
+ *       Product.findById(product._id, function (err, product) {
+
+ *         console.log(product) // null
+
+ *       })
+
+ *     })
+
+ *
+
+ *
+
+ * As an extra measure of flow control, remove will return a Promise (bound to `fn` if passed) so it could be chained, or hooked to receive errors
+
+ *
+
+ * #### Example:
+
+ *
+
+ *     product.remove().then(function (product) {
+
+ *        ...
+
+ *     }).catch(function (err) {
+
+ *        assert.ok(err)
+
+ *     })
+"," *     const product = await product.remove().catch(function (err) {
+
+ *        assert.ok(err);
+
+ *     });
+
+ *     const foundProduct = await Product.findById(product._id);
+
+ *     console.log(foundProduct) // null
+",2022-07-11 14:22:51+02:00
+437b03a81c12fb804a366ff3d50b5084fc504c3e,hasezoey,style(aggregate): touch-up the jsdoc,lib/aggregate.js,https://github.com/automattic/mongoose/commit/437b03a81c12fb804a366ff3d50b5084fc504c3e," *     const promise = aggregate.exec();
+
+ *     promise.then(..);
+
+ * @see Promise #promise_Promise
+
+ * @return {Promise}
+"," *     const result = await aggregate.exec();
+
+ * @return {Promise} Returns a Promise if no ""callback"" is given.
+",2022-07-22 14:19:24+02:00
+9b51f98aed00de9c244062d645721ef3ac7dbca9,Valeri Karpov,fix most aggregation and connection tests for mongodb@5,test/common.js,https://github.com/automattic/mongoose/commit/9b51f98aed00de9c244062d645721ef3ac7dbca9,"  return new Promise((resolve, reject) => {
+
+    const db = module.exports();
+
+
+
+
+
+    db.on('error', reject);
+
+
+
+    db.on('open', function() {
+
+      const admin = db.db.admin();
+
+      admin.serverStatus(function(err, info) {
+
+        if (err) {
+
+          return reject(err);
+
+        }
+
+        const version = info.version.split('.').map(function(n) {
+
+          return parseInt(n, 10);
+
+        });
+
+        db.close(function() {
+
+          resolve(version);
+
+        });
+
+      });
+
+    });
+","  const db = await module.exports();
+
+
+
+  const admin = db.client.db().admin();
+
+
+
+  const info = await admin.serverStatus();
+
+  const version = info.version.split('.').map(function(n) {
+
+    return parseInt(n, 10);
+
+  await db.close();
+
+  return version;
+",2023-01-26 18:13:18-05:00
+f0c55f3278fd4aa3633baecfdf2b3776ca6cec4a,Valeri Karpov,"BREAKING CHANGE: make openUri() use async functions, drop callback support",lib/connection.js,https://github.com/automattic/mongoose/commit/f0c55f3278fd4aa3633baecfdf2b3776ca6cec4a,"Connection.prototype.openUri = function openUri(uri, options, callback) {
+
+  if (typeof options === 'function') {
+
+    callback = options;
+
+    options = null;
+
+  if (['string', 'number'].indexOf(typeof options) !== -1) {
+
+    throw new MongooseError('Mongoose 5.x no longer supports ' +
+
+      '`mongoose.connect(host, dbname, port)` or ' +
+
+      '`mongoose.createConnection(host, dbname, port)`. See ' +
+
+      'https://mongoosejs.com/docs/connections.html for supported connection syntax');
+
+  if (callback != null && typeof callback !== 'function') {
+
+    throw new MongooseError('3rd parameter to `mongoose.connect()` or ' +
+
+      '`mongoose.createConnection()` must be a function, got ""' +
+
+      typeof callback + '""');
+
+  }
+
+
+
+  if (this._destroyCalled) {
+
+    const error = 'Connection has been closed and destroyed, and cannot be used for re-opening the connection. ' +
+
+    'Please create a new connection with `mongoose.createConnection()` or `mongoose.connect()`.';
+
+    if (typeof callback === 'function') {
+
+      callback(error);
+
+      return;
+
+    }
+
+    else {
+
+      throw new MongooseError(error);
+
+    }
+
+  if (this.readyState === STATES.connecting || this.readyState === STATES.connected) {
+
+    if (this._connectionString !== uri) {
+
+
+
+    if (typeof callback === 'function') {
+
+      this.$initialConnection = this.$initialConnection.then(
+
+        () => callback(null, this),
+
+        err => callback(err)
+
+      );
+
+    }
+
+    return this;
+
+  this._connectionString = uri;
+
+  this.readyState = STATES.connecting;
+
+  this._closeCalled = false;
+
+
+
+  const _this = this;
+
+
+","Connection.prototype.openUri = async function openUri(uri, options) {
+
+  if (this.readyState === STATES.connecting || this.readyState === STATES.connected) {
+
+    if (this._connectionString === uri) {
+
+      return this;
+
+    }
+
+  this._closeCalled = false;
+
+
+
+  // Internal option to skip `await this.$initialConnection` in
+
+  // this function for `createConnection()`. Because otherwise
+
+  // `createConnection()` would have an uncatchable error.
+
+  let _fireAndForget = false;
+
+  if (options && '_fireAndForget' in options) {
+
+    _fireAndForget = options._fireAndForget;
+
+    delete options._fireAndForget;
+
+  const promise = _createMongoClient(this, uri, options);
+
+
+
+  this.$initialConnection = promise.
+
+    then(() => this).
+
+    catch(err => {
+
+      this.readyState = STATES.disconnected;
+
+      if (this.listeners('error').length > 0) {
+
+        immediate(() => this.emit('error', err));
+
+      }
+
+      throw err;
+
+    });
+
+
+
+  for (const model of Object.values(this.models)) {
+
+    // Errors handled internally, so safe to ignore error
+
+    model.init(function $modelInitNoop() {});
+
+  }
+
+
+
+  // `createConnection()` calls this `openUri()` function without
+
+  // awaiting on the result, so we set this option to rely on
+
+  // `asPromise()` to handle any errors.
+
+  if (_fireAndForget) {
+
+    return this;
+
+  }
+
+
+
+  try {
+
+    await this.$initialConnection;
+
+  } catch (err) {
+
+    throw _handleConnectionErrors(err);
+
+  }
+
+
+
+  return this;
+
+};
+
+
+
+/*!
+
+ * ignore
+
+ */
+
+
+
+function _handleConnectionErrors(err) {
+
+  if (err?.name === 'MongoServerSelectionError') {
+
+    const originalError = err;
+
+    err = new ServerSelectionError();
+
+    err.assimilateError(originalError);
+
+  }
+
+
+
+  return err;
+
+}
+
+
+
+/*!
+
+ * ignore
+
+ */
+
+
+
+async function _createMongoClient(conn, uri, options) {
+
+  if (conn._destroyCalled) {
+
+    throw new MongooseError(
+
+      'Connection has been closed and destroyed, and cannot be used for re-opening the connection. ' +
+
+      'Please create a new connection with `mongoose.createConnection()` or `mongoose.connect()`.'
+
+    );
+
+  if (conn.readyState === STATES.connecting || conn.readyState === STATES.connected) {
+
+    if (conn._connectionString !== uri) {
+",2023-02-01 15:02:31-05:00
+f0c55f3278fd4aa3633baecfdf2b3776ca6cec4a,Valeri Karpov,"BREAKING CHANGE: make openUri() use async functions, drop callback support",lib/connection.js,https://github.com/automattic/mongoose/commit/f0c55f3278fd4aa3633baecfdf2b3776ca6cec4a,"  const promise = new Promise((resolve, reject) => {
+
+    let client;
+
+    try {
+
+      client = new mongodb.MongoClient(uri, options);
+
+    } catch (error) {
+
+      _this.readyState = STATES.disconnected;
+
+      return reject(error);
+
+    }
+
+    _this.client = client;
+
+
+
+    client.setMaxListeners(0);
+
+    client.connect().then(() => {
+
+      _setClient(_this, client, options, dbName);
+
+      for (const db of this.otherDbs) {
+
+        _setClient(db, client, {}, db.name);
+
+      }
+
+
+
+      resolve(_this);
+
+    }).catch(reject);
+
+  });
+
+
+
+  const serverSelectionError = new ServerSelectionError();
+
+  this.$initialConnection = promise.
+
+    then(() => this).
+
+    catch(err => {
+
+      this.readyState = STATES.disconnected;
+
+      if (err != null && err.name === 'MongoServerSelectionError') {
+
+        err = serverSelectionError.assimilateError(err);
+
+      }
+
+      if (this.listeners('error').length > 0) {
+
+        immediate(() => this.emit('error', err));
+
+      }
+
+      throw err;
+
+    });
+
+  if (callback != null) {
+
+    this.$initialConnection = this.$initialConnection.then(
+
+      () => { callback(null, this); return this; },
+
+      err => callback(err)
+
+    );
+
+  }
+
+  for (const model of Object.values(this.models)) {
+
+    // Errors handled internally, so safe to ignore error
+
+    model.init(function $modelInitNoop() {});
+
+
+
+  return this.$initialConnection;
+
+};
+","  conn.readyState = STATES.connecting;
+
+  conn._connectionString = uri;
+
+  let client;
+
+  try {
+
+    client = new mongodb.MongoClient(uri, options);
+
+  } catch (error) {
+
+    conn.readyState = STATES.disconnected;
+
+    throw error;
+
+  }
+
+  conn.client = client;
+
+  client.setMaxListeners(0);
+
+  await client.connect();
+
+  _setClient(conn, client, options, dbName);
+
+  for (const db of conn.otherDbs) {
+
+    _setClient(db, client, {}, db.name);
+
+  return conn;
+
+}
+",2023-02-01 15:02:31-05:00
+f0c55f3278fd4aa3633baecfdf2b3776ca6cec4a,Valeri Karpov,"BREAKING CHANGE: make openUri() use async functions, drop callback support",test/collection.test.js,https://github.com/automattic/mongoose/commit/f0c55f3278fd4aa3633baecfdf2b3776ca6cec4a,"  it('should buffer commands until connection is established', function(done) {
+
+    let connected = false;
+
+    let insertedId = undefined;
+
+    let pending = 2;
+
+
+
+    function finish() {
+
+      if (--pending) {
+
+        return;
+
+      }
+
+      assert.ok(connected);
+
+      assert.ok(insertedId !== undefined);
+
+      collection.findOne({ _id: insertedId }).then(doc => {
+
+        assert.strictEqual(doc.foo, 'bar');
+
+        db.close();
+
+        done();
+
+      });
+
+    }
+
+    collection.insertOne({ foo: 'bar' }, {}, function(err, result) {
+
+      assert.ok(connected);
+
+      insertedId = result.insertedId;
+
+      finish();
+
+    });
+
+    db.openUri(process.env.MONGOOSE_TEST_URI || uri, function(err) {
+
+      connected = !err;
+
+      finish();
+
+    });
+
+  it('returns a promise if buffering and no callback (gh-7676)', function(done) {
+","  it('should buffer commands until connection is established', async function() {
+
+    const op = collection.insertOne({ foo: 'bar' }, {});
+
+    await db.openUri(process.env.MONGOOSE_TEST_URI || uri);
+
+
+
+    const res = await op;
+
+    assert.ok(res.insertedId);
+
+    const doc = await collection.findOne({ _id: res.insertedId });
+
+    assert.strictEqual(doc.foo, 'bar');
+
+    await db.close();
+
+  it('returns a promise if buffering and no callback (gh-7676)', async function() {
+",2023-02-01 15:02:31-05:00
+f0c55f3278fd4aa3633baecfdf2b3776ca6cec4a,Valeri Karpov,"BREAKING CHANGE: make openUri() use async functions, drop callback support",test/collection.test.js,https://github.com/automattic/mongoose/commit/f0c55f3278fd4aa3633baecfdf2b3776ca6cec4a,"    db.openUri(start.uri, function(err) {
+
+      assert.ifError(err);
+
+      promise.then(() => done(), done);
+
+    });
+","    await db.openUri(start.uri);
+
+
+
+    await promise;
+",2023-02-01 15:02:31-05:00
+f0c55f3278fd4aa3633baecfdf2b3776ca6cec4a,Valeri Karpov,"BREAKING CHANGE: make openUri() use async functions, drop callback support",test/connection.test.js,https://github.com/automattic/mongoose/commit/f0c55f3278fd4aa3633baecfdf2b3776ca6cec4a,"  it('throws a MongooseServerSelectionError on server selection timeout (gh-8451)', function() {
+
+    return mongoose.createConnection(uri, opts).asPromise().then(() => assert.ok(false), err => {
+
+      assert.equal(err.name, 'MongooseServerSelectionError');
+
+    });
+","  it('throws a MongooseServerSelectionError on server selection timeout (gh-8451)', async function() {
+
+    const err = await mongoose.createConnection(uri, opts).
+
+      asPromise().
+
+      then(() => null, err => err);
+
+    assert.ok(err);
+
+    assert.equal(err.name, 'MongooseServerSelectionError');
+",2023-02-01 15:02:31-05:00
+38e98f97e3ac07aa50a0a66fe444ce7e7d3c8a2e,Valeri Karpov,"BREAKING CHANGE: make Query.prototype.exec() async, drop support for callbacks",lib/query.js,https://github.com/automattic/mongoose/commit/38e98f97e3ac07aa50a0a66fe444ce7e7d3c8a2e,"  const cb = (err, docs) => {
+
+    if (err) {
+
+      return callback(err);
+
+    }
+
+    if (docs.length === 0) {
+
+      return callback(null, docs);
+
+    }
+
+    if (this.options.explain) {
+
+      return callback(null, docs);
+
+    }
+
+    if (!mongooseOptions.populate) {
+
+      const versionKey = _this.schema.options.versionKey;
+
+      if (mongooseOptions.lean && mongooseOptions.lean.versionKey === false && versionKey) {
+
+        docs.forEach((doc) => {
+
+          if (versionKey in doc) {
+
+            delete doc[versionKey];
+
+          }
+
+        });
+
+      }
+
+      return mongooseOptions.lean ?
+
+      // call _completeManyLean here?
+
+        _completeManyLean(_this.model.schema, docs, null, completeManyOptions, callback) :
+
+        // callback(null, docs) :
+
+        completeMany(_this.model, docs, fields, userProvidedFields, completeManyOptions, callback);
+
+    }
+
+    const pop = helpers.preparePopulationOptionsMQ(_this, mongooseOptions);
+
+    if (mongooseOptions.lean) {
+
+      return _this.model.populate(docs, pop, callback);
+
+    completeMany(_this.model, docs, fields, userProvidedFields, completeManyOptions, (err, docs) => {
+
+      if (err != null) {
+
+        return callback(err);
+
+      }
+
+      _this.model.populate(docs, pop, callback);
+
+    });
+
+  };
+
+  const options = this._optionsForExec();
+
+  options.projection = this._fieldsForExec();
+
+  const filter = this._conditions;
+
+  this._collection.collection.find(filter, options, (err, cursor) => {
+
+    if (err != null) {
+
+      return cb(err);
+
+    }
+
+    if (options.explain) {
+
+      return cursor.explain().then(res => cb(null, res), err => cb(err));
+
+    }
+
+    try {
+
+      return cursor.toArray().then(res => cb(null, res), err => cb(err));
+
+    } catch (err) {
+
+      return cb(err);
+
+    }
+
+  });
+
+});
+","  const options = this._optionsForExec();
+
+  options.projection = this._fieldsForExec();
+
+  const filter = this._conditions;
+
+  const cursor = await this._collection.collection.find(filter, options);
+
+  if (options.explain) {
+
+    return cursor.explain();
+
+  }
+
+  let docs = await cursor.toArray();
+
+  if (docs.length === 0) {
+
+    return docs;
+
+  }
+
+  if (!mongooseOptions.populate) {
+
+    const versionKey = _this.schema.options.versionKey;
+
+    if (mongooseOptions.lean && mongooseOptions.lean.versionKey === false && versionKey) {
+
+      docs.forEach((doc) => {
+
+        if (versionKey in doc) {
+
+          delete doc[versionKey];
+
+        }
+
+      });
+
+    return mongooseOptions.lean ?
+
+      _completeManyLean(_this.model.schema, docs, null, completeManyOptions) :
+
+      completeMany(_this.model, docs, fields, userProvidedFields, completeManyOptions);
+
+  }
+
+  const pop = helpers.preparePopulationOptionsMQ(_this, mongooseOptions);
+
+  if (mongooseOptions.lean) {
+
+    return _this.model.populate(docs, pop);
+
+  }
+
+  docs = await completeMany(_this.model, docs, fields, userProvidedFields, completeManyOptions);
+
+  await this.model.populate(docs, pop);
+
+  return docs;
+
+};
+",2023-02-02 15:13:54-05:00
+15febec1ee28201d1694a460a4907d5518adc880,Valeri Karpov,deleteMany() and deleteOne() as async thunks,lib/query.js,https://github.com/automattic/mongoose/commit/15febec1ee28201d1694a460a4907d5518adc880,"  if (!callback) {
+
+    return Query.base.deleteOne.call(this);
+
+  }
+
+
+
+  this.exec.call(this, callback);
+
+ * @param {Function} callback
+
+Query.prototype._deleteOne = wrapThunk(function(callback) {
+
+    callback(this.error());
+
+    return this;
+
+  callback = _wrapThunkCallback(this, callback);
+
+
+
+  this._collection.collection.deleteOne(this._conditions, options).then(
+
+    res => { callback(null, res); },
+
+    err => { callback(err); }
+
+  );
+
+});
+","  Query.base.deleteOne.call(this);
+
+ *
+
+Query.prototype._deleteOne = async function _deleteOne() {
+
+    throw this.error();
+
+  return this._collection.collection.deleteOne(this._conditions, options);
+
+};
+",2023-02-03 10:28:18-05:00
+15febec1ee28201d1694a460a4907d5518adc880,Valeri Karpov,deleteMany() and deleteOne() as async thunks,lib/query.js,https://github.com/automattic/mongoose/commit/15febec1ee28201d1694a460a4907d5518adc880,"Query.prototype._deleteMany = wrapThunk(function(callback) {
+
+    callback(this.error());
+
+    return this;
+
+  callback = _wrapThunkCallback(this, callback);
+
+  this._collection.collection.deleteMany(this._conditions, options).then(
+
+    res => { callback(null, res); },
+
+    err => { callback(err); }
+
+  );
+
+});
+","Query.prototype._deleteMany = async function _deleteMany() {
+
+    throw this.error();
+
+  return this._collection.collection.deleteMany(this._conditions, options);
+
+};
+",2023-02-03 10:28:18-05:00
+7b68d494652f9c2eda7806595ce8ea66a9a50718,Daniel Diaz,progress,test/model.test.js,https://github.com/automattic/mongoose/commit/7b68d494652f9c2eda7806595ce8ea66a9a50718,"    const p1 = Temp.create({ nested: { nums: [1, 2, 3, 4, 5] } });
+
+    p1.then(function(t) {
+
+      t.nested.nums.pull(1);
+
+      t.nested.nums.pull(2);
+
+      assert.equal(t.$__.activePaths.paths['nested.nums'], 'modify');
+
+      done();
+
+    }).catch(done);
+
+  it('$pull should affect what you see in an array before a save', function(done) {
+","    const t = await Temp.create({ nested: { nums: [1, 2, 3, 4, 5] } });
+
+    t.nested.nums.pull(1);
+
+    t.nested.nums.pull(2);
+
+    assert.equal(t.$__.activePaths.paths['nested.nums'], 'modify');
+
+  it('$pull should affect what you see in an array before a save', async function() {
+",2023-02-03 12:01:42-05:00
+3ae89172dd14aee576d97fb6c47b54e7d76640c0,Valeri Karpov,test: clean up a bunch of test failures,test/model.test.js,https://github.com/automattic/mongoose/commit/3ae89172dd14aee576d97fb6c47b54e7d76640c0,"    it('updateOne()', function(done) {
+
+      BlogPost.create({ title: 'interoperable update as promise' }, function(err) {
+
+        assert.ifError(err);
+
+        const query = BlogPost.updateOne({ title: 'interoperable update as promise' }, { title: 'interoperable update as promise delta' });
+
+        query.exec(function(err, res) {
+
+          assert.ifError(err);
+
+          assert.equal(res.matchedCount, 1);
+
+          assert.equal(res.modifiedCount, 1);
+
+          BlogPost.count({ title: 'interoperable update as promise delta' }, function(err, count) {
+
+            assert.ifError(err);
+
+            assert.equal(count, 1);
+
+            done();
+
+          });
+
+        });
+
+      });
+
+    it('findOne()', function(done) {
+
+      BlogPost.create({ title: 'interoperable findOne as promise' }, function(err, created) {
+
+        assert.ifError(err);
+
+        const query = BlogPost.findOne({ title: 'interoperable findOne as promise' });
+
+        query.exec(function(err, found) {
+
+          assert.ifError(err);
+
+          assert.equal(found.id, created.id);
+
+          done();
+
+        });
+
+      });
+
+    it('find()', function(done) {
+
+      BlogPost.create(
+
+        { title: 'interoperable find as promise' },
+
+        function(err, createdOne, createdTwo) {
+
+          assert.ifError(err);
+
+          const query = BlogPost.find({ title: 'interoperable find as promise' }).sort('_id');
+
+          query.exec(function(err, found) {
+
+            assert.ifError(err);
+
+            assert.equal(found.length, 2);
+
+            const ids = {};
+
+            ids[String(found[0]._id)] = 1;
+
+            ids[String(found[1]._id)] = 1;
+
+            assert.ok(String(createdOne._id) in ids);
+
+            assert.ok(String(createdTwo._id) in ids);
+
+            done();
+
+          });
+
+        });
+
+    it('op can be changed', function(done) {
+
+      BlogPost.create({ title: title }, function(err, created) {
+
+        assert.ifError(err);
+
+        const query = BlogPost.count({ title: title });
+
+        query.exec('findOne', function(err, found) {
+
+          assert.ifError(err);
+
+          assert.equal(found.id, created.id);
+
+          done();
+
+        });
+
+      });
+
+      it.skip('count()', function(done) {
+
+        BlogPost.create({ title: 'interoperable count as promise 2' }, function(err) {
+
+          assert.ifError(err);
+
+          const query = BlogPost.count({ title: 'interoperable count as promise 2' });
+
+          const promise = query.exec();
+
+          promise.then(function(count) {
+
+            assert.equal(count, 1);
+
+            done();
+
+          }).catch(done);
+
+        });
+
+      });
+
+
+
+      it.skip('update()', function(done) {
+
+        BlogPost.create({ title: 'interoperable update as promise 2' }, function(err) {
+
+          assert.ifError(err);
+
+          const query = BlogPost.update({ title: 'interoperable update as promise 2' }, { title: 'interoperable update as promise delta 2' });
+
+          const promise = query.exec();
+
+          promise.then(function() {
+
+            BlogPost.count({ title: 'interoperable update as promise delta 2' }, function(err, count) {
+
+              assert.ifError(err);
+
+              assert.equal(count, 1);
+
+              done();
+
+            });
+
+          });
+
+        });
+
+      });
+
+
+","    it('updateOne()', async function() {
+
+      await BlogPost.create({ title: 'interoperable update as promise' });
+
+      const query = BlogPost.updateOne({ title: 'interoperable update as promise' }, { title: 'interoperable update as promise delta' });
+
+      const res = await query.exec();
+
+      assert.equal(res.matchedCount, 1);
+
+      assert.equal(res.modifiedCount, 1);
+
+      const count = await BlogPost.countDocuments({ title: 'interoperable update as promise delta' });
+
+      assert.equal(count, 1);
+
+    it('findOne()', async function() {
+
+      const created = await BlogPost.create({ title: 'interoperable findOne as promise' });
+
+      const query = BlogPost.findOne({ title: 'interoperable findOne as promise' });
+
+      const found = await query.exec();
+
+      assert.equal(found.id, created.id);
+
+    it('find()', async function() {
+
+      const [createdOne, createdTwo] = await BlogPost.create([
+
+        { title: 'interoperable find as promise' }
+
+      ]);
+
+
+
+      const query = BlogPost.find({ title: 'interoperable find as promise' }).sort('_id');
+
+      const found = await query.exec();
+
+      assert.equal(found.length, 2);
+
+      const ids = {};
+
+      ids[String(found[0]._id)] = 1;
+
+      ids[String(found[1]._id)] = 1;
+
+      assert.ok(String(createdOne._id) in ids);
+
+      assert.ok(String(createdTwo._id) in ids);
+
+    it('op can be changed', async function() {
+
+      const created = await BlogPost.create({ title: title });
+
+      const query = BlogPost.count({ title: title });
+
+      const found = await query.exec('findOne');
+
+      assert.equal(found.id, created.id);
+",2023-02-07 12:39:03-05:00
+3ae89172dd14aee576d97fb6c47b54e7d76640c0,Valeri Karpov,test: clean up a bunch of test failures,test/model.test.js,https://github.com/automattic/mongoose/commit/3ae89172dd14aee576d97fb6c47b54e7d76640c0,"      it('find()', function(done) {
+
+        BlogPost.create(
+
+          { title: 'interoperable find as promise 2' },
+
+          function(err, createdOne, createdTwo) {
+
+            assert.ifError(err);
+
+            const query = BlogPost.find({ title: 'interoperable find as promise 2' }).sort('_id');
+
+            const promise = query.exec();
+
+            promise.then(function(found) {
+
+              assert.ifError(err);
+
+              assert.equal(found.length, 2);
+
+              assert.equal(found[0].id, createdOne.id);
+
+              assert.equal(found[1].id, createdTwo.id);
+
+              done();
+
+            }).catch(done);
+
+          });
+
+      });
+
+
+
+      it.skip('remove()', function() {
+
+        return BlogPost.create({ title: 'interoperable remove as promise 2' }).
+
+          then(() => {
+
+            return BlogPost.remove({ title: 'interoperable remove as promise 2' });
+
+          }).
+
+          then(() => {
+
+            return BlogPost.count({ title: 'interoperable remove as promise 2' });
+
+          }).
+
+          then(count => {
+
+            assert.equal(count, 0);
+
+          });
+
+      });
+
+      it('are thenable', function(done) {
+
+        const peopleSchema = new Schema({ name: String, likes: ['ObjectId'] });
+
+        const P = db.model('Test', peopleSchema);
+
+        BlogPost.create(
+
+          { title: 'then promise 1' },
+
+          { title: 'then promise 2' },
+
+          { title: 'then promise 3' },
+
+          function(err, d1, d2, d3) {
+
+            assert.ifError(err);
+
+
+
+            P.create(
+
+              { name: 'brandon', likes: [d1] },
+
+              { name: 'ben', likes: [d2] },
+
+              { name: 'bernie', likes: [d3] },
+
+              function(err) {
+
+                assert.ifError(err);
+
+
+
+                const promise = BlogPost.find({ title: /^then promise/ }).select('_id').exec();
+
+                promise.then(function(blogs) {
+
+                  const ids = blogs.map(function(m) {
+
+                    return m._id;
+
+                  });
+
+                  return P.where('likes').in(ids).exec();
+
+                }).then(function(people) {
+
+                  assert.equal(people.length, 3);
+
+                  return people;
+
+                }).then(function() {
+
+                  done();
+
+                }, function(err) {
+
+                  done(new Error(err));
+
+                });
+
+              });
+
+          });
+
+    it('hides private props', function(done) {
+","      it('find()', async function() {
+
+        const [createdOne, createdTwo] = await BlogPost.create(
+
+          { title: 'interoperable find as promise 2' }
+
+        );
+
+        const query = BlogPost.find({ title: 'interoperable find as promise 2' }).sort('_id');
+
+        const found = await query.exec();
+
+        assert.equal(found.length, 2);
+
+        assert.equal(found[0].id, createdOne.id);
+
+        assert.equal(found[1].id, createdTwo.id);
+
+    it('hides private props', function() {
+",2023-02-07 12:39:03-05:00
+3ae89172dd14aee576d97fb6c47b54e7d76640c0,Valeri Karpov,test: clean up a bunch of test failures,test/model.test.js,https://github.com/automattic/mongoose/commit/3ae89172dd14aee576d97fb6c47b54e7d76640c0,"      savePromise.then(function() {
+
+        assert.ok(!doc.$__.$versionError);
+
+        assert.ok(!doc.$__.saveOptions);
+
+        done();
+
+      }).catch(done);
+
+    it('should overwrite arrays when directly set (gh-1126)', function(done) {
+
+      BlogPost.create({ title: 'gh-1126', numbers: [1, 2] }, function(err, b) {
+
+        assert.ifError(err);
+
+        BlogPost.findById(b._id, function(err, b) {
+
+          assert.ifError(err);
+
+          assert.deepEqual([1, 2].join(), b.numbers.join());
+
+
+
+          b.numbers = [];
+
+          b.numbers.push(3);
+
+
+
+          const d = b.$__delta()[1];
+
+          assert.ok('$set' in d, 'invalid delta ' + JSON.stringify(d));
+
+          assert.ok(Array.isArray(d.$set.numbers));
+
+          assert.equal(d.$set.numbers.length, 1);
+
+          assert.equal(d.$set.numbers[0], 3);
+
+
+
+          b.save(function(err) {
+
+            assert.ifError(err);
+
+
+
+            BlogPost.findById(b._id, function(err, b) {
+
+              assert.ifError(err);
+
+              assert.ok(Array.isArray(b.numbers));
+
+              assert.equal(b.numbers.length, 1);
+
+              assert.equal(b.numbers[0], 3);
+
+
+
+              b.numbers = [3];
+
+              const d = b.$__delta();
+
+              assert.ok(!d);
+
+
+
+              b.numbers = [4];
+
+              b.numbers.push(5);
+
+              b.save(function(err) {
+
+                assert.ifError(err);
+
+                BlogPost.findById(b._id, function(err, b) {
+
+                  assert.ifError(err);
+
+                  assert.ok(Array.isArray(b.numbers));
+
+                  assert.equal(b.numbers.length, 2);
+
+                  assert.equal(b.numbers[0], 4);
+
+                  assert.equal(b.numbers[1], 5);
+
+                  done();
+
+                });
+
+              });
+
+            });
+
+          });
+
+        });
+
+      });
+
+    it('should use $set when subdoc changed before pulling (gh-1303)', function(done) {
+
+      B.create(
+
+        { title: 'gh-1303', comments: [{ body: 'a' }, { body: 'b' }, { body: 'c' }] },
+
+        function(err, b) {
+
+          assert.ifError(err);
+
+          B.findById(b._id, function(err, b) {
+
+            assert.ifError(err);
+
+
+
+            b.comments[2].body = 'changed';
+
+            b.comments.pull(b.comments[1]);
+
+
+
+            assert.equal(b.comments.length, 2);
+
+            assert.equal(b.comments[0].body, 'a');
+
+            assert.equal(b.comments[1].body, 'changed');
+
+
+
+            const d = b.$__delta()[1];
+
+            assert.ok('$set' in d, 'invalid delta ' + JSON.stringify(d));
+
+            assert.ok(Array.isArray(d.$set.comments));
+
+            assert.equal(d.$set.comments.length, 2);
+
+
+
+            b.save(function(err) {
+
+              assert.ifError(err);
+
+
+
+              B.findById(b._id, function(err, b) {
+
+                assert.ifError(err);
+
+                assert.ok(Array.isArray(b.comments));
+
+                assert.equal(b.comments.length, 2);
+
+                assert.equal(b.comments[0].body, 'a');
+
+                assert.equal(b.comments[1].body, 'changed');
+
+                done();
+
+              });
+
+            });
+
+          });
+
+        });
+
+    it('with conflicted data in db', function(done) {
+
+      m.save(function(err) {
+
+        assert.strictEqual(err, null);
+
+        assert.strictEqual('GI', m.namey.first);
+
+        assert.strictEqual('Joe', m.namey.last);
+
+        done();
+
+      });
+
+    it('with positional notation on path not existing in schema (gh-1048)', function(done) {
+","      await savePromise;
+
+      assert.ok(!doc.$__.$versionError);
+
+      assert.ok(!doc.$__.saveOptions);
+
+    it('should overwrite arrays when directly set (gh-1126)', async function() {
+
+      let b = await BlogPost.create({ title: 'gh-1126', numbers: [1, 2] });
+
+      b = await BlogPost.findById(b._id);
+
+      assert.deepEqual([1, 2].join(), b.numbers.join());
+
+
+
+      b.numbers = [];
+
+      b.numbers.push(3);
+
+
+
+      let d = b.$__delta()[1];
+
+      assert.ok('$set' in d, 'invalid delta ' + JSON.stringify(d));
+
+      assert.ok(Array.isArray(d.$set.numbers));
+
+      assert.equal(d.$set.numbers.length, 1);
+
+      assert.equal(d.$set.numbers[0], 3);
+
+
+
+      await b.save();
+
+      b = await BlogPost.findById(b._id);
+
+      assert.ok(Array.isArray(b.numbers));
+
+      assert.equal(b.numbers.length, 1);
+
+      assert.equal(b.numbers[0], 3);
+
+
+
+      b.numbers = [3];
+
+      d = b.$__delta();
+
+      assert.ok(!d);
+
+
+
+      b.numbers = [4];
+
+      b.numbers.push(5);
+
+      await b.save();
+
+      b = await BlogPost.findById(b._id);
+
+      assert.ok(Array.isArray(b.numbers));
+
+      assert.equal(b.numbers.length, 2);
+
+      assert.equal(b.numbers[0], 4);
+
+      assert.equal(b.numbers[1], 5);
+
+    it('should use $set when subdoc changed before pulling (gh-1303)', async function() {
+
+      let b = await B.create(
+
+        { title: 'gh-1303', comments: [{ body: 'a' }, { body: 'b' }, { body: 'c' }] }
+
+      );
+
+
+
+      b = await B.findById(b._id);
+
+      b.comments[2].body = 'changed';
+
+      b.comments.pull(b.comments[1]);
+
+
+
+      assert.equal(b.comments.length, 2);
+
+      assert.equal(b.comments[0].body, 'a');
+
+      assert.equal(b.comments[1].body, 'changed');
+
+
+
+      const d = b.$__delta()[1];
+
+      assert.ok('$set' in d, 'invalid delta ' + JSON.stringify(d));
+
+      assert.ok(Array.isArray(d.$set.comments));
+
+      assert.equal(d.$set.comments.length, 2);
+
+
+
+      await b.save();
+
+      b = await B.findById(b._id);
+
+      assert.ok(Array.isArray(b.comments));
+
+      assert.equal(b.comments.length, 2);
+
+      assert.equal(b.comments[0].body, 'a');
+
+      assert.equal(b.comments[1].body, 'changed');
+
+    it('with conflicted data in db', async function() {
+
+      await m.save();
+
+      assert.strictEqual('GI', m.namey.first);
+
+      assert.strictEqual('Joe', m.namey.last);
+
+    it('with positional notation on path not existing in schema (gh-1048)', async function() {
+",2023-02-07 12:39:03-05:00
+3ae89172dd14aee576d97fb6c47b54e7d76640c0,Valeri Karpov,test: clean up a bunch of test failures,test/model.test.js,https://github.com/automattic/mongoose/commit/3ae89172dd14aee576d97fb6c47b54e7d76640c0,"      Movie.insertMany(movies, function(error, docs) {
+
+        assert.ifError(error);
+
+        assert.equal(docs.length, 1);
+
+        Movie.findOne({ name: 'Predator' }, function(error, doc) {
+
+          assert.ifError(error);
+
+          assert.equal(doc.leadActor.toHexString(), arnold._id.toHexString());
+
+          done();
+
+        });
+
+      });
+
+    });
+
+
+
+    it('insertMany() with promises (gh-4237)', function(done) {
+
+      const schema = new Schema({
+
+        name: String
+
+      });
+
+      const Movie = db.model('Movie', schema);
+
+
+
+      const arr = [{ name: 'Star Wars' }, { name: 'The Empire Strikes Back' }];
+
+      Movie.insertMany(arr).then(function(docs) {
+
+        assert.equal(docs.length, 2);
+
+        assert.ok(!docs[0].isNew);
+
+        assert.ok(!docs[1].isNew);
+
+        Movie.find({}, function(error, docs) {
+
+          assert.ifError(error);
+
+          assert.equal(docs.length, 2);
+
+          done();
+
+        });
+
+      });
+","      const docs = await Movie.insertMany(movies);
+
+      assert.equal(docs.length, 1);
+
+      const doc = await Movie.findOne({ name: 'Predator' });
+
+      assert.equal(doc.leadActor.toHexString(), arnold._id.toHexString());
+",2023-02-07 12:39:03-05:00
+1a32861360f8326ad3f8182eee9c45636e76240e,Valeri Karpov,test: fix timestamp tests,test/timestamps.test.js,https://github.com/automattic/mongoose/commit/1a32861360f8326ad3f8182eee9c45636e76240e,"    it('should have fields when create', function(done) {
+
+      cat.save(function(err, doc) {
+
+        assert.ok(doc.createdAt);
+
+        assert.ok(doc.updatedAt);
+
+        assert.ok(doc.createdAt.getTime() === doc.updatedAt.getTime());
+
+        done();
+
+      });
+
+    it('sets timestamps on findOneAndUpdate', function(done) {
+
+      Cat.findOneAndUpdate({ name: 'notexistname' }, { $set: {} }, { upsert: true, new: true }, function(err, doc) {
+
+        assert.ok(doc.createdAt);
+
+        assert.ok(doc.updatedAt);
+
+        assert.ok(doc.createdAt.getTime() === doc.updatedAt.getTime());
+
+        done();
+
+      });
+
+    it('sets timestamps on findOneAndReplace (gh-9951)', function() {
+
+      return Cat.findOneAndReplace({ name: 'notexistname' }, {}, { upsert: true, new: true }).then(doc => {
+
+        assert.ok(doc.createdAt);
+
+        assert.ok(doc.updatedAt);
+
+        assert.ok(doc.createdAt.getTime() === doc.updatedAt.getTime());
+
+      });
+
+    it('should change updatedAt when save', function(done) {
+
+      Cat.findOne({ name: 'newcat' }, function(err, doc) {
+
+        const old = doc.updatedAt;
+
+        doc.hobby = 'coding';
+
+        doc.save(function(err, doc) {
+
+          assert.ok(doc.updatedAt.getTime() > old.getTime());
+
+          done();
+
+        });
+
+      });
+
+    it('should not change updatedAt when save with no modifications', function(done) {
+
+      Cat.findOne({ name: 'newcat' }, function(err, doc) {
+
+        const old = doc.updatedAt;
+
+        doc.save(function(err, doc) {
+
+          assert.ok(doc.updatedAt.getTime() === old.getTime());
+
+          done();
+
+        });
+
+      });
+","    it('should have fields when create', async function() {
+
+      const doc = await cat.save();
+
+      assert.ok(doc.createdAt);
+
+      assert.ok(doc.updatedAt);
+
+      assert.ok(doc.createdAt.getTime() === doc.updatedAt.getTime());
+
+    it('sets timestamps on findOneAndUpdate', async function() {
+
+      const doc = await Cat.findOneAndUpdate({ name: 'notexistname' }, { $set: {} }, { upsert: true, new: true });
+
+      assert.ok(doc.createdAt);
+
+      assert.ok(doc.updatedAt);
+
+      assert.ok(doc.createdAt.getTime() === doc.updatedAt.getTime());
+
+    it('sets timestamps on findOneAndReplace (gh-9951)', async function() {
+
+      const doc = await Cat.findOneAndReplace({ name: 'notexistname' }, {}, { upsert: true, new: true });
+
+      assert.ok(doc.createdAt);
+
+      assert.ok(doc.updatedAt);
+
+      assert.ok(doc.createdAt.getTime() === doc.updatedAt.getTime());
+
+    it('should change updatedAt when save', async function() {
+
+      const doc = await Cat.findOne({ name: 'newcat' });
+
+      const old = doc.updatedAt;
+
+      doc.hobby = 'coding';
+
+      await doc.save();
+
+      assert.ok(doc.updatedAt.getTime() > old.getTime());
+
+    it('should not change updatedAt when save with no modifications', async function() {
+
+      const doc = await Cat.findOne({ name: 'newcat' });
+
+      const old = doc.updatedAt;
+
+      await doc.save();
+
+      assert.ok(doc.updatedAt.getTime() === old.getTime());
+",2023-02-07 13:07:54-05:00
+81620f354d4fd7cabf6eb8a49a0a3ad50d813f42,Valeri Karpov,test: clean up some more test failures,test/model.updateOne.test.js,https://github.com/automattic/mongoose/commit/81620f354d4fd7cabf6eb8a49a0a3ad50d813f42,"      instance.save(function(error) {
+
+        assert.ifError(error);
+
+        const query = { _id: instance._id };
+
+        const update = { $set: { name: value } };
+
+        const ok = function() {
+
+          done();
+
+        };
+
+        Model.updateOne(query, update).then(ok, done);
+
+      });
+
+    it('versioning with setDefaultsOnInsert (gh-2593)', function(done) {
+","      await instance.save();
+
+
+
+      const query = { _id: instance._id };
+
+      const update = { $set: { name: value } };
+
+
+
+      return Model.updateOne(query, update);
+
+    it('versioning with setDefaultsOnInsert (gh-2593)', async function() {
+",2023-02-08 11:43:29-05:00
+81620f354d4fd7cabf6eb8a49a0a3ad50d813f42,Valeri Karpov,test: clean up some more test failures,test/model.updateOne.test.js,https://github.com/automattic/mongoose/commit/81620f354d4fd7cabf6eb8a49a0a3ad50d813f42,"      Model.updateOne(q, u, o).then(function() {
+
+        done();
+
+      }).catch(done);
+","      await Model.updateOne(q, u, o);
+",2023-02-08 11:43:29-05:00
+55c53d0c813f88d9e7a1d45e95a2b62b3dd7fdf9,Valeri Karpov,test: fix a bunch more test failures,test/model.populate.test.js,https://github.com/automattic/mongoose/commit/55c53d0c813f88d9e7a1d45e95a2b62b3dd7fdf9,"      ModelA.create({ name: 'model-A' }, function(error, toyA) {
+
+        assert.ifError(error);
+
+        ModelB.create({ name: 'model-B' }, function(error, toyB) {
+
+          assert.ifError(error);
+
+          Parent.create({
+
+            children: [
+
+              {
+
+                name: 'Child 1',
+
+                toy: { kind: 'Test1', value: toyA._id }
+
+              },
+
+              {
+
+                name: 'Child 2'
+
+              },
+
+              {
+
+                name: 'Child 3',
+
+                toy: { kind: 'Test2', value: toyB._id }
+
+              }
+
+            ]
+
+          }, function(error, doc) {
+
+            assert.ifError(error);
+
+            test(doc._id);
+
+          });
+
+        });
+
+      function test(id) {
+
+        Parent.findById(id, function(error, doc) {
+
+          assert.ifError(error);
+
+          doc.populate('children.toy.value').then(function(doc) {
+
+            assert.equal(doc.children[0].toy.value.name, 'model-A');
+
+            assert.equal(doc.children[1].toy.value, null);
+
+            assert.equal(doc.children[2].toy.value.name, 'model-B');
+
+            done();
+
+          }).catch(done);
+
+        });
+
+      }
+","      const toyA = await ModelA.create({ name: 'model-A' });
+
+      const toyB = await ModelB.create({ name: 'model-B' });
+
+      let doc = await Parent.create({
+
+        children: [
+
+          {
+
+            name: 'Child 1',
+
+            toy: { kind: 'Test1', value: toyA._id }
+
+          },
+
+          {
+
+            name: 'Child 2'
+
+          },
+
+          {
+
+            name: 'Child 3',
+
+            toy: { kind: 'Test2', value: toyB._id }
+
+          }
+
+        ]
+
+
+
+      doc = await Parent.findById(doc._id);
+
+      await doc.populate('children.toy.value');
+
+      assert.equal(doc.children[0].toy.value.name, 'model-A');
+
+      assert.equal(doc.children[1].toy.value, null);
+
+      assert.equal(doc.children[2].toy.value.name, 'model-B');
+
+
+",2023-02-08 14:49:02-05:00
+1a28ba52366a2e58627ff6f5e0bd12e684d7ac88,Valeri Karpov,remove a bunch of other callback methods,lib/cursor/QueryCursor.js,https://github.com/automattic/mongoose/commit/1a28ba52366a2e58627ff6f5e0bd12e684d7ac88,"QueryCursor.prototype.close = function(callback) {
+
+  return promiseOrCallback(callback, cb => {
+
+    this.cursor.close().then(
+
+      () => {
+
+        this.emit('close');
+
+        cb(null);
+
+      },
+
+      error => {
+
+        cb(error);
+
+        this.listeners('error').length > 0 && this.emit('error', error);
+
+      }
+
+    );
+
+  }, this.model.events);
+","QueryCursor.prototype.close = async function close() {
+
+  if (typeof arguments[0] === 'function') {
+
+    throw new MongooseError('QueryCursor.prototype.close() no longer accepts a callback');
+
+  }
+
+  try {
+
+    await this.cursor.close();
+
+    this.emit('close');
+
+  } catch (error) {
+
+    this.listeners('error').length > 0 && this.emit('error', error);
+
+    throw error;
+
+  }
+",2023-02-12 13:14:57-05:00
+e2211846a666289476d8d9856476d6281b56cf2a,Valeri Karpov,make model index helpers async,lib/model.js,https://github.com/automattic/mongoose/commit/e2211846a666289476d8d9856476d6281b56cf2a,"  callback = this.$handleCallbackError(callback);
+
+
+
+  return this.db.base._promiseOrCallback(callback, cb => {
+
+    cb = this.$wrapCallback(cb);
+
+    this.db.createCollection(this.$__collection.collectionName, options).then(
+
+      () => cb(null, this.$__collection),
+
+      err => {
+
+        if (err != null && (err.name !== 'MongoServerError' || err.code !== 48)) {
+
+          return cb(err);
+
+        }
+
+        return cb(null, this.$__collection);
+
+      }
+
+    );
+
+  }, this.events);
+","  try {
+
+    await this.db.createCollection(this.$__collection.collectionName, options);
+
+  } catch (err) {
+
+    if (err != null && (err.name !== 'MongoServerError' || err.code !== 48)) {
+
+      throw err;
+
+    }
+
+  }
+
+  return this.$__collection;
+",2023-02-12 13:41:22-05:00
+87592672b7cd33510124d3bcc4c88a48b3419934,Valeri Karpov,docs: quick improvement to `Model.init()` docs re: #13054,lib/model.js,https://github.com/automattic/mongoose/commit/87592672b7cd33510124d3bcc4c88a48b3419934," *     Event.init().then(function(Event) {
+
+ *       // You can also use `Event.on('index')` if you prefer event emitters
+
+ *       // over promises.
+
+ *       console.log('Indexes are done building!');
+
+ *     });
+"," *     await Event.init();
+
+ *     console.log('Indexes are done building!');
+",2023-03-07 13:36:53-05:00
+e201f3b3edc3132ab475cd1c419e1e93fc0a0f7c,Valeri Karpov,test: fix tests from 6.x merge,test/model.indexes.test.js,https://github.com/automattic/mongoose/commit/e201f3b3edc3132ab475cd1c419e1e93fc0a0f7c,"      TestModel.diffIndexes().then((diff) => {
+
+        assert.deepEqual(diff, { toCreate: [{ age: 1, title: 'text', description: 'text' }], toDrop: [] });
+
+        TestModel.syncIndexes().then(() => {
+
+          TestModel.diffIndexes().then((diff2) => {
+
+            assert.deepEqual(diff2, { toCreate: [], toDrop: [] });
+
+            done();
+
+          });
+
+        });
+
+      });
+","      await TestModel.init();
+
+      const diff = await TestModel.diffIndexes();
+
+      assert.deepEqual(diff, { toCreate: [{ age: 1, title: 'text', description: 'text' }], toDrop: [] });
+
+      await TestModel.syncIndexes();
+
+
+
+      const diff2 = await TestModel.diffIndexes();
+
+      assert.deepEqual(diff2, { toCreate: [], toDrop: [] });
+",2023-04-04 15:57:20-04:00
+32e4a2efef4fea3679530f20e28122f357adb352,Daniel Diaz,revert `set()` changes,test/schematype.test.js,https://github.com/automattic/mongoose/commit/32e4a2efef4fea3679530f20e28122f357adb352,"        doc.save().then();
+","        await doc.save();
+",2023-06-23 10:27:15-04:00
+9c7618113e4809d4a4934cb79e67496b79cb87b6,Daniel Diaz,add async/await back,test/schematype.test.js,https://github.com/automattic/mongoose/commit/9c7618113e4809d4a4934cb79e67496b79cb87b6,"      it('should allow setting values to a given property gh-13510', function() {
+
+        doc.save().then();
+","      it('should allow setting values to a given property gh-13510', async function() {
+
+        await m.connect('mongodb://127.0.0.1:27017/gh13510');
+
+        await Test.deleteMany({});
+
+        await doc.save();
+",2023-06-23 12:09:52-04:00
+020a8f3a48990fd7d4588964755420b90844baef,Valeri Karpov,chore: move cleanup logic from npm scripts to website.js script,scripts/website.js,https://github.com/automattic/mongoose/commit/020a8f3a48990fd7d4588964755420b90844baef,"  console.log(`Processing ~${files.length} files`);
+
+  Promise.all([pugifyAllFiles(), copyAllRequiredFiles()]).then(() => {
+
+    console.log(""Done Processing"");
+
+  })
+","  (async function main() {
+
+    console.log(`Processing ~${files.length} files`);
+
+
+
+    await deleteAllHtmlFiles();
+
+    await pugifyAllFiles();
+
+    await copyAllRequiredFiles();
+
+    if (process.env.DOCS_DEPLOY) {
+
+      await moveDocsToTemp();
+
+    }
+
+
+
+    console.log('Done Processing');
+
+  })();
+",2023-11-20 15:41:20-05:00
+467db46d2ca711ba4807eaf459e2c521628e8535,Valeri Karpov,"WIP debugging #15026, refactor populate() to use async/await under the hood for stack traces",lib/model.js,https://github.com/automattic/mongoose/commit/467db46d2ca711ba4807eaf459e2c521628e8535,"  // data that should persist across subPopulate calls
+
+  const cache = {};
+
+  return new Promise((resolve, reject) => {
+
+    _populate(_this, docs, paths, cache, (err, res) => {
+
+      if (err) {
+
+        return reject(err);
+
+      }
+
+      resolve(res);
+
+    });
+
+  });
+","  await _populate(_this, docs, paths);
+
+  return docs;
+",2024-12-07 20:37:33-05:00

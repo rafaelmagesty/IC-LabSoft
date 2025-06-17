@@ -1,0 +1,48 @@
+commit_hash,author,message,file_path,commit_url,removed_chunk,added_chunk,commit_date
+18a24f614fe09423c953848d27e171361335bed4,KernelDeimos,dev: update ipc ready and app launched events,src/puter-js/src/modules/UI.js,https://github.com/HeyPuter/puter/commit/18a24f614fe09423c953848d27e171361335bed4,"    launchApp = function(appName, args, callback) {
+
+        return new Promise((resolve) => {
+
+            // if appName is an object and args is not set, then appName is actually args
+
+            if (typeof appName === 'object' && !args) {
+
+                args = appName;
+
+                appName = undefined;
+
+            }
+
+
+
+            this.#postMessageWithCallback('launchApp', resolve, { app_name: appName, args });
+
+        })
+","    launchApp = async function launchApp(app_name, args, callback) {
+
+        const app_info = await this.#ipc_stub({
+
+            method: 'launchApp',
+
+            callback,
+
+            parameters: {
+
+                app_name,
+
+                args,
+
+            },
+
+        });
+
+        
+
+        return AppConnection.from(app_info, {
+
+            appInstanceID: this.appInstanceID,
+
+            messageTarget: this.messageTarget,
+
+        });
+",2024-09-01 22:38:40-04:00

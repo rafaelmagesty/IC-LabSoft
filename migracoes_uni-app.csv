@@ -1,0 +1,101 @@
+commit_hash,author,message,file_path,commit_url,removed_chunk,added_chunk,commit_date
+96a868a4de206af9466cbea9ab84300f47842f89,fxy060608,fix(app): ios promise.then,packages/uni-h5-vite/dist/transformIndexHtml/index.js,https://github.com/dcloudio/uni-app/commit/96a868a4de206af9466cbea9ab84300f47842f89,"var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+
+    return new (P || (P = Promise))(function (resolve, reject) {
+
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+
+        function rejected(value) { try { step(generator[""throw""](value)); } catch (e) { reject(e); } }
+
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+
+    });
+
+};
+
+    return function (html) {
+
+        return __awaiter(this, void 0, void 0, function* () {
+
+            const manifestJson = dist_1.parseManifestJsonOnce(process.env.UNI_INPUT_DIR);
+
+            const title = ((_a = manifestJson.h5) === null || _a === void 0 ? void 0 : _a.title) || manifestJson.name || '';
+
+            return html.replace(/<title>(.*?)<\/title>/, `<title>${title}</title>`);
+
+        });
+","    return async function (html) {
+
+        const manifestJson = dist_1.parseManifestJsonOnce(process.env.UNI_INPUT_DIR);
+
+        const title = ((_a = manifestJson.h5) === null || _a === void 0 ? void 0 : _a.title) || manifestJson.name || '';
+
+        return html.replace(/<title>(.*?)<\/title>/, `<title>${title}</title>`);
+",2021-08-04 11:50:18+08:00
+7a479da856f34e7e247c9761dd67e195034c2df2,fxy060608,chore: bump vite from 3.1.3 to 3.1.6,packages/uni-h5/dist/uni-h5.es.js,https://github.com/dcloudio/uni-app/commit/7a479da856f34e7e247c9761dd67e195034c2df2,"var __async = (__this, __arguments, generator) => {
+
+  return new Promise((resolve, reject) => {
+
+    var fulfilled = (value) => {
+
+      try {
+
+        step(generator.next(value));
+
+      } catch (e2) {
+
+        reject(e2);
+
+      }
+
+    };
+
+    var rejected = (value) => {
+
+      try {
+
+        step(generator.throw(value));
+
+      } catch (e2) {
+
+        reject(e2);
+
+      }
+
+    };
+
+    var step = (x) => x.done ? resolve(x.value) : Promise.resolve(x.value).then(fulfilled, rejected);
+
+    step((generator = generator.apply(__this, __arguments)).next());
+
+  });
+
+};
+
+  (_0, _1) => __async(void 0, [_0, _1], function* (_, { resolve, reject }) {
+
+      const data = yield navigator.clipboard.readText();
+
+  })
+
+  (_0, _1) => __async(void 0, [_0, _1], function* ({ data }, { resolve, reject }) {
+
+      yield navigator.clipboard.writeText(data);
+
+  }),
+","  async (_, { resolve, reject }) => {
+
+      const data = await navigator.clipboard.readText();
+
+  }
+
+  async ({ data }, { resolve, reject }) => {
+
+      await navigator.clipboard.writeText(data);
+
+  },
+",2022-10-08 14:21:26+08:00
